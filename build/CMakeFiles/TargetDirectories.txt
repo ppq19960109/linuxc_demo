@@ -1,3 +1,0 @@
-/home/ppq/linux/workplace/http_demo/build/CMakeFiles/rebuild_cache.dir
-/home/ppq/linux/workplace/http_demo/build/CMakeFiles/edit_cache.dir
-/home/ppq/linux/workplace/http_demo/build/CMakeFiles/httpdemo.dir

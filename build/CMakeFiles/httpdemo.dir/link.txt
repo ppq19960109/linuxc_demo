@@ -1,1 +1,0 @@
-gcc -Wall -g   CMakeFiles/httpdemo.dir/src/http.c.o CMakeFiles/httpdemo.dir/src/main.c.o  -o httpdemo   -L/home/ppq/linux/workplace/http_demo/libs  -L/home/ppq/linux/workplace/http_demo/libs/libevent/lib  -Wl,-rpath,/home/ppq/linux/workplace/http_demo/libs:/home/ppq/linux/workplace/http_demo/libs/libevent/lib -lpthread 

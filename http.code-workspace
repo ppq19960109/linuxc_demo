@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"commom.h": "c",
+			"errno.h": "c",
+			"inet.h": "c",
+			"ctype.h": "c",
+			"event.h": "c",
+			"string.h": "c",
+			"ioctl.h": "c",
+			"event_struct.h": "c",
+			"types.h": "c",
+			"stdlib.h": "c",
+			"http.h": "c",
+			"pthread.h": "c",
+			"math.h": "c",
+			"malloc.h": "c",
+			"cjson.h": "c",
+			"unistd.h": "c"
+		}
+	}
+}
