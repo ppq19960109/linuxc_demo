@@ -5,6 +5,22 @@
 #include "event2/event_struct.h"
 #include "event2/http.h"
 
+#define NORMAL_COLOR  "\033[0m"
+#define YELLOW "\033[1;33m"
+
+#define log_color(color,fmt,...)  log_printf(color "%s-[%s-%d]: " fmt NORMAL_COLOR,__FUNCTION__,__FILE__,__LINE__,##__VA_ARGS__)
+#define log_debug(fmt,...)  log_color(YELLOW,fmt,##__VA_ARGS__)
+
+
+void log_printf(char *format,...)
+{
+   va_list args;
+   
+   va_start(args, format);
+   vprintf(format, args);
+   va_end(args);
+}
+
 struct ev_http_t {
     pthread_t thread;
 
@@ -24,38 +40,43 @@ void http_handler(struct evhttp_request* req, void* args) {
     const char* temp;
     cJSON* req_json;
 
-    cJSON* rsp = cJSON_CreateObject();
-    cJSON_AddStringToObject(rsp, "pwd", "hello");
-    printf("rsp:%s\n", cJSON_Print(rsp));
-
     temp = evhttp_request_get_uri(req);
-    printf("uri:%s\n", temp);
+    log_debug("uri:%s",temp);
+
     req_val = evhttp_request_get_input_headers(req);
     temp = evhttp_find_header(req_val, "content-type");
-    printf("head:%s\n", temp);
+    printf("content-type:%s\n", temp);
     temp = evhttp_find_header(req_val, "Content-Length");
-    printf("head:%s\n", temp);
+    printf("Content-Length:%s\n", temp);
 
     evbuf = evhttp_request_get_input_buffer(req);
     evbuf_total = evbuffer_get_length(evbuf);
+    if (evbuf_total == 0) {
+        goto fail;
+    }
     buf = malloc(evbuf_total);
 
     evbuffer_remove(evbuf, buf, evbuf_total);
-    printf("buffer:%s\n", buf);
+    printf("body:%s\n", buf);
     req_json = cJSON_Parse(buf);
-    printf("json:%s\n", cJSON_Print(req_json));
-    int has = cJSON_HasObjectItem(req_json, "name");
-    printf("has:%d\n", has);
-    cJSON* name = cJSON_GetObjectItem(req_json, "name");
-    printf("name:%s\n", cJSON_Print(name));
+    printf("body json:%s\n", cJSON_Print(req_json));
+
+    cJSON* rsp = cJSON_CreateObject();
+    cJSON_AddNumberToObject(rsp, "retcode", 12);
+    char* rspbuf = cJSON_Print(rsp);
+    printf("rsp:%s\n", rspbuf);
 
     evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type",
-                      "application/json;charset=utf-8");
-    evbuffer_add_printf(evbuf, "{\"retcode\"=%d}\n", 123);
+                      "application/json;charset=UTF-8");
+    evbuffer_add(evbuf, rspbuf, strlen(rspbuf));
     evhttp_send_reply(req, HTTP_OK, "OK", evbuf);
+
+fail:
+    evhttp_send_reply(req, HTTP_NOCONTENT, "NOCONTENT", NULL);
 }
 
 void http_init() {
+
     ev_http.base = event_base_new();
     ev_http.http = evhttp_new(ev_http.base);
 

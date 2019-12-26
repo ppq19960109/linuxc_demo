@@ -12,7 +12,6 @@ var options = {
 var body = {
     "name":"ppq"
 }
-var content=JSON.stringify(body);
 
 var options_post = {
     hostname: "127.0.0.1",
@@ -33,9 +32,9 @@ var req = http.request(options_post, function(res) {
     console.log("HEADERS JSON: " + JSON.stringify(res.headers));
     res.setEncoding("utf8");
     res.on("data", function(chunk) {
-        console.log("body",chunk);
+        console.log("body:",chunk);
     });
 });
 
-req.write(content);
+// req.write(JSON.stringify(body));
 req.end();
