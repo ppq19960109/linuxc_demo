@@ -21,7 +21,17 @@
 			"math.h": "c",
 			"malloc.h": "c",
 			"cjson.h": "c",
-			"unistd.h": "c"
+			"unistd.h": "c",
+			"bufferevent.h": "c",
+			"thread.h": "c",
+			"log.h": "c",
+			"http_test.h": "c",
+			"event_buffer_test.h": "c",
+			"event_app.h": "c",
+			"event_test.h": "c",
+			"socket.h": "c",
+			"mman.h": "c",
+			"file.h": "c"
 		}
 	}
 }

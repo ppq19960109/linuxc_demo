@@ -1,8 +1,8 @@
 #include "commom.h"
-#include "http.h"
+#include "event_app.h"
 
 int main(int agrc, char *agrv[]) {
     printf("main start \n");
-    http_init();
+    event_app_init();
     return 0;
 }

@@ -16,11 +16,14 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #include <pthread.h>
 #include <math.h>
-
+#include <time.h>
 
 #include "cJSON.h"
 #include "cJSON_Utils.h"
+
+#include "log.h"
 #endif

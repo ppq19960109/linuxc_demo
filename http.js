@@ -1,4 +1,4 @@
-var request = require("request");
+
 var http = require("http");
 var querystring=require("querystring");
 
@@ -36,5 +36,5 @@ var req = http.request(options_post, function(res) {
     });
 });
 
-// req.write(JSON.stringify(body));
+req.write(JSON.stringify(body));
 req.end();
