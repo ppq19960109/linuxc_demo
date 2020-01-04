@@ -17,7 +17,7 @@ LDFLAGS += -L$(TOPDIR)/libs
 LDFLAGS += -L$(TOPDIR)/libs/libevent/lib
 LDFLAGS += -L$(TOPDIR)/libs/sqlite/lib
 
-LIBS += -Wl,-Bstatic -levent_core -levent  -levent_pthreads  -levent_extra -levent_openssl  -lsqlite3  -Wl,-Bdynamic -ldl -lm -lpthread 
+LIBS += -Wl,--start-group -Wl,-Bstatic -levent_core -levent  -levent_pthreads  -levent_extra -levent_openssl  -lsqlite3 -Wl,-Bdynamic -ldl -lm -lpthread -Wl,--end-group
 SRC += $(wildcard $(SRC_PATH)/*.c)
 # SRC += $(wildcard $(TOPDIR)/libs/sqlite3/*.c)
 
