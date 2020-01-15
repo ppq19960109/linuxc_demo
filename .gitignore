@@ -1,2 +1,4 @@
 *.o
-http_demo
+*.bmp
+demo
+build/

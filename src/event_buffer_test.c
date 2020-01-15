@@ -3,7 +3,7 @@
 #include "commom.h"
 #include "file.h"
 
-void read_cb(struct bufferevent* bev, void* ctx) {
+static void read_cb(struct bufferevent* bev, void* ctx) {
     int rc;
     log_debug("bufferevent read\n");
     // struct evbuffer* input = bufferevent_get_input(bev);
@@ -26,11 +26,11 @@ end:
     free(buf);
 }
 
-void write_cb(struct bufferevent* bev, void* ctx) {
+static void write_cb(struct bufferevent* bev, void* ctx) {
     log_debug("bufferevent write\n");
 }
 
-void event_cb(struct bufferevent* bev, short events, void* ctx) {
+static void event_cb(struct bufferevent* bev, short events, void* ctx) {
     log_debug("bufferevent event\n");
     log_debug("event: %d\n", events);
 }

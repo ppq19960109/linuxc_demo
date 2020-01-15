@@ -31,7 +31,9 @@
 			"event_test.h": "c",
 			"socket.h": "c",
 			"mman.h": "c",
-			"file.h": "c"
+			"file.h": "c",
+			"qrcode.h": "c",
+			"qrencode.h": "c"
 		}
 	}
 }
