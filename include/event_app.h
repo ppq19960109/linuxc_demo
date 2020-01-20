@@ -15,6 +15,7 @@ struct ev_app_t {
     struct event* event;
     struct evhttp* http;
     struct bufferevent* bepair[2];
+    struct bufferevent* bev;
 };
 
 int event_app_init();
