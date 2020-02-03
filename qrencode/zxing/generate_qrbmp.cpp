@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstring>
 
-#include "generate_bmp.h"
+#include "generate_qrbmp.h"
 
 using namespace std;
 // #pragma pack(1)
@@ -31,7 +31,7 @@ typedef struct tagBITMAPINFOHEADER
     unsigned int biClrImportant;
 } __attribute__((packed)) BITMAPINFOHEADER;
 
-int BmpUtils::saveBitmap(const char *bmpName, void *bmpData, int width, int height, int bodySize, const unsigned char bmpBitCount)
+int QrBmpUtils::saveBitmap(const char *bmpName, void *bmpData, int width, int height, int bodySize, const unsigned char bmpBitCount)
 {
     FILE *pf = fopen(bmpName, "wb");
 
@@ -93,7 +93,7 @@ fail:
     return -1;
 }
 
-int BmpUtils::saveQrcode(const char *qrcodeName, unsigned char *bmpData, int width, int height, const unsigned char bmpBitCount)
+int QrBmpUtils::saveQrcodeBmp(const char *qrcodeName, void *bmpData, int width, int height, const unsigned char bmpBitCount)
 {
 
     int widthByte = (width * bmpBitCount / 8 + 3) / 4 * 4; //每line字节数必须为4的倍数
@@ -101,8 +101,13 @@ int BmpUtils::saveQrcode(const char *qrcodeName, unsigned char *bmpData, int wid
     unsigned char bmpByteCount = bmpBitCount / 8;
 
     unsigned char *qrBmpData = new unsigned char[bodySize];
+    if (qrBmpData == NULL || bmpData == NULL)
+    {
+        return -1;
+    }
     memset(qrBmpData, 255, bodySize);
-    unsigned char *qrData = bmpData;
+
+    unsigned char *qrData = (unsigned char *)bmpData;
     int i, j, k;
     for (i = height - 1; i >= 0; i--)
     {
@@ -120,8 +125,11 @@ int BmpUtils::saveQrcode(const char *qrcodeName, unsigned char *bmpData, int wid
         }
     }
 
-    saveBitmap(qrcodeName, qrBmpData, width, height, bodySize, bmpBitCount);
-
+    unsigned char error = saveBitmap(qrcodeName, qrBmpData, width, height, bodySize, bmpBitCount);
+    if (error != 0)
+    {
+        return -1;
+    }
     delete[] qrBmpData;
 
     return 0;

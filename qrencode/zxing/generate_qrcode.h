@@ -6,6 +6,7 @@ extern "C"
 {
 #endif
     int create_qrcode(char* text,char* filePath,int w,int ecc);
+    int qrcode_create(char *text, int w, int ecc, char *data);
 #ifdef __cplusplus
 }
 #endif
