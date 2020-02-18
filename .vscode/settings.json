@@ -37,6 +37,19 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "utility": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "string": "cpp",
+        "generateqrbmp.h": "c",
+        "commom.h": "c",
+        "log.h": "c",
+        "time.h": "c",
+        "pthread.h": "c",
+        "unistd.h": "c",
+        "math.h": "c",
+        "types.h": "c",
+        "fb.h": "c",
+        "lvgl.h": "c",
+        "lv_examples.h": "c",
+        "lv_test_theme_1.h": "c"
     }
 }

@@ -26,4 +26,7 @@
 #include "cJSON_Utils.h"
 
 #include "log.h"
+
+#define CONFIG "hi"CONFIG_STR
+#define CONFIG_STR "hello"
 #endif
