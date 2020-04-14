@@ -33,7 +33,25 @@
 			"mman.h": "c",
 			"file.h": "c",
 			"qrcode.h": "c",
-			"qrencode.h": "c"
+			"qrencode.h": "c",
+			"generateqrbmp.h": "c",
+			"hal_iic.h": "c",
+			"stdint.h": "c",
+			"system_error": "c",
+			"array": "c",
+			"functional": "c",
+			"tuple": "c",
+			"type_traits": "c",
+			"utility": "c",
+			"i2c.h": "c",
+			"stdio.h": "c",
+			"fcntl.h": "c",
+			"i2c-dev.h": "c",
+			"iso14443a.h": "c",
+			"string": "c",
+			"i2c_std.h": "c",
+			"pn.h": "c",
+			"pn512.h": "c"
 		}
 	}
 }
