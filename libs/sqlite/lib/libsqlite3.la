@@ -17,7 +17,7 @@ old_library='libsqlite3.a'
 inherited_linker_flags=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -lz -lm -ldl -lpthread'
+dependency_libs=' -lm -ldl -lpthread'
 
 # Names of additional weak libraries provided by this library
 weak_library_names=''
@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/ppq/linux/custom/sqlite-autoconf-3300100/_install/lib'
+libdir='/home/ppq/linux/git/http-js/libs/sqlite-autoconf-3300100/_install/lib'

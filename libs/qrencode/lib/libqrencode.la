@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/ppq/linux/qrcode/qrencode-4.0.2/_install/lib'
+libdir='/home/ppq/linux/git/http-js/libs/qrencode-4.0.2/_install/lib'

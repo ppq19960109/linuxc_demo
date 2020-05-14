@@ -1,4 +1,4 @@
-prefix=/home/ppq/linux/qrcode/qrencode-4.0.2/_install
+prefix=/home/ppq/linux/git/http-js/libs/qrencode-4.0.2/_install
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

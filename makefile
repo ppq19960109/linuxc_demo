@@ -40,10 +40,10 @@ OBJ += $(SRC:%.c=%.o)
 TARGET := demo
 .PHONY : clean all
 
-all: $(TARGET) 
+all: $(TARGET)
 
 $(TARGET) : $(OBJ)
-	$(CC) $^  $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@ 
+	$(CC) $^  $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
 
 clean :
 	$(RM) $(TARGET)

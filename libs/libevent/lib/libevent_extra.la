@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/ppq/linux/custom/libevent-2.1.11-stable/_install/lib'
+libdir='/home/ppq/linux/git/http-js/libs/libevent-2.1.11-stable/_install/lib'
