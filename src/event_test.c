@@ -36,7 +36,7 @@ static void bev_read_cb(struct bufferevent* bev, void* ctx) {
         goto end;
     }
     log_debug("body:%s\n", buf);
-
+    evbuffer_free(input);
     free(buf);
     return;
 end:
@@ -53,7 +53,7 @@ static void bev_event_cb(struct bufferevent* bev, short events, void* ctx) {
     // #define BEV_EVENT_ERROR		0x20	/**< unrecoverable error encountered */
     // #define BEV_EVENT_TIMEOUT	0x40	/**< user-specified timeout reached */
     // #define BEV_EVENT_CONNECTED	0x80	/**< connect operation finished. */
-    log_debug("event: %x\n", events);
+    log_debug("event_cb event: %x\n", events);
     if (events & BEV_EVENT_CONNECTED) {
         struct evbuffer* evbuf = bufferevent_get_input(bev);
         size_t evlen = evbuffer_get_length(evbuf);
@@ -67,8 +67,8 @@ static void bev_event_cb(struct bufferevent* bev, short events, void* ctx) {
 int event_test_init(struct ev_app_t* ev_app) {
     int rc = -1;
     ev_app->event = event_new(ev_app->base, -1, EV_TIMEOUT, event_callback, ev_app);
-    ev_app->event = malloc(sizeof(struct event));
-    event_assign(ev_app->event, ev_app->base, -1, EV_TIMEOUT, event_callback, ev_app);
+    // ev_app->event = malloc(sizeof(struct event));
+    // event_assign(ev_app->event, ev_app->base, -1, EV_TIMEOUT, event_callback, ev_app);
     struct timeval five_seconds = {3, 0};
     rc = event_add(ev_app->event, &five_seconds);
     if (0 != rc) {
@@ -78,12 +78,11 @@ int event_test_init(struct ev_app_t* ev_app) {
 
     struct sockaddr_in sin;
 
-    // memset(&sin, 0, sizeof(sin));
+    memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
-    sin.sin_addr.s_addr = inet_addr("127.0.0.1"); /* 127.0.0.1 */
-    sin.sin_port = htons(8090);                   /* Port 8080 */
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);//inet_addr("127.0.0.1"); /* 127.0.0.1 */
+    sin.sin_port = htons(7070);                   /* Port 8080 */
 
-    // int fd = socket(AF_INET, SOCK_STREAM, 0);
     ev_app->bev = bufferevent_socket_new(ev_app->base, -1, BEV_OPT_CLOSE_ON_FREE);
     // evutil_make_socket_nonblocking(fd);
 

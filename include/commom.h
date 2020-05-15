@@ -27,6 +27,5 @@
 
 #include "log.h"
 
-#define CONFIG "hi"CONFIG_STR
-#define CONFIG_STR "hello"
+#include <arpa/inet.h>
 #endif

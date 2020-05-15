@@ -2,6 +2,7 @@
 #include "commom.h"
 #include "event_buffer_test.h"
 #include "event_test.h"
+#include "event_server.h"
 #include "http_test.h"
 #include "sqlite_test.h"
 
@@ -19,12 +20,16 @@ int event_app_init() {
         log_debug("sqlite_test_init\n");
         goto fail;
     }
-
-    rc = event_test_init(&ev_app);
+    rc = event_server_init(&ev_app);
     if (0 != rc) {
-        log_debug("event_test_init\n");
+        log_debug("event_server_init\n");
         goto fail;
     }
+    // rc = event_test_init(&ev_app);
+    // if (0 != rc) {
+    //     log_debug("event_test_init\n");
+    //     goto fail;
+    // }
     rc = event_buffer_init(&ev_app);
     if (0 != rc) {
         log_debug("event_buffer_init\n");
