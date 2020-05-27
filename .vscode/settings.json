@@ -50,6 +50,7 @@
         "fb.h": "c",
         "lvgl.h": "c",
         "lv_examples.h": "c",
-        "lv_test_theme_1.h": "c"
+        "lv_test_theme_1.h": "c",
+        "lv_hal.h": "c"
     }
 }

@@ -1,7 +1,9 @@
-#include "commom.h"
+
 #include "lvgl.h"
 #include "lv_examples.h"
 #include "lv_test_theme_1.h"
+#include "commom.h"
+#include "lv_hal_disp.h"
 
 #define RED_COLOR888_32bpp 0x00ff0000
 #define GREEN_COLOR888_32bpp 0x0000ff00
@@ -177,7 +179,7 @@ int main(void)
 
     int keys_fd;
 
-    keys_fd = open("/dev/input/event2", O_RDONLY); //打开TP设备
+    keys_fd = open("/dev/input/event1", O_RDONLY); //打开TP设备
     if (keys_fd <= 0)
     {
         printf("open /dev/input/event0 device error!\n");

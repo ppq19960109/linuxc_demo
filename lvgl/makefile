@@ -1,5 +1,6 @@
 
 CROSS_COMPILE = arm-none-linux-gnueabi-
+# CROSS_COMPILE = arm-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -7,10 +8,13 @@ TOPDIR = .
 SRC_INCPATH = $(TOPDIR)
 SRC_PATH = $(TOPDIR)
 
+
 CFLAGS += -I$(SRC_INCPATH)
 CFLAGS += -I$(TOPDIR)/lvgl/
 CFLAGS += -I$(TOPDIR)/lv_examples/
-CFLAGS += -g -Wall
+CFLAGS += -g -Wall 
+#FABI := softfp	#这里把hard改为softfp
+#CFLAGS += -mfloat-abi=$(FABI)
 
 LDFLAGS += -L$(TOPDIR)
 
@@ -35,7 +39,7 @@ OUTPUT_OBJ := $(wildcard $(LVGL_OBJ_DIR)/*.o)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 
-TARGET := itop
+TARGET := lvgl_demo
 .PHONY : clean all
 
 all: $(TARGET)
