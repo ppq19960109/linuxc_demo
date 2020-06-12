@@ -1,2 +1,3 @@
-# http-js
-libevent cJSON nodejs on linux 
+# linux
+1. libevent
+2. qrcode
