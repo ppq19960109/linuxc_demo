@@ -7,7 +7,7 @@ extern "C"
 #endif
 
 int read_from_bottom(const char *json);
-
+int write_to_bottom(void *ptr);
 #ifdef __cplusplus
 }
 #endif

@@ -36,6 +36,7 @@ int main(void)
     get_local_all_ip(hilink_data.ip);
 
     read_from_bottom(0);
+    write_to_bottom(0);
     printf("Program is started.\r\n");
 
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
