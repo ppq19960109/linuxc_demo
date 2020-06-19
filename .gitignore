@@ -1,5 +1,4 @@
 *.o
 *.db
 *.bmp
-demo
 build/
