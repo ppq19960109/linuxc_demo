@@ -1,36 +1,36 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: HiLink²úÆ·ÊÊÅäÊµÏÖÔ´ÎÄ¼ş
+ * Description: HiLinkäº§å“é€‚é…å®ç°æºæ–‡ä»¶
  * Create: 2019-04-20
- * Notes: ¸ÃÎÄ¼şÖĞµÄ½Ó¿ÚĞèÒª¶ÔÍâÌá¹©¸øµÚÈı·½³§ÉÌÊ¹ÓÃ£¬ÎªÁËÇ°Ïò¼æÈİ£¬²¿·ÖÀÏ½Ó¿ÚÔİ²»°´×îĞÂ±àÂë¹æ·¶Õû¸Ä.
+ * Notes: è¯¥æ–‡ä»¶ä¸­çš„æ¥å£éœ€è¦å¯¹å¤–æä¾›ç»™ç¬¬ä¸‰æ–¹å‚å•†ä½¿ç”¨ï¼Œä¸ºäº†å‰å‘å…¼å®¹ï¼Œéƒ¨åˆ†è€æ¥å£æš‚ä¸æŒ‰æœ€æ–°ç¼–ç è§„èŒƒæ•´æ”¹.
  */
 #include "hilink_profile_adapter.h"
 #include "net_info.h"
 
-/* Éè±¸ÀàĞÍ¶¨Òå */
+/* è®¾å¤‡ç±»å‹å®šä¹‰ */
 typedef struct
 {
-    const char *sn;     /* Éè±¸Î¨Ò»±êÊ¶£¬±ÈÈçsnºÅ£¬³¤¶È·¶Î§£¨0,40] */
-    const char *prodId; /* Éè±¸HiLinkÈÏÖ¤ºÅ£¬³¤¶È·¶Î§£¨0,5] */
-    const char *model;  /* Éè±¸ĞÍºÅ£¬³¤¶È·¶Î§£¨0,32] */
-    const char *dev_t;  /* Éè±¸ÀàĞÍ£¬³¤¶È·¶Î§£¨0,4] */
-    const char *manu;   /* Éè±¸ÖÆÔìÉÌ£¬³¤¶È·¶Î§£¨0,4] */
-    const char *mac;    /* Éè±¸MACµØÖ·£¬¹Ì¶¨32×Ö½Ú */
-    const char *hiv;    /* Éè±¸HilinkĞ­Òé°æ±¾£¬³¤¶È·¶Î§£¨0,32] */
-    const char *fwv;    /* Éè±¸¹Ì¼ş°æ±¾£¬³¤¶È·¶Î§[0,64] */
-    const char *hwv;    /* Éè±¸Ó²¼ş°æ±¾£¬³¤¶È·¶Î§[0,64] */
-    const char *swv;    /* Éè±¸Èí¼ş°æ±¾£¬³¤¶È·¶Î§[0,64] */
-    int prot_t;         /* Éè±¸Ğ­ÒéÀàĞÍ£¬È¡Öµ·¶Î§[1,3] */
+    const char *sn;     /* è®¾å¤‡å”¯ä¸€æ ‡è¯†ï¼Œæ¯”å¦‚snå·ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,40] */
+    const char *prodId; /* è®¾å¤‡HiLinkè®¤è¯å·ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,5] */
+    const char *model;  /* è®¾å¤‡å‹å·ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,32] */
+    const char *dev_t;  /* è®¾å¤‡ç±»å‹ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,4] */
+    const char *manu;   /* è®¾å¤‡åˆ¶é€ å•†ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,4] */
+    const char *mac;    /* è®¾å¤‡MACåœ°å€ï¼Œå›ºå®š32å­—èŠ‚ */
+    const char *hiv;    /* è®¾å¤‡Hilinkåè®®ç‰ˆæœ¬ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,32] */
+    const char *fwv;    /* è®¾å¤‡å›ºä»¶ç‰ˆæœ¬ï¼Œé•¿åº¦èŒƒå›´[0,64] */
+    const char *hwv;    /* è®¾å¤‡ç¡¬ä»¶ç‰ˆæœ¬ï¼Œé•¿åº¦èŒƒå›´[0,64] */
+    const char *swv;    /* è®¾å¤‡è½¯ä»¶ç‰ˆæœ¬ï¼Œé•¿åº¦èŒƒå›´[0,64] */
+    int prot_t;         /* è®¾å¤‡åè®®ç±»å‹ï¼Œå–å€¼èŒƒå›´[1,3] */
 } dev_info_t;
 
-/* ·şÎñÀàĞÍ¶¨Òå */
+/* æœåŠ¡ç±»å‹å®šä¹‰ */
 typedef struct
 {
-    const char *st;     /* ·şÎñÀàĞÍ£¬³¤¶È·¶Î§£¨0,32] */
-    const char *svc_id; /* ·şÎñID£¬³¤¶È·¶Î§£¨0,64] */
+    const char *st;     /* æœåŠ¡ç±»å‹ï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,32] */
+    const char *svc_id; /* æœåŠ¡IDï¼Œé•¿åº¦èŒƒå›´ï¼ˆ0,64] */
 } svc_info_t;
 
-/* Éè±¸ĞÅÏ¢¶¨Òå */
+/* è®¾å¤‡ä¿¡æ¯å®šä¹‰ */
 dev_info_t dev_info = {
     "Device SN",
     PRODUCT_ID,
@@ -44,30 +44,39 @@ dev_info_t dev_info = {
     "1.0.0",
     PROTOCOL_TYPE};
 
-/* Éè±¸ÀàĞÍÓ¢ÎÄÃûºÍ³§ÉÌÓ¢ÎÄÃû³¤¶ÈÖ®ºÍ²»ÄÜ³¬¹ı17×Ö½Ú */
+void dev_info_init(dev_info_t *dev_info)
+{
+    dev_info->prodId = PRODUCT_ID;
+    dev_info->hiv = "1.0.0";
+    dev_info->fwv = "1.0.0";
+    dev_info->hwv = "1.0.0";
+    dev_info->swv = "1.0.0";
+    dev_info->prot_t = PROTOCOL_TYPE;
+}
+/* è®¾å¤‡ç±»å‹è‹±æ–‡åå’Œå‚å•†è‹±æ–‡åé•¿åº¦ä¹‹å’Œä¸èƒ½è¶…è¿‡17å­—èŠ‚ */
 typedef struct
 {
-    const char *devTypeName; /* Éè±¸ÀàĞÍÓ¢ÎÄÃû³Æ */
-    const char *manuName;    /* ³§ÉÌÓ¢ÎÄÃû³Æ */
+    const char *devTypeName; /* è®¾å¤‡ç±»å‹è‹±æ–‡åç§° */
+    const char *manuName;    /* å‚å•†è‹±æ–‡åç§° */
 } DevNameEn;
 
-/* Éè±¸Ãû³Æ¶¨Òå */
+/* è®¾å¤‡åç§°å®šä¹‰ */
 DevNameEn g_devNameEn = {
     DEVICE_TYPE_NAME,
     MANUAFACTURER_NAME};
 
-/* ·şÎñĞÅÏ¢¶¨Òå */
+/* æœåŠ¡ä¿¡æ¯å®šä¹‰ */
 int gSvcNum = 1;
 svc_info_t gSvcInfo[] = {
     {"binarySwitch", "switch"}};
 
-/* ACĞÅÏ¢ */
+/* ACä¿¡æ¯ */
 unsigned char A_C[48] = {
     0x49, 0x3F, 0x45, 0x4A, 0x3A, 0x72, 0x38, 0x7B, 0x36, 0x32, 0x50, 0x3C, 0x49, 0x39, 0x62, 0x38,
     0x72, 0xCB, 0x6D, 0xC5, 0xAE, 0xE5, 0x4A, 0x82, 0xD3, 0xE5, 0x6D, 0xF5, 0x36, 0x82, 0x62, 0xEB,
     0x89, 0x30, 0x6C, 0x88, 0x32, 0x56, 0x23, 0xFD, 0xB8, 0x67, 0x90, 0xA7, 0x7B, 0x61, 0x1E, 0xAE};
 
-/* BIĞÅÏ¢ */
+/* BIä¿¡æ¯ */
 char *bi_rsacipher = "611E3824A1C3EC57E2D62BD2CFA1279C"
                      "4AE847BB4EDD69011A68C92C37005BA1"
                      "F8664921ED8FA283870296CA532375D1"
@@ -85,66 +94,66 @@ char *bi_rsacipher = "611E3824A1C3EC57E2D62BD2CFA1279C"
                      "206FF15B17F655F23DBA781D1AF110F7"
                      "76E38F60CB11BEFD1CE44169E9B53FE2";
 
-/* »ñÈ¡¼ÓÃÜ AC ²ÎÊı  */
+/* è·å–åŠ å¯† AC å‚æ•°  */
 unsigned char *hilink_get_auto_ac(void)
 {
     return A_C;
 }
 
-/* »ñÈ¡¼ÓÃÜ BI ²ÎÊı */
+/* è·å–åŠ å¯† BI å‚æ•° */
 char *hilink_get_auto_bi_rsa_cipher(void)
 {
     return bi_rsacipher;
 }
 
 /*
- * ĞŞ¸Ä·şÎñµ±Ç°×Ö¶ÎÖµ
- * svcIdÎª·şÎñµÄID£¬payloadÎª½ÓÊÕµ½ĞèÒªĞŞ¸ÄµÄJson¸ñÊ½µÄ×Ö¶ÎÓëÆäÖµ£¬lenÎªpayloadµÄ³¤¶È
- * ·µ»Ø0±íÊ¾·şÎñ×´Ì¬ÖµĞŞ¸Ä³É¹¦£¬²»ĞèÒªµ×²ãÉè±¸Ö÷¶¯ÉÏ±¨£¬ÓÉHilink Device SDKÉÏ±¨£»
- * ·µ»Ø-101±íÊ¾»ñµÃ±¨ÎÄ²»·ûºÏÒªÇó£»
- * ·µ»Ø-111±íÊ¾·şÎñ×´Ì¬ÖµÕıÔÚĞŞ¸ÄÖĞ£¬ĞŞ¸Ä³É¹¦ºóµ×²ãÉè±¸±ØĞëÖ÷¶¯ÉÏ±¨£»
+ * ä¿®æ”¹æœåŠ¡å½“å‰å­—æ®µå€¼
+ * svcIdä¸ºæœåŠ¡çš„IDï¼Œpayloadä¸ºæ¥æ”¶åˆ°éœ€è¦ä¿®æ”¹çš„Jsonæ ¼å¼çš„å­—æ®µä¸å…¶å€¼ï¼Œlenä¸ºpayloadçš„é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæœåŠ¡çŠ¶æ€å€¼ä¿®æ”¹æˆåŠŸï¼Œä¸éœ€è¦åº•å±‚è®¾å¤‡ä¸»åŠ¨ä¸ŠæŠ¥ï¼Œç”±Hilink Device SDKä¸ŠæŠ¥ï¼›
+ * è¿”å›-101è¡¨ç¤ºè·å¾—æŠ¥æ–‡ä¸ç¬¦åˆè¦æ±‚ï¼›
+ * è¿”å›-111è¡¨ç¤ºæœåŠ¡çŠ¶æ€å€¼æ­£åœ¨ä¿®æ”¹ä¸­ï¼Œä¿®æ”¹æˆåŠŸååº•å±‚è®¾å¤‡å¿…é¡»ä¸»åŠ¨ä¸ŠæŠ¥ï¼›
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len)
 {
     log_info("svcId:%d\n", svcId);
     log_info("payload:%s,len:%d\n", payload, len);
     cJSON *root = cJSON_Parse(payload);
-
+    free(root);
     return 0;
 }
 
 /*
- * »ñÈ¡·şÎñ×Ö¶ÎÖµ
- * svcId±íÊ¾·şÎñID¡£³§ÉÌÊµÏÖ¸Ãº¯ÊıÊ±£¬ĞèÒª¶ÔsvcId½øĞĞÅĞ¶Ï£»
- * in±íÊ¾½ÓÊÕµ½µÄJson¸ñÊ½µÄ×Ö¶ÎÓëÆäÖµ£»
- * inLen±íÊ¾½ÓÊÕµ½µÄinµÄ³¤¶È£»
- * out±íÊ¾±£´æ·şÎñ×Ö¶ÎÖµÄÚÈİµÄÖ¸Õë,ÄÚ´æÓÉ³§ÉÌ¿ª±Ù£¬Ê¹ÓÃÍê³Éºó£¬ÓÉHilink Device SDKÊÍ·Å£»
- * outLen±íÊ¾¶ÁÈ¡µ½µÄpayloadµÄ³¤¶È£»
- * ·µ»Ø0±íÊ¾·şÎñ×´Ì¬×Ö¶ÎÖµ»ñÈ¡³É¹¦£¬·µ»Ø·Ç0±íÊ¾»ñÈ¡·şÎñ×´Ì¬×Ö¶ÎÖµ²»³É¹¦¡£
+ * è·å–æœåŠ¡å­—æ®µå€¼
+ * svcIdè¡¨ç¤ºæœåŠ¡IDã€‚å‚å•†å®ç°è¯¥å‡½æ•°æ—¶ï¼Œéœ€è¦å¯¹svcIdè¿›è¡Œåˆ¤æ–­ï¼›
+ * inè¡¨ç¤ºæ¥æ”¶åˆ°çš„Jsonæ ¼å¼çš„å­—æ®µä¸å…¶å€¼ï¼›
+ * inLenè¡¨ç¤ºæ¥æ”¶åˆ°çš„inçš„é•¿åº¦ï¼›
+ * outè¡¨ç¤ºä¿å­˜æœåŠ¡å­—æ®µå€¼å†…å®¹çš„æŒ‡é’ˆ,å†…å­˜ç”±å‚å•†å¼€è¾Ÿï¼Œä½¿ç”¨å®Œæˆåï¼Œç”±Hilink Device SDKé‡Šæ”¾ï¼›
+ * outLenè¡¨ç¤ºè¯»å–åˆ°çš„payloadçš„é•¿åº¦ï¼›
+ * è¿”å›0è¡¨ç¤ºæœåŠ¡çŠ¶æ€å­—æ®µå€¼è·å–æˆåŠŸï¼Œè¿”å›é0è¡¨ç¤ºè·å–æœåŠ¡çŠ¶æ€å­—æ®µå€¼ä¸æˆåŠŸã€‚
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen)
 {
     log_info("svcId:%d\n", svcId);
     log_info("in:%s,len:%d\n", in, inLen);
     cJSON *root = cJSON_Parse(in);
-    
+    free(root);
     return 0;
 }
 
 /*
- * »ñÈ¡Éè±¸snºÅ
- * ×¢Òâ: snÖ¸ÏòµÄ×Ö·û´®³¤¶ÈÎª0Ê±½«Ê¹ÓÃÉè±¸macµØÖ·×÷Îªsn
+ * è·å–è®¾å¤‡snå·
+ * æ³¨æ„: snæŒ‡å‘çš„å­—ç¬¦ä¸²é•¿åº¦ä¸º0æ—¶å°†ä½¿ç”¨è®¾å¤‡macåœ°å€ä½œä¸ºsn
  */
 void HilinkGetDeviceSn(unsigned int len, char *sn)
 {
-    /* ÔÚ´Ë´¦Ìí¼ÓÊµÏÖ´úÂë, ½«sn¸³Öµ¸ø*sn»Ø´« */
+    /* åœ¨æ­¤å¤„æ·»åŠ å®ç°ä»£ç , å°†snèµ‹å€¼ç»™*snå›ä¼  */
     return;
 }
 
 /*
- * »ñÈ¡Éè±¸Ïà¹Ø°æ±¾ºÅ
- * ·µ»Ø0±íÊ¾°æ±¾ºÅ»ñÈ¡³É¹¦£¬·µ»ØÆäËû±íÊ¾°æ±¾ºÅ»ñÈ¡Ê§°Ü
- * ×¢Òâ£¬´Ë½Ó¿ÚÎªHiLinkÄÚ²¿µ÷ÓÃº¯Êı
+ * è·å–è®¾å¤‡ç›¸å…³ç‰ˆæœ¬å·
+ * è¿”å›0è¡¨ç¤ºç‰ˆæœ¬å·è·å–æˆåŠŸï¼Œè¿”å›å…¶ä»–è¡¨ç¤ºç‰ˆæœ¬å·è·å–å¤±è´¥
+ * æ³¨æ„ï¼Œæ­¤æ¥å£ä¸ºHiLinkå†…éƒ¨è°ƒç”¨å‡½æ•°
  */
 int getDeviceVersion(char **firmwareVer, char **softwareVer, char **hardwareVer)
 {
@@ -155,19 +164,19 @@ int getDeviceVersion(char **firmwareVer, char **softwareVer, char **hardwareVer)
 }
 
 /*
- * »ñÈ¡SoftApÅäÍøPINÂë
- * ·µ»ØÖµÎª8Î»Êı×ÖPINÂë, ·µ»Ø-1±íÊ¾Ê¹ÓÃHiLink SDKµÄÄ¬ÈÏPINÂë
- * ¸Ã½Ó¿ÚĞèÉè±¸¿ª·¢ÕßÊµÏÖ
+ * è·å–SoftApé…ç½‘PINç 
+ * è¿”å›å€¼ä¸º8ä½æ•°å­—PINç , è¿”å›-1è¡¨ç¤ºä½¿ç”¨HiLink SDKçš„é»˜è®¤PINç 
+ * è¯¥æ¥å£éœ€è®¾å¤‡å¼€å‘è€…å®ç°
  */
 int HiLinkGetPinCode(void)
 {
-    /* ²âÊÔÊ±£¬Õâ¸öÊı×Ö¿ÉÒÔËæ±ã¸Ä£¬Ö»ÒªÊÇ8Î»Êı×Ö¼´¿É */
+    /* æµ‹è¯•æ—¶ï¼Œè¿™ä¸ªæ•°å­—å¯ä»¥éšä¾¿æ”¹ï¼Œåªè¦æ˜¯8ä½æ•°å­—å³å¯ */
     return 12345678;
 }
 
 /*
- * ²éÑ¯µ±Ç°Éè±¸Ãô¸ĞĞÔ±êÊ¶
- * ·µ»Ø0Îª·ÇÃô¸ĞÉè±¸£¬·µ»Ø1ÎªÃô¸ĞÉè±¸
+ * æŸ¥è¯¢å½“å‰è®¾å¤‡æ•æ„Ÿæ€§æ ‡è¯†
+ * è¿”å›0ä¸ºéæ•æ„Ÿè®¾å¤‡ï¼Œè¿”å›1ä¸ºæ•æ„Ÿè®¾å¤‡
  */
 int HILINK_IsSensitiveDevice(void)
 {

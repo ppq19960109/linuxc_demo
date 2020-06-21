@@ -8,6 +8,8 @@ extern "C"
 
 #include "log.h"
 #include "cJSON.h"
+#include <stdlib.h>
+
 #define ETH_NAME "ens33" //"eth0"
 
     int get_local_ip(const char *eth_inf, char *ip, unsigned char len);

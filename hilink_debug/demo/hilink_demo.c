@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: HiLink SDKµÄdemo³ÌĞò
+ * Description: HiLink SDKçš„demoç¨‹åº
  * Create: 2019-03-05
  */
 #include <stdio.h>
@@ -39,7 +39,7 @@ int main(void)
     write_to_bottom(0);
     printf("Program is started.\r\n");
 
-    /* hilink mainĞèÒªÔËĞĞ£¬sleep 1s±£Ö¤½ø³Ì²»»áÍË³ö */
+    /* hilink mainéœ€è¦è¿è¡Œï¼Œsleep 1sä¿è¯è¿›ç¨‹ä¸ä¼šé€€å‡º */
     while (1)
     {
         sleep(1);

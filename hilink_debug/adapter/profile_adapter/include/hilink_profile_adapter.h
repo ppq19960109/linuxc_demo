@@ -1,8 +1,8 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: HiLink��Ʒ����ͷ�ļ�
+ * Description: HiLink产品适配头文件
  * Create: 2019-04-20
- * Notes: ���ļ��еĽӿ���Ҫ�����ṩ������������ʹ�ã�Ϊ��ǰ����ݣ������Ͻӿ��ݲ������±���淶����.
+ * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
  */
 #ifndef __HILINK_PROFILE_ADAPTER_H__
 #define __HILINK_PROFILE_ADAPTER_H__
@@ -11,58 +11,58 @@
 extern "C" {
 #endif
 
-/* �豸�汾��Ϣ */
+/* 设备版本信息 */
 #define FIRMWARE_VER  "20000"
 #define SOFTWARE_VER  "1.0.3"
 #define HARDWARE_VER  "20000"
 
-/* �豸��Ʒ��Ϣ */
+/* 设备产品信息 */
 #define PRODUCT_ID    "1011"
 #define DEVICE_TYPE   "01D"
 #define MANUAFACTURER "011"
 #define DEVICE_MODEL  "SP mini3-HL"
 #define HILINK_VER    "1.0.0"
 
-/* ��ȷ���豸����Ӣ�����ͳ���Ӣ��������֮�Ͳ�����17�ֽ� */
+/* 请确保设备类型英文名和厂商英文名长度之和不超过17字节 */
 #define DEVICE_TYPE_NAME   "Switch"
 #define MANUAFACTURER_NAME "Broadlink"
 
-/* ͨ��Э������: WiFi */
+/* 通信协议类型: WiFi */
 #define PROTOCOL_TYPE 1
 
-/* ��ȡBI �����ӿں��� */
+/* 获取BI 参数接口函数 */
 char *hilink_get_auto_bi_rsa_cipher(void);
 
-/* ��ȡAC �����ӿں��� */
+/* 获取AC 参数接口函数 */
 unsigned char *hilink_get_auto_ac(void);
 
 /*
- * �޸ķ���ǰ�ֶ�ֵ
- * svcIdΪ�����ID��payloadΪ���յ���Ҫ�޸ĵ�Json��ʽ���ֶ�����ֵ��lenΪpayload�ĳ���
- * ����0��ʾ����״ֵ̬�޸ĳɹ�������Ҫ�ײ��豸�����ϱ�����Hilink Device SDK�ϱ���
- * ����-101��ʾ��ñ��Ĳ�����Ҫ��
- * ����-111��ʾ����״ֵ̬�����޸��У��޸ĳɹ���ײ��豸���������ϱ���
+ * 修改服务当前字段值
+ * svcId为服务的ID，payload为接收到需要修改的Json格式的字段与其值，len为payload的长度
+ * 返回0表示服务状态值修改成功，不需要底层设备主动上报，由Hilink Device SDK上报；
+ * 返回-101表示获得报文不符合要求；
+ * 返回-111表示服务状态值正在修改中，修改成功后底层设备必须主动上报；
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len);
 
 /*
- * ��ȡ�����ֶ�ֵ
- * svcId��ʾ����ID������ʵ�ָú���ʱ����Ҫ��svcId�����жϣ�
- * in��ʾ���յ���Json��ʽ���ֶ�����ֵ��
- * inLen��ʾ���յ���in�ĳ��ȣ�
- * out��ʾ��������ֶ�ֵ���ݵ�ָ��,�ڴ��ɳ��̿��٣�ʹ����ɺ���Hilink Device SDK�ͷţ�
- * outLen��ʾ��ȡ����payload�ĳ��ȣ�
- * ����0��ʾ����״̬�ֶ�ֵ��ȡ�ɹ������ط�0��ʾ��ȡ����״̬�ֶ�ֵ���ɹ���
+ * 获取服务字段值
+ * svcId表示服务ID。厂商实现该函数时，需要对svcId进行判断；
+ * in表示接收到的Json格式的字段与其值；
+ * inLen表示接收到的in的长度；
+ * out表示保存服务字段值内容的指针,内存由厂商开辟，使用完成后，由Hilink Device SDK释放；
+ * outLen表示读取到的payload的长度；
+ * 返回0表示服务状态字段值获取成功，返回非0表示获取服务状态字段值不成功。
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen);
 
 /*
- * ��ȡ�豸sn��
- * ע��: snָ����ַ�������Ϊ0ʱ��ʹ���豸mac��ַ��Ϊsn
+ * 获取设备sn号
+ * 注意: sn指向的字符串长度为0时将使用设备mac地址作为sn
  */
 void HilinkGetDeviceSn(unsigned int len, char *sn);
 
-/* ��ȡ��ǰ�豸�汾�� */
+/* 获取当前设备版本号 */
 int getDeviceVersion(char **firmwareVer, char **softwareVer, char **hardwareVer);
 
 #ifdef __cplusplus
