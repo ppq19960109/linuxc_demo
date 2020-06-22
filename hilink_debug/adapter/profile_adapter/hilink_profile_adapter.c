@@ -44,15 +44,15 @@ dev_info_t dev_info = {
     "1.0.0",
     PROTOCOL_TYPE};
 
-void dev_info_init(dev_info_t *dev_info)
-{
-    dev_info->prodId = PRODUCT_ID;
-    dev_info->hiv = "1.0.0";
-    dev_info->fwv = "1.0.0";
-    dev_info->hwv = "1.0.0";
-    dev_info->swv = "1.0.0";
-    dev_info->prot_t = PROTOCOL_TYPE;
-}
+// void dev_info_init(dev_info_t *dev_info)
+// {
+//     dev_info->prodId = PRODUCT_ID;
+//     dev_info->hiv = "1.0.0";
+//     dev_info->fwv = "1.0.0";
+//     dev_info->hwv = "1.0.0";
+//     dev_info->swv = "1.0.0";
+//     dev_info->prot_t = PROTOCOL_TYPE;
+// }
 /* 设备类型英文名和厂商英文名长度之和不能超过17字节 */
 typedef struct
 {

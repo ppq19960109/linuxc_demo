@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
         if (arg == 1)
         {
             log_debug("net_server\n");
-            net_server_epoll();
+            net_server_input();
         }
         else
         {

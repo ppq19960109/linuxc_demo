@@ -7,10 +7,22 @@
  */
 #include "hilink_profile_bridge.h"
 
+#include "hilink_profile_adapter.h"
+#include "protocol_cover.h"
+
 #ifndef NULL
 #define NULL 0
 #endif
 
+void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
+{
+    strcpy(brgDevInfo->prodId, PRODUCT_ID);
+    strcpy(brgDevInfo->hiv, "1.0.0");
+    strcpy(brgDevInfo->fwv, "1.0.0");
+    strcpy(brgDevInfo->hwv, "1.0.0");
+    strcpy(brgDevInfo->swv, "1.0.0");
+    brgDevInfo->protType = PROTOCOL_TYPE;
+}
 /*
  * 获取设备的设备信息
  * 该函数由设备开发者或厂商实现
@@ -19,13 +31,28 @@
  * 返回0: 设备信息获取成功，devInfo指向的设备信息正确有效
  * 返回非0: 设备信息获取失败，devInfo指向的设备信息无效
  */
-int HilinkGetBrgDevInfo(const char* sn, BrgDevInfo* devInfo)
+int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
 {
     /* 厂商实现此接口 */
-    if ((sn == NULL) || (devInfo == NULL)) {
+    if ((sn == NULL) || (devInfo == NULL))
+    {
         return -1;
     }
-    return 0;
+    dev_data_t *ptr;
+    list_for_each_entry(ptr, &protocol_data.dev_list, node)
+    {
+        if (strcmp(ptr->DeviceId, sn)==0)
+        {
+            BrgDevInfo_init(devInfo);
+            strcpy(devInfo->sn, ptr->DeviceId);
+            strcpy(devInfo->model, ptr->ModelId);
+            strcpy(devInfo->devType, DEVICE_TYPE);
+            strcpy(devInfo->mac, ptr->GatewayId);
+            strcpy(devInfo->manu, MANUAFACTURER);
+            return 0;
+        }
+    }
+    return -1;
 }
 
 /*
@@ -37,12 +64,15 @@ int HilinkGetBrgDevInfo(const char* sn, BrgDevInfo* devInfo)
  * 返回0: 服务信息获取成功，svcInfo指向的服务信息正确有效
  * 返回非0: 服务信息获取失败，svcInfo指向的服务信息无效
  */
-int HilinkGetBrgSvcInfo(const char* sn, BrgDevSvcInfo* svcInfo, unsigned int* svcNum)
+int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *svcNum)
 {
     /* 厂商实现此接口 */
-    if ((sn == NULL) || (svcInfo == NULL) || (svcNum == NULL)) {
+    if ((sn == NULL) || (svcInfo == NULL) || (svcNum == NULL))
+    {
         return -1;
     }
+    dev_data_t *dev_buf = list_get_by_id(sn,&protocol_data.dev_list);
+
     return 0;
 }
 
@@ -57,12 +87,15 @@ int HilinkGetBrgSvcInfo(const char* sn, BrgDevSvcInfo* svcInfo, unsigned int* sv
  * 返回M2M_SVC_STUTAS_VALUE_MODIFYING(-111): 服务状态值正在修改中，修改成功后底层设备必须主动上报
  * 返回M2M_NO_ERROR(0): 服务状态值修改成功，不需要底层设备主动上报，由Hilink Device SDK上报
  */
-int HilinkPutBrgDevCharState(const char* sn, const char* svcId, const char* payload, unsigned int len)
+int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payload, unsigned int len)
 {
     /* 厂商实现此接口 */
-    if ((sn == NULL) || (svcId == NULL) || (payload == NULL)) {
+    if ((sn == NULL) || (svcId == NULL) || (payload == NULL))
+    {
         return -1;
     }
+    dev_data_t *dev_buf = list_get_by_id(sn,&protocol_data.dev_list);
+
     return 0;
 }
 
@@ -77,12 +110,15 @@ int HilinkPutBrgDevCharState(const char* sn, const char* svcId, const char* payl
  * 返回非0: 获取服务状态失败
  * 注意: out需要动态申请，Hilink Device SDK使用完成后会调用hilink_free接口释放
  */
-int HilinkGetBrgDevCharState(const char* sn, GetBrgDevCharState* in, char** out, unsigned int* outLen)
+int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out, unsigned int *outLen)
 {
     /* 厂商实现此接口 */
-    if ((sn == NULL) || (in == NULL) || (out == NULL) || (outLen == NULL)) {
+    if ((sn == NULL) || (in == NULL) || (out == NULL) || (outLen == NULL))
+    {
         return -1;
     }
+    dev_data_t *dev_buf = list_get_by_id(sn,&protocol_data.dev_list);
+
     return 0;
 }
 
@@ -91,11 +127,14 @@ int HilinkGetBrgDevCharState(const char* sn, GetBrgDevCharState* in, char** out,
  * 该函数由设备开发者或厂商实现
  * sn: Bridge桥下挂设备唯一标识
  */
-int HilinkDelBrgDev(const char* sn)
+int HilinkDelBrgDev(const char *sn)
 {
     /* 厂商实现此接口 */
-    if (sn == NULL) {
+    if (sn == NULL)
+    {
         return -1;
     }
+    list_del_by_id(sn,&protocol_data.dev_list);
+
     return 0;
 }

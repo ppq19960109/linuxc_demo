@@ -3,7 +3,7 @@
 void perr_exit(const char *str)
 {
     perror(str);
-    exit(1);
+    // exit(1);
 }
 
 int Socket(int domain, int type)
@@ -51,6 +51,7 @@ int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     if (connect(sockfd, addr, addrlen) < 0)
     {
         perr_exit("connect error");
+        return -1;
     }
 
     return 0;
@@ -73,6 +74,10 @@ again:
 }
 int Close(int fd)
 {
+    if (fd == 0)
+    {
+        return -1;
+    }
     int n;
     if ((n = close(fd)) == -1)
         perr_exit("close error");
@@ -87,7 +92,23 @@ ssize_t Read(int fd, void *ptr, size_t nbytes)
 again:
     if ((n = read(fd, ptr, nbytes)) == -1)
     {
-        if (errno == EINTR)
+        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+            goto again;
+        else
+            return -1;
+    }
+
+    return n;
+}
+
+ssize_t Recv(int fd, void *ptr, size_t nbytes,int flag)
+{
+    ssize_t n;
+
+again:
+    if ((n = recv(fd, ptr, nbytes,flag)) == -1)
+    {
+        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
             goto again;
         else
             return -1;
@@ -103,7 +124,7 @@ ssize_t Write(int fd, const void *ptr, size_t nbytes)
 again:
     if ((n = write(fd, ptr, nbytes)) == -1)
     {
-        if (errno == EINTR)
+        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
             goto again;
         else
             return -1;

@@ -17,6 +17,7 @@
 #define SERVER_PORT 9090
 
 int net_server_srart();
+void net_server_input();
 void net_server();
 void net_server_fork();
 void net_server_pthread();

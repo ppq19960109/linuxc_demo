@@ -20,6 +20,48 @@ int net_server_srart()
     return sockfd;
 }
 
+void net_server_input()
+{
+    char buf[255];
+    int readLen;
+    struct sockaddr_in server_client;
+    socklen_t addrlen;
+
+    int sockfd = net_server_srart();
+    while (1)
+    {
+        int clientfd = Accept(sockfd, (struct sockaddr *)&server_client, &addrlen);
+        if (clientfd != -1)
+        {
+            log_debug("client ip: %s,port: %d\n", inet_ntoa(server_client.sin_addr), ntohs(server_client.sin_port));
+            while (1)
+            {
+                memset(buf, 0, sizeof(buf));
+                scanf("%s", buf);
+
+                readLen = strlen(buf);
+                // log_debug("Write:%s len:%d\n", buf, readLen);
+                Write(clientfd, buf, readLen);
+                // readLen = Read(clientfd, buf, sizeof(buf));
+                // log_debug("Read:%s len:%d\n", buf, readLen);
+                // if (readLen == 0)
+                // {
+                //     log_debug("client close");
+                //     break;
+                // }
+                // else if (readLen < 0)
+                // {
+                // }
+                // else
+                // {
+                //     Write(clientfd, buf, readLen);
+                // }
+            }
+        }
+    }
+    Close(sockfd);
+}
+
 void net_server()
 {
     char buf[255];
@@ -550,7 +592,6 @@ void net_server_poll()
                         {
                             Close(clientfd);
                             peerfd[i].fd = -1;
-                           
                         }
                     }
                     else

@@ -3,10 +3,6 @@
  * Description: HiLink SDK的demo程序
  * Create: 2019-03-05
  */
-#include <stdio.h>
-#include <unistd.h>
-#include <netinet/in.h>
-
 #include "hilink.h"
 #include "hilink_network_adapter.h"
 #include "hilink_softap_adapter.h"
@@ -35,15 +31,25 @@ int main(void)
     log_info("broadcastIp:%s\n", hilink_data.broadcastIp);
     get_local_all_ip(hilink_data.ip);
 
-    read_from_bottom(0);
-    write_to_bottom(0);
-    printf("Program is started.\r\n");
+    protlcol_init();
+    // read_from_local(0);
+    local_dev_t local_dev;
+    local_dev.FrameNumber=11;
+    strcpy(local_dev.GatewayId,"ed334ggeewe");
+    strcpy(local_dev.Type,"Ctrl");
+    strcpy(local_dev.Data.DeviceId,"123456787654310");
+    strcpy(local_dev.Data.ModelId,"500c32");
+    strcpy(local_dev.Data.Key,"Switch");
 
+    write_to_local(&local_dev);
+    printf("Program is started.\r\n");
+    
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
     while (1)
     {
         sleep(1);
         // hilink_msleep(1000);
     }
+    protlcol_destory();
     return 0;
 }
