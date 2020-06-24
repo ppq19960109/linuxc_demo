@@ -20,7 +20,7 @@ extern "C"
     {
         char GatewayId[16];
         char DeviceType[16];
-        char DeviceId[16];
+        char DeviceId[18];
         char ModelId[16];
         char Version[16];
         char Secret[40];
@@ -34,7 +34,7 @@ extern "C"
 
     struct local_data_t
     {
-        char DeviceId[16];
+        char DeviceId[18];
         char ModelId[16];
         char Key[16];
         char Value[16];
@@ -59,6 +59,7 @@ extern "C"
 
     void protlcol_init();
     void protlcol_destory();
+    char char_copy_from_json(cJSON *json, char *src, char *dst);
     int str_copy_from_json(cJSON *json, char *src, char *dst);
 
     int read_from_local(const char *json);

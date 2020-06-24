@@ -84,6 +84,16 @@ static int str_search(const char *key, const char **pstr, int num)
     return -1;
 }
 
+char char_copy_from_json(cJSON *json, char *src, char *dst)
+{
+    cJSON *obj = cJSON_GetObjectItem(json, src);
+    if (obj != NULL)
+    {
+        *dst=atoi(obj->valuestring);
+        return 0;
+    }
+    return -1;
+}
 int str_copy_from_json(cJSON *json, char *src, char *dst)
 {
     cJSON *obj = cJSON_GetObjectItem(json, src);
@@ -239,6 +249,8 @@ int read_from_local(const char *json)
     break;
     case 6:
     {
+        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
+        dev_private_event(dev_buf, Data);
     }
     break;
     case 7:
