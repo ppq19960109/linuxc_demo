@@ -1,6 +1,6 @@
 
-CROSS_COMPILE =
-CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
+CROSS_COMPILE = armv8l-linux-gnueabihf-
+CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc -mcpu=cortex-a53  -march=armv8-a
 RM = rm -f
 
 TOPDIR = .
@@ -9,7 +9,7 @@ SRC_PATH = $(TOPDIR)
 
 
 
-CFLAGS += -I$(SRC_INCPATH)
+CFLAGS += -I$(SRC_INCPATH) 
 CFLAGS += -g -Wall
 
 LDFLAGS += -L$(TOPDIR)$(TOPDIR)/libs
@@ -34,7 +34,7 @@ TARGET := test
 all: $(TARGET)
 
 $(TARGET) : $(OBJ)
-	$(CC) $^  $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
+	$(CC) $^  $(CFLAGS)   -o $@
 
 clean :
 	$(RM) $(TARGET)

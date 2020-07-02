@@ -33,6 +33,7 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
  */
 int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
 {
+    log_debug("HilinkGetBrgDevInfo");
     /* 厂商实现此接口 */
     if ((sn == NULL) || (devInfo == NULL))
     {
@@ -66,6 +67,7 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
  */
 int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *svcNum)
 {
+    log_debug("HilinkGetBrgSvcInfo");
     /* 厂商实现此接口 */
     if ((sn == NULL) || (svcInfo == NULL) || (svcNum == NULL))
     {
@@ -89,6 +91,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
  */
 int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payload, unsigned int len)
 {
+    log_debug("HilinkPutBrgDevCharState");
     /* 厂商实现此接口 */
     if ((sn == NULL) || (svcId == NULL) || (payload == NULL))
     {
@@ -112,6 +115,7 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
  */
 int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out, unsigned int *outLen)
 {
+    log_debug("HilinkGetBrgDevCharState");
     /* 厂商实现此接口 */
     if ((sn == NULL) || (in == NULL) || (out == NULL) || (outLen == NULL))
     {
@@ -129,6 +133,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
  */
 int HilinkDelBrgDev(const char *sn)
 {
+    log_debug("HilinkDelBrgDev");
     /* 厂商实现此接口 */
     if (sn == NULL)
     {

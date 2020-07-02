@@ -13,7 +13,10 @@ void list_del_dev(dev_data_t *ptr)
 int list_del_by_id(const char *id, struct list_head *head)
 {
     dev_data_t *ptr, *next;
-
+    if (head == NULL)
+    {
+        return -1;
+    }
     list_for_each_entry_safe(ptr, next, head, node)
     {
         if (strcmp(ptr->DeviceId, id))
@@ -28,7 +31,10 @@ int list_del_by_id(const char *id, struct list_head *head)
 void list_del_all(struct list_head *head)
 {
     dev_data_t *ptr, *next;
-
+    if (head == NULL)
+    {
+        return;
+    }
     list_for_each_entry_safe(ptr, next, head, node)
     {
         list_del_dev(ptr);
@@ -37,7 +43,10 @@ void list_del_all(struct list_head *head)
 dev_data_t *list_get_by_id(const char *id, struct list_head *head)
 {
     dev_data_t *ptr;
-
+    if (head == NULL)
+    {
+        return NULL;
+    }
     list_for_each_entry(ptr, head, node)
     {
         if (strcmp(ptr->DeviceId, id) == 0)
@@ -50,6 +59,10 @@ dev_data_t *list_get_by_id(const char *id, struct list_head *head)
 void list_print_all(struct list_head *head)
 {
     dev_data_t *ptr;
+    if (head == NULL)
+    {
+        return;
+    }
     int i = 0;
     list_for_each_entry(ptr, head, node)
     {

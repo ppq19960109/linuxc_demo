@@ -32,10 +32,10 @@ const char data[] = {};
 int main(int agrc, char *agrv[])
 {
     printf("main start \n");
-    int* a=1;
+    // int* a=1;
 
-    int crc=CalCrc(0,data,sizeof(data));
-    printf("crc value:%x len:%x\n",crc,sizeof(data));
-    printf("main end %d\n",&(*a));
+    // int crc=CalCrc(0,data,sizeof(data));
+    // printf("crc value:%x len:%x\n",crc,sizeof(data));
+    // printf("main end %d\n",&(*a));
     return 0;
 }

@@ -20,7 +20,7 @@ extern "C" {
 #define PRODUCT_ID    "1011"
 #define DEVICE_TYPE   "01D"
 #define MANUAFACTURER "011"
-#define DEVICE_MODEL  "SP mini3-HL"
+#define DEVICE_MODEL  "SP mini3-HL1"
 #define HILINK_VER    "1.0.0"
 
 /* 请确保设备类型英文名和厂商英文名长度之和不超过17字节 */

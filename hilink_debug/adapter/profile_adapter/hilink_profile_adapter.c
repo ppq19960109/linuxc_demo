@@ -32,12 +32,12 @@ typedef struct
 
 /* 设备信息定义 */
 dev_info_t dev_info = {
-    "Device SN",
+    "135792468",//Device SN
     PRODUCT_ID,
-    DEVICE_MODEL,
+    "SP mini3-HL123",
     DEVICE_TYPE,
     MANUAFACTURER,
-    "Device Mac",
+    "234567890123",//Device Mac
     "1.0.0",
     "1.0.0",
     "1.0.0",
@@ -97,12 +97,14 @@ char *bi_rsacipher = "611E3824A1C3EC57E2D62BD2CFA1279C"
 /* 获取加密 AC 参数  */
 unsigned char *hilink_get_auto_ac(void)
 {
+    log_debug("hilink_get_auto_ac");
     return A_C;
 }
 
 /* 获取加密 BI 参数 */
 char *hilink_get_auto_bi_rsa_cipher(void)
 {
+    log_debug("hilink_get_auto_bi_rsa_cipher");
     return bi_rsacipher;
 }
 
@@ -115,8 +117,8 @@ char *hilink_get_auto_bi_rsa_cipher(void)
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len)
 {
-    log_info("svcId:%d\n", svcId);
-    log_info("payload:%s,len:%d\n", payload, len);
+    log_debug("svcId:%d", svcId);
+    log_debug("payload:%s,len:%d", payload, len);
     cJSON *root = cJSON_Parse(payload);
     free(root);
     return 0;
@@ -133,10 +135,15 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen)
 {
-    log_info("svcId:%d\n", svcId);
-    log_info("in:%s,len:%d\n", in, inLen);
+    log_debug("svcId:%d", svcId);
+    log_debug("in:%s,len:%d", in, inLen);
     cJSON *root = cJSON_Parse(in);
     free(root);
+
+    void *svc_out = malloc(sizeof(svc_info_t));
+    memcpy(svc_out, &gSvcInfo, sizeof(svc_info_t));
+    out = (char **)&svc_out;
+    *outLen = 1;
     return 0;
 }
 
@@ -147,6 +154,8 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
 void HilinkGetDeviceSn(unsigned int len, char *sn)
 {
     /* 在此处添加实现代码, 将sn赋值给*sn回传 */
+    log_debug("HilinkGetDeviceSn:%d", len);
+    strcpy(sn,"567892");
     return;
 }
 

@@ -1,39 +1,60 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: softApÊÊÅäÊµÏÖ (ĞèÉè±¸³§ÉÌÊµÏÖ)
+ * Description: softApé€‚é…å®ç° (éœ€è®¾å¤‡å‚å•†å®ç°)
  */
 #include "hilink_softap_adapter.h"
-#include <stdio.h>
+#include "hilink_network_adapter.h"
 
 #include "net_info.h"
 /*
- * »ñÈ¡¹ã²¥ip
- * broadcastIp±íÊ¾´æ·ÅIpµÄ»º³å
- * len±íÊ¾´æ·ÅIpµÄ»º³å³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
- * ×¢Òâ: broadcastIpÎªµã·ÖÊ®½øÖÆ¸ñÊ½
+ * è·å–å¹¿æ’­ip
+ * broadcastIpè¡¨ç¤ºå­˜æ”¾Ipçš„ç¼“å†²
+ * lenè¡¨ç¤ºå­˜æ”¾Ipçš„ç¼“å†²é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
+ * æ³¨æ„: broadcastIpä¸ºç‚¹åˆ†åè¿›åˆ¶æ ¼å¼
  */
 int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 {
+    log_info("HILINK_GetBroadcastIp");
     return get_local_broadcastIp(ETH_NAME,broadcastIp,len);
 }
 
 /*
- * ½«Íø¿¨ÇĞÎªAPÄ£Ê½²¢¿ªÆôsoftApÈÈµã
- * ssid ±íÊ¾ÓÃÓÚ´´½¨softApµÄssid
- * ssidLen±íÊ¾ssid³¤¶È, ×î´óÈ¡Öµ64
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * å°†ç½‘å¡åˆ‡ä¸ºAPæ¨¡å¼å¹¶å¼€å¯softApçƒ­ç‚¹
+ * ssid è¡¨ç¤ºç”¨äºåˆ›å»ºsoftApçš„ssid
+ * ssidLenè¡¨ç¤ºssidé•¿åº¦, æœ€å¤§å–å€¼64
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 {
+    log_info("HILINK_StartSoftAp");
+    system("killall hostapd");
+    system("killall dnsmasq");
+    system("wpa_cli -i wlan0 disable_network 0");
+
+    system("ifconfig wlan0 down");
+    sleep(1);
+    system("ifconfig wlan0 up");
+    sleep(1);
+    system("echo \"1\" > /proc/sys/net/ipv4/ip_forward");
+
+    system("ifconfig wlan0 192.168.72.1");
+
+    system("hostapd /userdata/hostapd_rk3308.conf -B");
+    system("dnsmasq -iwlan0  --dhcp-option=3,192.168.72.1 --dhcp-range=192.168.72.50,192.168.72.200,24h");
+    system("iptables -t nat -A POSTROUTING -s 192.168.72.1/24 -o eth0 -j MASQUERADE");
+
     return 0;
 }
 
 /*
- * ¹Ø±ÕsoftApÈÈµã²¢½«Íø¿¨ÇĞ»ØstationÄ£Ê½
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * å…³é—­softApçƒ­ç‚¹å¹¶å°†ç½‘å¡åˆ‡å›stationæ¨¡å¼
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_StopSoftAp(void)
 {
+    log_info("HILINK_StopSoftAp");
+    system("killall hostapd");
+    system("killall dnsmasq");
     return 0;
 }

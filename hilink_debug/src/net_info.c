@@ -8,9 +8,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include <net/if.h>
+
 #include <arpa/inet.h>
 #include <ifaddrs.h>
+#include <net/if.h>
+#include <linux/sockios.h>
+#include <linux/ethtool.h>
 
 #define MAC_SIZE 18
 #define IP_SIZE 16
@@ -19,7 +22,7 @@ int get_local_ip(const char *eth_inf, char *ip, unsigned char len)
 {
     int sd;
     struct sockaddr_in sin;
-    struct ifreq ifr;
+    struct ifreq ifr = {0};
 
     sd = socket(AF_INET, SOCK_DGRAM, 0);
     if (-1 == sd)
@@ -144,5 +147,80 @@ int get_local_all_ip(char *ip)
 
     freeifaddrs(ifAddrStruct);
 
+    return 0;
+}
+
+// if_name like "ath0", "eth0". Notice: call this function
+// need root privilege.
+// return value:
+// -1 -- error , details can check errno
+// 1 -- interface link up
+// 0 -- interface link down.
+int get_netlink_status(const char *if_name)
+{
+    int skfd;
+    struct ifreq ifr;
+    struct ethtool_value edata;
+
+    edata.cmd = ETHTOOL_GLINK;
+    edata.data = 0;
+
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, if_name, sizeof(ifr.ifr_name) - 1);
+    ifr.ifr_data = (char *)&edata;
+
+    if ((skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
+        return -1;
+
+    if (ioctl(skfd, SIOCETHTOOL, &ifr) == -1)
+    {
+        fprintf(stderr, "%s: ioctl SIOCETHTOOL error [%d] %s\r\n", if_name, errno, strerror(errno));
+        close(skfd);
+        return -1;
+    }
+
+    close(skfd);
+    return edata.data;
+}
+
+int get_link_status(const char *if_name)
+{
+    int sd;
+    struct sockaddr_in sin;
+    struct ifreq ifr;
+
+    sd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (-1 == sd)
+    {
+        printf("socket error: %s\n", strerror(errno));
+        return -1;
+    }
+
+    strncpy(ifr.ifr_name, if_name, IFNAMSIZ);
+    ifr.ifr_name[IFNAMSIZ - 1] = 0;
+    if (ioctl(sd, SIOCGIFFLAGS, (char *)&ifr) < 0)
+    {
+        fprintf(stderr, "%s: ioctl SIOCGIFFLAGS error [%d] %s\r\n", if_name, errno, strerror(errno));
+        close(sd);
+        return -1;
+    }
+
+    if (!(ifr.ifr_flags & IFF_UP))
+    {
+        close(sd);
+        fprintf(stderr, "DEVICE_DOWN\r\n");
+        return 1;
+    }
+
+    if (!(ifr.ifr_flags & IFF_RUNNING))
+    {
+        close(sd);
+        fprintf(stderr, "DEVICE_UNPLUGGED\r\n");
+        return 2;
+    }
+
+    fprintf(stderr, "DEVICE_LINKED\r\n");
+
+    close(sd);
     return 0;
 }

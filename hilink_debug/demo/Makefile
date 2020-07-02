@@ -1,51 +1,56 @@
-#µ±Ç°Â·¾¶
+#å½“å‰è·¯å¾„
 PWD := .
 BASE_PATH := $(PWD)/..
 
+# CROSS = aarch64-linux-gnu-
+CROSS = armv8l-linux-gnueabihf-
+# CROSS = arm-linux-gnueabihf-
 # CC := /opt/toolchains/mips-mti-linux-gnu/2019.09-01/bin/mips-mti-linux-gnu-gcc
 # AR := /opt/toolchains/mips-mti-linux-gnu/2019.09-01/bin/mips-mti-linux-gnu-ar
-CC := gcc
-AR := ar
-#Í·ÎÄ¼şÂ·¾¶
+CC := $(CROSS)gcc
+AR := $(CROSS)ar
+#å¤´æ–‡ä»¶è·¯å¾„
 INCLUDE_PATH := -I$(BASE_PATH)/include
 INCLUDE_PATH += -I$(BASE_PATH)/adapter/network_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/adapter/config_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/adapter/profile_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/adapter/sdk_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/src
-#ÊÊÅäÔ´ÎÄ¼ş
+#é€‚é…æºæ–‡ä»¶
 SOURCE_FILES := $(wildcard $(BASE_PATH)/adapter/network_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/config_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/profile_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/sdk_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/demo/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/*.c)
-#¿âÎÄ¼şÂ·¾¶
+#åº“æ–‡ä»¶è·¯å¾„
 LIB_FILE_PATH := $(BASE_PATH)/lib
 
-#¿âÎÄ¼ş
-# LIB_FILES := -Wl,--start-group -lhilinkdevicesdk -lhilinkota -ldl -Wl,--end-group -lpthread
-LIB_FILES := -Wl,--start-group -lpthread -ldl -lm -Wl,--end-group 
-#±àÒë³öµÄ.oÎÄ¼ş
+#åº“æ–‡ä»¶
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic -ldl -lm -lpthread -Wl,--end-group 
+# LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
+#ç¼–è¯‘å‡ºçš„.oæ–‡ä»¶
+
 OBJECTS_PATH := objs
 OBJECTS := $(patsubst %.c, %.o, $(SOURCE_FILES))
 
-#±àÒëÑ¡Ïî
-COMPILE_FLAGS := -O $(INCLUDE_PATH)
+#ç¼–è¯‘é€‰é¡¹
+
+COMPILE_FLAGS := -O  $(INCLUDE_PATH)
 LINK_FLAGS := -L$(LIB_FILE_PATH) $(LIB_FILES)
 
-#±àÒë¿ªÊ¼
+#ç¼–è¯‘å¼€å§‹
 .PHONY: all
-all: clean hilink
+all: clean hilinkdemo
 
-#ÇåÀí
+#æ¸…ç†
 clean:
 	rm -f $(OBJECTS) hilink
 
-#½ø³Ì
-hilink: $(OBJECTS)
+#è¿›ç¨‹
+hilinkdemo: $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS) $(LINK_FLAGS)
 
-#±àÒë.o
+#ç¼–è¯‘.o
 $(OBJECTS):%.o : %.c
 	$(CC) $(COMPILE_FLAGS) -c $< -o $@

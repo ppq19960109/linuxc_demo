@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2020-2020. All rights reserved.
- * Description: HiLink InterfaceÍ·ÎÄ¼ş
+ * Description: HiLink Interfaceå¤´æ–‡ä»¶
  */
 #ifndef HILINK_INTERFACE_H
 #define HILINK_INTERFACE_H
@@ -15,10 +15,10 @@ typedef struct {
 } HILINK_MemHooks;
 
 /*
- * ×¢²áÄÚ´æ²Ù×÷½Ó¿Úµ½HiLink SDK
- * ´«Èë²ÎÊıÎªÓÃ»§×¢²áµÄÄÚ´æ²Ù×÷º¯Êı½á¹¹ÌåÖ¸Õë
- * ·µ»Ø0³É¹¦£¬·µ»Ø·Ç0Ê§°Ü
- * ×¢Òâ£ºmallocºÍfree½Ó¿Ú±ØĞë³É¶Ô×¢²á
+ * æ³¨å†Œå†…å­˜æ“ä½œæ¥å£åˆ°HiLink SDK
+ * ä¼ å…¥å‚æ•°ä¸ºç”¨æˆ·æ³¨å†Œçš„å†…å­˜æ“ä½œå‡½æ•°ç»“æ„ä½“æŒ‡é’ˆ
+ * è¿”å›0æˆåŠŸï¼Œè¿”å›é0å¤±è´¥
+ * æ³¨æ„ï¼šmallocå’Œfreeæ¥å£å¿…é¡»æˆå¯¹æ³¨å†Œ
  */
 int HILINK_RegisterMemHooks(const HILINK_MemHooks *memHooks);
 

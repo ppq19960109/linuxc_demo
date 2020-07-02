@@ -114,7 +114,7 @@ protocol_data_t protocol_data;
 void protlcol_init()
 {
     INIT_LIST_HEAD(&protocol_data.dev_list);
-    net_client(&protocol_data.socketfd);
+    // net_client(&protocol_data.socketfd);
 }
 
 void protlcol_destory()

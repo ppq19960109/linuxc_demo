@@ -1,126 +1,200 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: ÍøÂçÊÊÅäÊµÏÖ (ĞèÉè±¸³§ÉÌÊµÏÖ)
+ * Description: ç½‘ç»œé€‚é…å®ç° (éœ€è®¾å¤‡å‚å•†å®ç°)
  */
 #include "hilink_network_adapter.h"
-#include <stdio.h>
 
 #include "net_info.h"
 
+char wifi_ssid[32] = "HUAWEI-WDNJ4L";
+char wifi_psk[16] = "1234567890";
 /*
- * »ñÈ¡±¾µØip
- * localIp±íÊ¾´æ·ÅIpµÄ»º³å
- * len±íÊ¾´æ·ÅIpµÄ»º³å³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
- * ×¢Òâ: localIpÎªµã·ÖÊ®½øÖÆ¸ñÊ½
+ * è·å–æœ¬åœ°ip
+ * localIpè¡¨ç¤ºå­˜æ”¾Ipçš„ç¼“å†²
+ * lenè¡¨ç¤ºå­˜æ”¾Ipçš„ç¼“å†²é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
+ * æ³¨æ„: localIpä¸ºç‚¹åˆ†åè¿›åˆ¶æ ¼å¼
  */
 int HILINK_GetLocalIp(char *localIp, unsigned char len)
 {
-    return get_local_ip(ETH_NAME, localIp, len);
+    int ret = get_local_ip(ETH_NAME, localIp, len);
+    log_info("HILINK_GetLocalIp:%s %d", localIp, ret);
+    return ret;
 }
 
 /*
- * »ñÈ¡ÍøÂçmacµØÖ·
- * mac±íÊ¾´æ·ÅMACµØÖ·µÄ»º³å
- * len±íÊ¾»º³å³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
- * ×¢Òâ: mac¸ñÊ½Îªa1b2c3d4e5f6
+ * è·å–ç½‘ç»œmacåœ°å€
+ * macè¡¨ç¤ºå­˜æ”¾MACåœ°å€çš„ç¼“å†²
+ * lenè¡¨ç¤ºç¼“å†²é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
+ * æ³¨æ„: macæ ¼å¼ä¸ºa1b2c3d4e5f6
  */
 int HILINK_GetMacAddr(unsigned char *mac, unsigned char len)
 {
-    return get_local_mac(ETH_NAME, mac, len);
+    log_info("HILINK_GetMacAddr len:%d", len);
+    int ret = get_local_mac(ETH_NAME, mac, len);
+    log_info("HILINK_GetMacAddr:%s %d", mac, ret);
+    return ret;
 }
 
 /*
- * »ñÈ¡WiFi ssid
- * ssid±íÊ¾´æ·ÅWiFi ssidµÄ»º³å
- * ssidLen±íÊ¾WiFi ssidµÄ³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * è·å–WiFi ssid
+ * ssidè¡¨ç¤ºå­˜æ”¾WiFi ssidçš„ç¼“å†²
+ * ssidLenè¡¨ç¤ºWiFi ssidçš„é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_GetWiFiSsid(char *ssid, unsigned int *ssidLen)
 {
+    log_info("HILINK_GetWiFiSsid");
+    strcpy(ssid, wifi_ssid);
+    *ssidLen = strlen(wifi_ssid); //rk3308_net
     return 0;
 }
 
 /*
- * ÉèÖÃWiFiÕËºÅĞÅÏ¢
- * ssid±íÊ¾WiFi ssid
- * ssidLen±íÊ¾WiFi ssidµÄ³¤¶È
- * pwd±íÊ¾WiFiÃÜÂë
- * pwdLen±íÊ¾WiFiÃÜÂë³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
- * ×¢Òâ£º(1) ssidºÍpwdÎª¿Õ±íÊ¾Çå³ıWiFiĞÅÏ¢;
- *       (2) ÉèÖÃµÄWiFiĞÅÏ¢ĞèÒª³Ö¾Ã»¯£¬ÒÔÈ·±£Éè±¸ÖØÆôºóÒÀÈ»¿ÉÒÔ»ñµÃWiFiÅäÖÃĞÅÏ¢
+ * è®¾ç½®WiFiè´¦å·ä¿¡æ¯
+ * ssidè¡¨ç¤ºWiFi ssid
+ * ssidLenè¡¨ç¤ºWiFi ssidçš„é•¿åº¦
+ * pwdè¡¨ç¤ºWiFiå¯†ç 
+ * pwdLenè¡¨ç¤ºWiFiå¯†ç é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
+ * æ³¨æ„ï¼š(1) ssidå’Œpwdä¸ºç©ºè¡¨ç¤ºæ¸…é™¤WiFiä¿¡æ¯;
+ *       (2) è®¾ç½®çš„WiFiä¿¡æ¯éœ€è¦æŒä¹…åŒ–ï¼Œä»¥ç¡®ä¿è®¾å¤‡é‡å¯åä¾ç„¶å¯ä»¥è·å¾—WiFié…ç½®ä¿¡æ¯
  */
+
 int HILINK_SetWiFiInfo(const char *ssid, unsigned int ssidLen, const char *pwd, unsigned int pwdLen)
 {
+    log_info("HILINK_SetWiFiInfo ssid:%s,ssidlen:%d,pwd:%s", ssid, ssidLen, pwd);
+    if (ssid == NULL || pwd == NULL)
+    {
+        return -1;
+    }
+    strcpy(wifi_ssid, ssid);
+    strcpy(wifi_psk, pwd);
     return 0;
 }
 
-/* ¶Ï¿ª²¢ÖØÁ¬WiFi */
+char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
+char *cmd_add = "wpa_cli -i wlan0 add_network";
+char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
+char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
+char *cmd_udhcp = "udhcpc -i wlan0";
+/* æ–­å¼€å¹¶é‡è¿WiFi */
 void HILINK_ReconnectWiFi(void)
 {
+    log_info("HILINK_ReconnectWiFi");
+    system(cmd_disable);
+    system(cmd_enable);
+    system(cmd_udhcp);
     return;
 }
 
 /*
- * Á¬½ÓWiFi
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * è¿æ¥WiFi
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_ConnectWiFi(void)
 {
+    // int ret = get_link_status(ETH_NAME);
+    // if (ret == 0)
+    // {
+    //     return 0;
+    // }
+    log_info("HILINK_ConnectWiFi");
+    system(cmd_remove);
+    system(cmd_add);
+
+    char cmd_ssid[64] = {"wpa_cli -i wlan0 set_network 0 ssid '\""};
+    strcpy(&cmd_ssid[strlen(cmd_ssid)], wifi_ssid);
+    strcpy(&cmd_ssid[strlen(cmd_ssid)], "\"'");
+
+    char cmd_psk[64] = {"wpa_cli -i wlan0 set_network 0 psk '\""};
+    strcpy(&cmd_psk[strlen(cmd_psk)], wifi_psk);
+    strcpy(&cmd_psk[strlen(cmd_psk)], "\"'");
+
+    log_info("cmd_ssid %s", cmd_ssid);
+    log_info("cmd_psk %s", cmd_psk);
+    system(cmd_ssid);
+    system(cmd_psk);
+
+    system(cmd_enable);
+    system(cmd_udhcp);
     return 0;
 }
 
 /*
- * »ñÈ¡ÍøÂç×´Ì¬
- * stateÎª0±íÊ¾ÍøÂç¶Ï¿ª»òÒÑÁ¬½Óµ«Íø¿¨Î´·ÖÅäµÃip£¬stateÎª1±íÊ¾ÒÑÁ¬½ÓÇÒ·ÖÅäµÃip
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * è·å–ç½‘ç»œçŠ¶æ€
+ * stateä¸º0è¡¨ç¤ºç½‘ç»œæ–­å¼€æˆ–å·²è¿æ¥ä½†ç½‘å¡æœªåˆ†é…å¾—ipï¼Œstateä¸º1è¡¨ç¤ºå·²è¿æ¥ä¸”åˆ†é…å¾—ip
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_GetNetworkState(int *state)
 {
+    char ip[16] = "";
+    if (get_local_ip(ETH_NAME, ip, sizeof(ip)) == -1)
+    {
+        *state = 0;
+        return -1;
+    }
+    if (strlen(ip) > 0)
+    {
+        *state = 1;
+    }
+    else
+    {
+        *state = 0;
+    }
+
+    log_info("HILINK_GetNetworkState ip:%s", ip);
     return 0;
 }
 
 /*
- * »ñÈ¡µ±Ç°Á¬½ÓµÄWiFiµÄ bssid
- * bssid±íÊ¾´æ·ÅWiFi bssidµÄ»º³å
- * bssidLen±íÊ¾WiFi bssid³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * è·å–å½“å‰è¿æ¥çš„WiFiçš„ bssid
+ * bssidè¡¨ç¤ºå­˜æ”¾WiFi bssidçš„ç¼“å†²
+ * bssidLenè¡¨ç¤ºWiFi bssidé•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
 {
-    return 0;
+    log_info("HILINK_GetWiFiBssid");
+    int ret = get_local_mac(ETH_NAME, bssid, *bssidLen);
+    log_info("HILINK_GetWiFiBssid:%s %d", bssid, ret);
+    return ret;
 }
 
 /*
- * »ñÈ¡µ±Ç°Á¬½ÓµÄWiFiĞÅºÅÇ¿¶È£¬µ¥Î»db
- * rssi±íÊ¾ĞÅºÅÇ¿¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * è·å–å½“å‰è¿æ¥çš„WiFiä¿¡å·å¼ºåº¦ï¼Œå•ä½db
+ * rssiè¡¨ç¤ºä¿¡å·å¼ºåº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_GetWiFiRssi(signed char *rssi)
 {
+    log_info("HILINK_GetWiFiRssi");
     return 0;
 }
 
 /*
- * ÖØÆôHiLink SDK
- * ÈôÏµÍ³²»¿ÉÖØÆô£¬½¨ÒéÖØÆôHiLink½ø³Ì
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * é‡å¯HiLink SDK
+ * è‹¥ç³»ç»Ÿä¸å¯é‡å¯ï¼Œå»ºè®®é‡å¯HiLinkè¿›ç¨‹
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_Restart(void)
 {
+    log_info("HILINK_Restart");
+    system("reboot");
     return 0;
 }
 
-/* ÏŞÖÆ×î¶àÍ¬Ê±½ÓÈëÁ½¸östation */
+/* é™åˆ¶æœ€å¤šåŒæ—¶æ¥å…¥ä¸¤ä¸ªstation */
 void HILINK_SetStationNumLimit(void)
 {
+    log_info("HILINK_SetStationNumLimit");
     return;
 }
 
-/* SoftApÅäÍø¹ı³ÌÖĞ£¬¸ù¾İIPÌß³ı¶ÔÓ¦µÄstation */
+/* SoftApé…ç½‘è¿‡ç¨‹ä¸­ï¼Œæ ¹æ®IPè¸¢é™¤å¯¹åº”çš„station */
 void HILINK_DisconnectStation(const char *ip)
 {
+    log_info("HILINK_DisconnectStation");
     return;
 }
