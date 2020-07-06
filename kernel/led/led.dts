@@ -1,0 +1,16 @@
+pinctrl_led: ledgrp {
+ fsl,pins = <
+ MX6UL_PAD_GPIO1_IO03__GPIO1_IO03 0x10B0 /* LED0 */
+ >;
+};
+
+gpioled {
+ #address-cells = <1>;
+ #size-cells = <1>;
+ compatible = "atkalpha-gpioled";
+ pinctrl-names = "default";
+ pinctrl-0 = <&pinctrl_led>;
+ led-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;
+ status = "okay";
+}
+

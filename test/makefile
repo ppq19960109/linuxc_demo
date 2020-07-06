@@ -1,6 +1,6 @@
 
-CROSS_COMPILE = armv8l-linux-gnueabihf-
-CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc -mcpu=cortex-a53  -march=armv8-a
+# CROSS_COMPILE = armv8l-linux-gnueabihf-
+CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
 TOPDIR = .

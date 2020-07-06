@@ -1,0 +1,1 @@
+cmd_/home/ppq/linux/git/linuxc_demo/kernel/led/chrled.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/ppq/linux/git/linuxc_demo/kernel/led/chrled.ko /home/ppq/linux/git/linuxc_demo/kernel/led/chrled.o /home/ppq/linux/git/linuxc_demo/kernel/led/chrled.mod.o

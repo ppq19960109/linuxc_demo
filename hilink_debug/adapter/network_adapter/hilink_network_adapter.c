@@ -170,6 +170,24 @@ int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
 int HILINK_GetWiFiRssi(signed char *rssi)
 {
     log_info("HILINK_GetWiFiRssi");
+    // FILE *pFile = popen("iwconfig wlan0| grep Signal level -Eo '[\-][0-9][0-9]*' | awk 'NR==1{print $1}'iwconfig wlan0| grep Signal level -Eo \'[\\-][0-9][0-9]*\' | awk \'NR==1{print $1}\'", "r");
+    FILE *pFile = popen("wpa_cli scan_results | grep HUAWEI-WDNJ4L |awk \'{print $3}\'", "r");
+    if (pFile == NULL)
+    {
+        return -1;
+    }
+    char szBuf[8] = {0};
+    char *str = fgets(szBuf, sizeof(szBuf), pFile);
+    if (str == NULL)
+    {
+        pclose(pFile);
+        return -1;
+    }
+
+    *rssi = atoi(szBuf);
+    log_info("HILINK_GetWiFiRssi:%s,%d\n", szBuf, *rssi);
+
+    pclose(pFile);
     return 0;
 }
 

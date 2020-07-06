@@ -89,11 +89,23 @@ char char_copy_from_json(cJSON *json, char *src, char *dst)
     cJSON *obj = cJSON_GetObjectItem(json, src);
     if (obj != NULL)
     {
-        *dst=atoi(obj->valuestring);
-        return 0;
+        *dst = atoi(obj->valuestring);
+        return *dst;
     }
     return -1;
 }
+
+int int_copy_from_json(cJSON *json, char *src, int *dst)
+{
+    cJSON *obj = cJSON_GetObjectItem(json, src);
+    if (obj != NULL)
+    {
+        *dst = atoi(obj->valuestring);
+        return *dst;
+    }
+    return -1;
+}
+
 int str_copy_from_json(cJSON *json, char *src, char *dst)
 {
     cJSON *obj = cJSON_GetObjectItem(json, src);
@@ -109,8 +121,9 @@ int isStrNotNull(const char *str)
 {
     return strlen(str);
 }
-//----------------------------------
+//-------------------------------------------------------------------------
 protocol_data_t protocol_data;
+
 void protlcol_init()
 {
     INIT_LIST_HEAD(&protocol_data.dev_list);
@@ -189,43 +202,40 @@ int read_from_local(const char *json)
 
     switch (type)
     {
-    case 0:
+    case 0: //设备注册上报：”Register”；
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
+        str_copy_from_json(array_sub, "DeviceType", dev_buf->DeviceType);
+        str_copy_from_json(array_sub, "Secret", dev_buf->Secret);
         if (dev_buf == NULL)
         {
-
-            str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
-            str_copy_from_json(array_sub, "Secret", dev_data->Secret);
             list_add(&dev_data->node, &protocol_data.dev_list);
             goto add;
         }
-        else
+    }
+    break;
+    case 1: //设备注销上报：”UnRegister”；
+    {
+        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
+        if (dev_buf != NULL)
         {
-            str_copy_from_json(array_sub, "DeviceType", dev_buf->DeviceType);
-            str_copy_from_json(array_sub, "Secret", dev_buf->Secret);
+            list_del(&dev_buf->node);
         }
     }
     break;
-    case 1:
+    case 2: //设备在线状态上报, “OnOff”
     {
-        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        // list_del(&dev_buf->node);
-    }
-    break;
-    case 2:
-    {
-        if (Key != NULL && strcmp(Key->valuestring, "Online"))
+        if (Key != NULL && strcmp(Key->valuestring, "Online") == 0)
         {
             dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-            str_copy_from_json(array_sub, "Value", dev_buf->Online);
+            char_copy_from_json(array_sub, "Value", &dev_buf->Online);
         }
     }
     break;
-    case 3:
+    case 3: //设备属性上报：”Attribute”；
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        if (Key != NULL && strcmp(Key->valuestring, "Version"))
+        if (Key != NULL && strcmp(Key->valuestring, "Version") == 0)
         {
             str_copy_from_json(array_sub, "Value", dev_buf->Version);
         }
@@ -241,8 +251,8 @@ int read_from_local(const char *json)
     {
         str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
         str_copy_from_json(array_sub, "Version", dev_data->Version);
-        str_copy_from_json(array_sub, "Online", dev_data->Online);
-        str_copy_from_json(array_sub, "RegisterStatus", dev_data->RegisterStatus);
+        str_copy_from_json(array_sub, "Online", &dev_data->Online);
+        char_copy_from_json(array_sub, "RegisterStatus", &dev_data->RegisterStatus);
         list_add(&dev_data->node, &protocol_data.dev_list);
         goto add;
     }

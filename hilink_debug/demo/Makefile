@@ -40,12 +40,8 @@ COMPILE_FLAGS := -O  $(INCLUDE_PATH)
 LINK_FLAGS := -L$(LIB_FILE_PATH) $(LIB_FILES)
 
 #编译开始
-.PHONY: all
-all: clean hilinkdemo
-
-#清理
-clean:
-	rm -f $(OBJECTS) hilink
+.PHONY: all clean
+all:  hilinkdemo
 
 #进程
 hilinkdemo: $(OBJECTS)
@@ -54,3 +50,7 @@ hilinkdemo: $(OBJECTS)
 #编译.o
 $(OBJECTS):%.o : %.c
 	$(CC) $(COMPILE_FLAGS) -c $< -o $@
+
+#清理
+clean:
+	rm -f $(OBJECTS) hilinkdemo
