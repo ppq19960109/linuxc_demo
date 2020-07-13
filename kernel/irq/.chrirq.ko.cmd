@@ -1,0 +1,1 @@
+cmd_/home/ppq/linux/git/linuxc_demo/kernel/irq/chrirq.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/ppq/linux/git/linuxc_demo/kernel/irq/chrirq.ko /home/ppq/linux/git/linuxc_demo/kernel/irq/chrirq.o /home/ppq/linux/git/linuxc_demo/kernel/irq/chrirq.mod.o

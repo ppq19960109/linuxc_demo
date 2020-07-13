@@ -5,6 +5,7 @@
 extern "C"
 {
 #endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -47,7 +48,7 @@ extern "C"
         char Type[12];
         // char GatewayId[16];
         struct local_data_t Data;
-        void *private;
+        // void *private;
     } local_dev_t;
 
     typedef struct
@@ -55,7 +56,7 @@ extern "C"
         int socketfd;
         struct list_head dev_list;
     } protocol_data_t;
-    
+
     extern protocol_data_t protocol_data;
 
     void protlcol_init();
@@ -64,10 +65,11 @@ extern "C"
     int str_copy_from_json(cJSON *json, char *src, char *dst);
     int int_copy_from_json(cJSON *json, char *src, int *dst);
 
-
     int read_from_local(const char *json);
     int write_to_local(void *ptr);
-
+    int isStrNotNull(const char *str);
+    int str_search(const char *key,  char **pstr, int num);
+    int strn_search(const char *key, char **pstr, int num, int n);
 #ifdef __cplusplus
 }
 #endif

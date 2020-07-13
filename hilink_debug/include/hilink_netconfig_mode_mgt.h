@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2018-2020. All rights reserved.
- * Description: HiLink SDK����ģʽ����
+ * Description: HiLink SDK配网模式管理
  */
 #ifndef HILINK_NETCONFIG_MODE_MGT_H
 #define HILINK_NETCONFIG_MODE_MGT_H
@@ -9,21 +9,21 @@
 extern "C" {
 #endif
 
-/* HiLink SDK֧�ֵ�����ģʽ */
+/* HiLink SDK支持的配网模式 */
 enum HILINK_NetConfigMode {
-    HILINK_NETCONFIG_NONE, /* ��������, ͨ�����ߵ��ֶ����ӵ����� */
-    HILINK_NETCONFIG_WIFI, /* HiLink SDK�ṩ��WiFi�Զ����� */
-    HILINK_NETCONFIG_OTHER, /* ��������ģʽ, APP����WiFi����Ϣ, ���ɷ��յ�WiFi��Ϣ���ݺ�, ���õ�HiLink SDK */
-    HILINK_NETCONFIG_BOTH, /* ��������ģʽ��WiFi������� */
-    HILINK_NETCONFIG_REGISTER_ONLY, /* HiLink SDK SoftAp����������ע����Ϣ */
-    HILINK_NETCONFIG_NO_SOFTAP_REGISTER_ONLY, /* ������SoftAp, PIN������������ע����Ϣ(ͨ������/4G/5G�Ƚ�������) */
-    HILINK_NETCONFIG_BUTT /* �Ƿ�����ģʽ */
+    HILINK_NETCONFIG_NONE, /* 不用配网, 通过网线等手段连接到网络 */
+    HILINK_NETCONFIG_WIFI, /* HiLink SDK提供的WiFi自动配网 */
+    HILINK_NETCONFIG_OTHER, /* 其他配网模式, APP发送WiFi的信息, 集成方收到WiFi信息数据后, 设置到HiLink SDK */
+    HILINK_NETCONFIG_BOTH, /* 其他配网模式和WiFi配网组合 */
+    HILINK_NETCONFIG_REGISTER_ONLY, /* HiLink SDK SoftAp配网仅接收注册信息 */
+    HILINK_NETCONFIG_NO_SOFTAP_REGISTER_ONLY, /* 不启动SoftAp, PIN码配网仅接收注册信息(通过网线/4G/5G等接入网络) */
+    HILINK_NETCONFIG_BUTT /* 非法配网模式 */
 };
 
-/* ���ò�Ʒ����ģʽ, ע��: ��Ҫ������HiLink SDK����֮ǰ���ñ��ӿ���������ģʽ */
+/* 设置产品配网模式, 注意: 需要在启动HiLink SDK任务之前调用本接口设置配网模式 */
 int HILINK_SetNetConfigMode(enum HILINK_NetConfigMode netConfigMode);
 
-/* ��ѯ��ǰ��Ʒ������ģʽ, ����ֵΪ��ǰ��Ʒ������ģʽ */
+/* 查询当前产品的配网模式, 返回值为当前产品的配网模式 */
 enum HILINK_NetConfigMode HILINK_GetNetConfigMode(void);
 
 #ifdef __cplusplus

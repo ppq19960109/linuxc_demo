@@ -213,7 +213,7 @@ fail_device:
 fail_class:
     cdev_del(&gpioled.cdev);                              /* 删除 cdev */
     unregister_chrdev_region(gpioled.devid, GPIOLED_CNT); /* 注销 */
-
+    gpio_free(gpioled.led_gpio);
     return ret;
 }
 
@@ -231,12 +231,14 @@ static int led_remove(struct platform_device *dev)
 
     cdev_del(&gpioled.cdev);                              /* 删除 cdev */
     unregister_chrdev_region(gpioled.devid, GPIOLED_CNT); /* 注销 */
+    gpio_free(gpioled.led_gpio);
     return 0;
 }
 
 /* 匹配列表 */
 static const struct of_device_id led_of_match[] = {
     {.compatible = "atkalpha-gpioled"},
+    {.compatible = "rk-gpioled"},
     {/* Sentinel */}};
 
 /* platform 驱动结构体 */

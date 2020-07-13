@@ -1,74 +1,48 @@
 #include "protocol_cover.h"
 #include "dev_private.h"
 
-const char *Command[] = {"Dispatch", "Report"};
+char *Command[] = {"Dispatch", "Report"};
 
-const char *TYPE_Report[] = {"Register", "UnRegister", "OnOff", "Attribute", "DevAttri", "DevList", "Event", "ReFactory", "CooInfo", "NeighborInfo", "ChildrenInfo", "SetSig", "GetSig"};
+char *TYPE_Report[] = {"Register", "UnRegister", "OnOff", "Attribute", "DevAttri", "DevList", "Event", "ReFactory", "CooInfo", "NeighborInfo", "ChildrenInfo", "SetSig", "GetSig"};
 
-const char *TYPE_Dispatch[] = {"Ctrl", "Add", "Delete", "Attribute", "DevAttri", "DevList", "NeighborInfo", "ChildrenInfo", "ReFactory", "RepeatReport", "SetSig", "GetSig", "SubName"};
+char *TYPE_Dispatch[] = {"Ctrl", "Add", "Delete", "Attribute", "DevAttri", "DevList", "NeighborInfo", "ChildrenInfo", "ReFactory", "RepeatReport", "SetSig", "GetSig", "SubName"};
 
-// #define ENUM_TYPE_CASE(x) \
-//     case x:               \
-//         return (#x);
+// const char report_test_json[] = {"{\
+//       \"Command\":\"Report\",\
+//       \"FrameNumber\":\"00\",\
+//       \"GatewayId\":\"0006D12345678909\",\
+//       \"Type\":\"DevList\",\
+//       \"TotalNumber\":\"21\",\
+//       \"AlreadyReportNumber\":\"21\",\
+//       \"Data\":[\
+//                 {\
+//                 \"DeviceId\":\"1234567876543210\",\
+//                 \"ModelId\":\"0a0c3c\",\
+//                 \"Name\":\"三位开关\",\
+//                 \"Version\":\"20180201\",\
+//                 \"Online\": \"1\",\
+//                 \"RegisterStatus\": \"1\"\
+//                 }\
+//                 ]\
+// }"};
 
-// enum types_enum
-// {
-//     Register = 0,
-//     UnRegister,
-//     OnOff,
-//     Attribute,
-//     DevAttri,
-//     DevList,
-//     Event,
-//     ReFactory,
-//     CooInfo,
-//     NeighborInfo,
-//     ChildrenInfo,
-//     SetSig,
-//     GetSig
-// };
+const char report_json[] = {"\
+    {\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"1234567876543210\",\
+              \"ModelId\":\"500c33\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+}\
+"};
 
-// static inline const char *type_to_string(enum types_enum type)
-// {
-//     switch (type)
-//     {
-//         ENUM_TYPE_CASE(Register)
-//         ENUM_TYPE_CASE(UnRegister)
-//         ENUM_TYPE_CASE(OnOff)
-//         ENUM_TYPE_CASE(Attribute)
-//         ENUM_TYPE_CASE(DevAttri)
-//         ENUM_TYPE_CASE(DevList)
-//         ENUM_TYPE_CASE(Event)
-//         ENUM_TYPE_CASE(ReFactory)
-//         ENUM_TYPE_CASE(CooInfo)
-//         ENUM_TYPE_CASE(NeighborInfo)
-//         ENUM_TYPE_CASE(ChildrenInfo)
-//         ENUM_TYPE_CASE(SetSig)
-//         ENUM_TYPE_CASE(GetSig)
-//     }
-//     return "NULL";
-// }
-
-const char report_test_json[] = {"{\
-      \"Command\":\"Report\",\
-      \"FrameNumber\":\"00\",\
-      \"GatewayId\":\"0006D12345678909\",\
-      \"Type\":\"DevList\",\
-      \"TotalNumber\":\"21\",\
-      \"AlreadyReportNumber\":\"21\",\
-      \"Data\":[\
-                {\
-                \"DeviceId\":\"1234567876543210\",\
-                \"ModelId\":\"0a0c3c\",\
-                \"Name\":\"三位开关\",\
-                \"Version\":\"20180201\",\
-                \"Online\": \"1\",\
-                \"RegisterStatus\": \"1\"\
-                }\
-                ]\
-}"};
-
-static int str_search(const char *key, const char **pstr, int num)
+int str_search(const char *key, char **pstr, int num)
 {
     int i;
 
@@ -76,6 +50,22 @@ static int str_search(const char *key, const char **pstr, int num)
     {
         // 指针数组  p首先是个指针  然后指向类型是地址 所以是二级指针
         if (strcmp(*pstr++, key) == 0)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+int strn_search(const char *key, char **pstr, int num, int n)
+{
+    int i;
+
+    for (i = 0; i < num; i++)
+    {
+        // 指针数组  p首先是个指针  然后指向类型是地址 所以是二级指针
+        if (strncmp(*pstr++, key, n) == 0)
         {
             return i;
         }
@@ -138,13 +128,13 @@ void protlcol_destory()
 
 int read_from_local(const char *json)
 {
-    cJSON *root = cJSON_Parse(json);
+    cJSON *root = cJSON_Parse(report_json);
     if (root == NULL)
     {
         log_error("root is NULL\n");
         goto fail;
     }
-    // log_debug("%s\n",cJSON_Print(root));
+    log_debug("%s\n", cJSON_Print(root));
 
     //command字段
     cJSON *Command = cJSON_GetObjectItem(root, "Command");
@@ -174,7 +164,7 @@ int read_from_local(const char *json)
         goto fail;
     }
     //
-    int type = str_search(Type->valuestring, TYPE_Report, sizeof(TYPE_Report));
+    int type = str_search(Type->valuestring, TYPE_Report, sizeof(TYPE_Report) / 4);
     if (type == -1)
     {
         log_error("Type is no exist\n");
@@ -194,24 +184,22 @@ int read_from_local(const char *json)
     {
         log_info("Key is %s\n", Key->valuestring);
     }
-    // cJSON *Value = cJSON_GetObjectItem(array_sub, "Value");
-    // if (Value != NULL)
-    // {
-    //     log_info("Value is %s\n", Value->valuestring);
-    // }
 
     switch (type)
     {
     case 0: //设备注册上报：”Register”；
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        str_copy_from_json(array_sub, "DeviceType", dev_buf->DeviceType);
-        str_copy_from_json(array_sub, "Secret", dev_buf->Secret);
         if (dev_buf == NULL)
         {
+            str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
+            str_copy_from_json(array_sub, "Secret", dev_data->Secret);
             list_add(&dev_data->node, &protocol_data.dev_list);
+            dev_private_attribute(dev_data, NULL);
             goto add;
         }
+        str_copy_from_json(array_sub, "DeviceType", dev_buf->DeviceType);
+        str_copy_from_json(array_sub, "Secret", dev_buf->Secret);
     }
     break;
     case 1: //设备注销上报：”UnRegister”；
@@ -249,18 +237,23 @@ int read_from_local(const char *json)
     break;
     case 5:
     {
-        str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
-        str_copy_from_json(array_sub, "Version", dev_data->Version);
-        str_copy_from_json(array_sub, "Online", &dev_data->Online);
-        char_copy_from_json(array_sub, "RegisterStatus", &dev_data->RegisterStatus);
-        list_add(&dev_data->node, &protocol_data.dev_list);
+        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
+        if (dev_buf == NULL)
+        {
+            str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
+            str_copy_from_json(array_sub, "Version", dev_data->Version);
+            str_copy_from_json(array_sub, "Online", &dev_data->Online);
+            char_copy_from_json(array_sub, "RegisterStatus", &dev_data->RegisterStatus);
+            list_add(&dev_data->node, &protocol_data.dev_list);
+            dev_private_attribute(dev_data, NULL);
+        }
         goto add;
     }
     break;
     case 6:
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        dev_private_event(dev_buf, Data);
+        dev_private_attribute(dev_buf, Data);
     }
     break;
     case 7:
@@ -310,6 +303,8 @@ fail:
     return -1;
 }
 
+//-----------------------------------------------------
+
 int write_to_local(void *ptr)
 {
     if (NULL == ptr)
@@ -339,7 +334,7 @@ int write_to_local(void *ptr)
         cJSON_AddStringToObject(arrayItem, "Value", local_dev->Data.Value);
     cJSON_AddItemToArray(DataArray, arrayItem);
 
-    char *json = cJSON_Print(root);
+    char *json = cJSON_PrintUnformatted(root);
     log_debug("%s\n", json);
 
     free(json);
@@ -349,26 +344,4 @@ int write_to_local(void *ptr)
 fail:
     free(root);
     return -1;
-}
-
-int read_from_cloud(void *ptr)
-{
-
-    return 0;
-}
-
-int write_to_cloud(void *ptr)
-{
-
-    return 0;
-}
-
-int cloud_to_bottom()
-{
-    return 0;
-}
-
-int bottom_to_cloud()
-{
-    return 0;
 }

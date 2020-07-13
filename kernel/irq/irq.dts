@@ -1,0 +1,11 @@
+key {
+    #address-cells = <1>;
+    #size-cells = <1>;
+    compatible = "atkalpha-key";
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_key>;
+    key-gpio = <&gpio1 18 GPIO_ACTIVE_LOW>; /* KEY0 */
+    interrupt-parent = <&gpio1>;
+    interrupts = <18 IRQ_TYPE_EDGE_BOTH>; /* FALLING RISING */
+    status = "okay";
+ };

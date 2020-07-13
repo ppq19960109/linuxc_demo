@@ -16,6 +16,9 @@ INCLUDE_PATH += -I$(BASE_PATH)/adapter/config_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/adapter/profile_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/adapter/sdk_adapter/include
 INCLUDE_PATH += -I$(BASE_PATH)/src
+INCLUDE_PATH += -I$(BASE_PATH)/src/cloud
+INCLUDE_PATH += -I$(BASE_PATH)/src/local
+INCLUDE_PATH += -I$(BASE_PATH)/src/adapter
 #适配源文件
 SOURCE_FILES := $(wildcard $(BASE_PATH)/adapter/network_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/config_adapter/*.c)
@@ -23,6 +26,9 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/profile_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/sdk_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/demo/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/*.c)
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/cloud/*.c)
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/local/*.c)
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/adapter/*.c)
 #库文件路径
 LIB_FILE_PATH := $(BASE_PATH)/lib
 

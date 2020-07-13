@@ -18,14 +18,14 @@ extern "C" {
 
 /* 设备产品信息 */
 #define PRODUCT_ID    "1011"
-#define DEVICE_TYPE   "01D"
-#define MANUAFACTURER "011"
-#define DEVICE_MODEL  "SP mini3-HL1"
+#define DEVICE_TYPE   "020"
+#define MANUAFACTURER "312"
+#define DEVICE_MODEL  "U2"
 #define HILINK_VER    "1.0.0"
 
 /* 请确保设备类型英文名和厂商英文名长度之和不超过17字节 */
-#define DEVICE_TYPE_NAME   "Switch"
-#define MANUAFACTURER_NAME "Broadlink"
+#define DEVICE_TYPE_NAME   "Bridge"
+#define MANUAFACTURER_NAME "HONYAR"
 
 /* 通信协议类型: WiFi */
 #define PROTOCOL_TYPE 1

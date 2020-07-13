@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: HiLinkÈÕÖ¾¼¶±ð¹ÜÀí
+ * Description: HiLinkæ—¥å¿—çº§åˆ«ç®¡ç†
  */
 
 #ifndef _HILINK_LOG_MANAGE_H_
@@ -11,28 +11,28 @@ extern "C" {
 #endif
 
 typedef enum {
-    HILINK_LOG_INVALID = -1, /* ·Ç·¨Öµ */
+    HILINK_LOG_INVALID = -1, /* éžæ³•å€¼ */
     HILINK_LOG_MIN     = 0,
-    HILINK_LOG_EMERG   = 0, /* ·Ç³£½ô¼±, ÏµÍ³²»¿ÉÓÃ */
-    HILINK_LOG_ALERT   = 1, /* ½ô¼±¼¶±ð, ±ØÐëÁ¢¼´²ÉÈ¡´ëÊ© */
-    HILINK_LOG_CRIT    = 2, /* ÖÂÃü¼¶±ð */
-    HILINK_LOG_ERR     = 3, /* ´íÎó¼¶±ð */
-    HILINK_LOG_WARN    = 4, /* ¸æ¾¯¼¶±ð */
-    HILINK_LOG_NOTICE  = 5, /* Í¨Öª¼¶±ð */
-    HILINK_LOG_INFO    = 6, /* ÐÅÏ¢¼¶±ð */
-    HILINK_LOG_DEBUG   = 7, /* µ÷ÊÔ¼¶±ð */
+    HILINK_LOG_EMERG   = 0, /* éžå¸¸ç´§æ€¥, ç³»ç»Ÿä¸å¯ç”¨ */
+    HILINK_LOG_ALERT   = 1, /* ç´§æ€¥çº§åˆ«, å¿…é¡»ç«‹å³é‡‡å–æŽªæ–½ */
+    HILINK_LOG_CRIT    = 2, /* è‡´å‘½çº§åˆ« */
+    HILINK_LOG_ERR     = 3, /* é”™è¯¯çº§åˆ« */
+    HILINK_LOG_WARN    = 4, /* å‘Šè­¦çº§åˆ« */
+    HILINK_LOG_NOTICE  = 5, /* é€šçŸ¥çº§åˆ« */
+    HILINK_LOG_INFO    = 6, /* ä¿¡æ¯çº§åˆ« */
+    HILINK_LOG_DEBUG   = 7, /* è°ƒè¯•çº§åˆ« */
     HILINK_LOG_MAX     = HILINK_LOG_DEBUG
 } HiLinkLogLevel;
 
 /*
- * ÅäÖÃµ±Ç°ÈÕÖ¾´òÓ¡×î¸ß¼¶±ð, release°æ±¾Ä¬ÈÏÎªHILINK_LOG_ERR, debug°æ±¾Ä¬ÈÏÎªHILINK_LOG_DEBUG
- * ÀýÈçÅäÖÃµÄÈÕÖ¾¼¶±ðÎªHILINK_LOG_ERR, ±íÊ¾¼¶±ðÔÚHILINK_LOG_ERRÒÔÏÂ(HILINK_LOG_WARNµÈ)µÄÈÕÖ¾²»»á´òÓ¡³öÀ´
+ * é…ç½®å½“å‰æ—¥å¿—æ‰“å°æœ€é«˜çº§åˆ«, releaseç‰ˆæœ¬é»˜è®¤ä¸ºHILINK_LOG_ERR, debugç‰ˆæœ¬é»˜è®¤ä¸ºHILINK_LOG_DEBUG
+ * ä¾‹å¦‚é…ç½®çš„æ—¥å¿—çº§åˆ«ä¸ºHILINK_LOG_ERR, è¡¨ç¤ºçº§åˆ«åœ¨HILINK_LOG_ERRä»¥ä¸‹(HILINK_LOG_WARNç­‰)çš„æ—¥å¿—ä¸ä¼šæ‰“å°å‡ºæ¥
  */
 void HILINK_SetLogLevel(HiLinkLogLevel level);
 
 /*
- * ²éÑ¯µ±Ç°ÈÕÖ¾´òÓ¡×î¸ß¼¶±ð
- * ÀýÈç²éÑ¯µÄÈÕÖ¾¼¶±ðÎªHILINK_LOG_ERR, ±íÊ¾¼¶±ðÔÚHILINK_LOG_ERRÒÔÏÂ(HILINK_LOG_WARNµÈ)µÄÈÕÖ¾²»»á´òÓ¡³öÀ´
+ * æŸ¥è¯¢å½“å‰æ—¥å¿—æ‰“å°æœ€é«˜çº§åˆ«
+ * ä¾‹å¦‚æŸ¥è¯¢çš„æ—¥å¿—çº§åˆ«ä¸ºHILINK_LOG_ERR, è¡¨ç¤ºçº§åˆ«åœ¨HILINK_LOG_ERRä»¥ä¸‹(HILINK_LOG_WARNç­‰)çš„æ—¥å¿—ä¸ä¼šæ‰“å°å‡ºæ¥
  */
 HiLinkLogLevel HILINK_GetLogLevel(void);
 

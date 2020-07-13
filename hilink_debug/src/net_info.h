@@ -13,7 +13,7 @@ extern "C"
 #include <string.h>
 #include <unistd.h>
 
-#define ETH_NAME  "wlan0"//"eth0"//"ens33"
+#define ETH_NAME "eth0" //"wlan0"//"ens33"
 
     int get_local_ip(const char *eth_inf, char *ip, unsigned char len);
     int get_local_mac(const char *eth_inf, char *mac, unsigned char len);
@@ -21,6 +21,8 @@ extern "C"
     int get_local_all_ip(char *ip);
     int get_netlink_status(const char *if_name);
     int get_link_status(const char *if_name);
+
+    int popen_cmd(char *cmd, char *mode, char *buf, char bufSize);
 #ifdef __cplusplus
 }
 #endif

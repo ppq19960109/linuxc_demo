@@ -1,45 +1,5 @@
 #include "list_tool.h"
 
-void list_del_dev(dev_data_t *ptr)
-{
-    list_del(&ptr->node);
-    if (ptr->private != NULL)
-    {
-        free(ptr->private);
-    }
-    free(ptr);
-}
-
-int list_del_by_id(const char *id, struct list_head *head)
-{
-    dev_data_t *ptr, *next;
-    if (head == NULL)
-    {
-        return -1;
-    }
-    list_for_each_entry_safe(ptr, next, head, node)
-    {
-        if (strcmp(ptr->DeviceId, id))
-        {
-            list_del_dev(ptr);
-            return 0;
-        }
-    }
-    return -1;
-}
-
-void list_del_all(struct list_head *head)
-{
-    dev_data_t *ptr, *next;
-    if (head == NULL)
-    {
-        return;
-    }
-    list_for_each_entry_safe(ptr, next, head, node)
-    {
-        list_del_dev(ptr);
-    }
-}
 dev_data_t *list_get_by_id(const char *id, struct list_head *head)
 {
     dev_data_t *ptr;
@@ -56,6 +16,42 @@ dev_data_t *list_get_by_id(const char *id, struct list_head *head)
     }
     return NULL;
 }
+
+void list_del_dev(dev_data_t *ptr)
+{
+    list_del(&ptr->node);
+    if (ptr->private != NULL)
+    {
+        free(ptr->private);
+    }
+    free(ptr);
+}
+
+int list_del_by_id(const char *id, struct list_head *head)
+{
+
+    dev_data_t *ptr = list_get_by_id(id, head);
+    if (ptr == NULL)
+    {
+        return -1;
+    }
+    list_del_dev(ptr);
+    return 0;
+}
+
+void list_del_all(struct list_head *head)
+{
+    dev_data_t *ptr, *next;
+    if (head == NULL)
+    {
+        return;
+    }
+    list_for_each_entry_safe(ptr, next, head, node)
+    {
+        list_del_dev(ptr);
+    }
+}
+
 void list_print_all(struct list_head *head)
 {
     dev_data_t *ptr;
@@ -63,6 +59,7 @@ void list_print_all(struct list_head *head)
     {
         return;
     }
+
     int i = 0;
     list_for_each_entry(ptr, head, node)
     {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: softApÊÊÅäÍ·ÎÄ¼ş
+ * Description: softApé€‚é…å¤´æ–‡ä»¶
  */
 #ifndef HILINK_SOFTAP_ADAPTER_H
 #define HILINK_SOFTAP_ADAPTER_H
@@ -10,25 +10,25 @@ extern "C" {
 #endif
 
 /*
- * »ñÈ¡¹ã²¥ip
- * broadcastIp±íÊ¾´æ·ÅIpµÄ»º³å
- * len±íÊ¾´æ·ÅIpµÄ»º³å³¤¶È
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
- * ×¢Òâ: broadcastIpÎªµã·ÖÊ®½øÖÆ¸ñÊ½
+ * è·å–å¹¿æ’­ip
+ * broadcastIpè¡¨ç¤ºå­˜æ”¾Ipçš„ç¼“å†²
+ * lenè¡¨ç¤ºå­˜æ”¾Ipçš„ç¼“å†²é•¿åº¦
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
+ * æ³¨æ„: broadcastIpä¸ºç‚¹åˆ†åè¿›åˆ¶æ ¼å¼
  */
 int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len);
 
 /*
- * ½«Íø¿¨ÇĞÎªAPÄ£Ê½²¢¿ªÆôsoftApÈÈµã
- * ssid ±íÊ¾ÓÃÓÚ´´½¨softApµÄssid
- * ssidLen±íÊ¾ssid³¤¶È, ×î´óÈ¡Öµ64
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * å°†ç½‘å¡åˆ‡ä¸ºAPæ¨¡å¼å¹¶å¼€å¯softApçƒ­ç‚¹
+ * ssid è¡¨ç¤ºç”¨äºåˆ›å»ºsoftApçš„ssid
+ * ssidLenè¡¨ç¤ºssidé•¿åº¦, æœ€å¤§å–å€¼64
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen);
 
 /*
- * ¹Ø±ÕsoftApÈÈµã²¢½«Íø¿¨ÇĞ»ØstationÄ£Ê½
- * ·µ»Ø0±íÊ¾³É¹¦£¬·µ»Ø-1±íÊ¾Ê§°Ü
+ * å…³é—­softApçƒ­ç‚¹å¹¶å°†ç½‘å¡åˆ‡å›stationæ¨¡å¼
+ * è¿”å›0è¡¨ç¤ºæˆåŠŸï¼Œè¿”å›-1è¡¨ç¤ºå¤±è´¥
  */
 int HILINK_StopSoftAp(void);
 

@@ -1,78 +1,79 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
- * Description: HiLink SDK����ʵ��Դ�ļ�
+ * Description: HiLink SDK适配实现源文件
  * Create: 2019-04-20
- * Notes: ���ļ��еĽӿ���Ҫ�����ṩ������������ʹ�ã�Ϊ��ǰ����ݣ������Ͻӿ��ݲ������±���淶����.
+ * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
  */
 #include "hilink_sdk_adapter.h"
-#include <stdio.h>
+
+#include "log.h"
 /*
- * ֪ͨ�豸��״̬
- * status��ʾ�豸��ǰ��״̬
- * ע�⣬�˺������豸���̸��ݲ�Ʒҵ��ѡ����ʵ��
+ * 通知设备的状态
+ * status表示设备当前的状态
+ * 注意，此函数由设备厂商根据产品业务选择性实现
  */
 void hilink_notify_devstatus(int status)
 {
     switch (status) {
         case HILINK_M2M_CLOUD_OFFLINE:
-            printf("�豸���ƶ����ӶϿ�\n");
-            /* �豸���ƶ����ӶϿ������ڴ˴�����ʵ�� */
+            log_info("HILINK_M2M_CLOUD_OFFLINE\n");
+            /* 设备与云端连接断开，请在此处添加实现 */
             break;
         case HILINK_M2M_CLOUD_ONLINE:
-             printf("�豸�����ƶ˳ɹ�\n");
-            /* �豸�����ƶ˳ɹ������ڴ˴�����ʵ�� */
+             log_info("HILINK_M2M_CLOUD_ONLINE\n");
+            /* 设备连接云端成功，请在此处添加实现 */
             break;
         case HILINK_M2M_LONG_OFFLINE:
-            printf("�豸���ƶ����ӳ�ʱ��Ͽ�\n");
-            /* �豸���ƶ����ӳ�ʱ��Ͽ������ڴ˴�����ʵ�� */
+            log_info("HILINK_M2M_LONG_OFFLINE\n");
+            /* 设备与云端连接长时间断开，请在此处添加实现 */
             break;
         case HILINK_M2M_LONG_OFFLINE_REBOOT:
-            printf("�豸���ƶ����ӳ�ʱ��Ͽ����������\n");
-            /* �豸���ƶ����ӳ�ʱ��Ͽ���������������ڴ˴�����ʵ�� */
+            log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
+            /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
             break;
         case HILINK_UNINITIALIZED:
-            printf("HiLink�߳�δ����\n");
-            /* HiLink�߳�δ���������ڴ˴�����ʵ�� */
+            log_info("HILINK_UNINITIALIZED\n");
+            /* HiLink线程未启动，请在此处添加实现 */
             break;
         case HILINK_LINK_UNDER_AUTO_CONFIG:
-            printf("�豸��������ģʽ\n");
-            /* �豸��������ģʽ�����ڴ˴�����ʵ�� */
+            log_info("HILINK_LINK_UNDER_AUTO_CONFIG\n");
+            /* 设备处于配网模式，请在此处添加实现 */
             break;
         case HILINK_LINK_CONFIG_TIMEOUT:
-            printf("�豸����10���ӳ�ʱ״̬\n");
-            /* �豸����10���ӳ�ʱ״̬�����ڴ˴�����ʵ�� */
+            log_info("HILINK_LINK_CONFIG_TIMEOUT\n");
+            /* 设备处于10分钟超时状态，请在此处添加实现 */
             break;
         case HILINK_LINK_CONNECTTING_WIFI:
-            printf("�豸��������·����\n");
-            /* �豸��������·���������ڴ˴�����ʵ�� */
+            log_info("HILINK_LINK_CONNECTTING_WIFI\n");
+            /* 设备正在连接路由器，请在此处添加实现 */
             break;
         case HILINK_LINK_CONNECTED_WIFI:
-            printf("�豸�Ѿ�����·����\n");
-            /* �豸�Ѿ�����·���������ڴ˴�����ʵ�� */
+            log_info("HILINK_LINK_CONNECTED_WIFI\n");
+            /* 设备已经连上路由器，请在此处添加实现 */
             break;
         case HILINK_M2M_CONNECTTING_CLOUD:
-            printf("�豸���������ƶ�\n");
-            /* �豸���������ƶˣ����ڴ˴�����ʵ�� */
+            log_info("HILINK_M2M_CONNECTTING_CLOUD\n");
+            /* 设备正在连接云端，请在此处添加实现 */
             break;
         case HILINK_M2M_CLOUD_DISCONNECT:
-            printf("�豸��·���������ӶϿ�\n");
-            /* �豸��·���������ӶϿ������ڴ˴�����ʵ�� */
+            log_info("HILINK_M2M_CLOUD_DISCONNECT\n");
+            /* 设备与路由器的连接断开，请在此处添加实现 */
             break;
         case HILINK_DEVICE_REGISTERED:
-            printf("�豸��ע��\n");
-            /* �豸��ע�ᣬ���ڴ˴�����ʵ�� */
+            log_info("HILINK_DEVICE_REGISTERED\n");
+            /* 设备被注册，请在此处添加实现 */
             break;
         case HILINK_DEVICE_UNREGISTER:
-            printf("�豸�����\n");
-            /* �豸��������ڴ˴�����ʵ�� */
+            log_info("HILINK_DEVICE_UNREGISTER\n");
+            /* 设备被解绑，请在此处添加实现 */
             break;
         case HILINK_REVOKE_FLAG_SET:
-            printf("�豸��λ�����λ\n");
-            /* �豸��λ�����λ�����ڴ˴�����ʵ�� */
+            log_info("HILINK_REVOKE_FLAG_SET\n");
+            /* 设备复位标记置位，请在此处添加实现 */
             break;
         case HILINK_NEGO_REG_INFO_FAIL:
-            printf("�豸Э��������Ϣʧ��\n");
-            /* �豸Э��������Ϣʧ�� */
+            log_info("HILINK_NEGO_REG_INFO_FAIL\n");
+            /* 设备协商配网信息失败 */
             break;
         default:
             break;
@@ -82,23 +83,24 @@ void hilink_notify_devstatus(int status)
 }
 
 /*
- * ʵ��ģ������ǰ���豸����
- * flagΪ0��ʾHiLink SDK �߳̿��Ź�����ģ������; Ϊ1��ʾAPPɾ���豸����ģ������
- * ����0��ʾ�����ɹ�, ϵͳ����������ʹ��Ӳ����; ����1��ʾ�����ɹ�, ϵͳ����������ʹ��������;
- * ���ظ�ֵ��ʾ����ʧ��, ϵͳ��������
- * ע�⣬�˺������豸����ʵ�֣���APPɾ���豸����ģ������ʱ���豸��������ط���0������ᵼ��ɾ���豸�쳣
+ * 实现模组重启前的设备操作
+ * flag为0表示HiLink SDK 线程看门狗触发模组重启; 为1表示APP删除设备触发模组重启
+ * 返回0表示处理成功, 系统可以重启，使用硬重启; 返回1表示处理成功, 系统可以重启，使用软重启;
+ * 返回负值表示处理失败, 系统不能重启
+ * 注意，此函数由设备厂商实现；若APP删除设备触发模组重启时，设备操作完务必返回0，否则会导致删除设备异常
  */
 int hilink_process_before_restart(int flag)
 {
-    /* HiLink SDK�߳̿��Ź���ʱ����ģ������ */
+    log_info("hilink_process_before_restart");
+    /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG) {
-        /* ʵ��ģ������ǰ�Ĳ���(��:����ϵͳ״̬��) */
+        /* 实现模组重启前的操作(如:保存系统状态等) */
         return -1;
     }
 
-    /* APPɾ���豸����ģ������ */
+    /* APP删除设备触发模组重启 */
     if (flag == HILINK_REBOOT_DEVDELETE) {
-        /* ʵ��ģ������ǰ�Ĳ���(��:����ϵͳ״̬��) */
+        /* 实现模组重启前的操作(如:保存系统状态等) */
         return 0;
     }
 
@@ -106,12 +108,13 @@ int hilink_process_before_restart(int flag)
 }
 
 /*
- * ��ȡ�豸�����룬��֪ͨAPP
- * status��ʾ�Ƿ��͹��ϣ�0��ʾ�����ͣ�1��ʾ���ͣ�code��ʾ������
- * ����0��ʾ�ɹ������ط�0ʧ��
+ * 获取设备故障码，并通知APP
+ * status表示是否发送故障，0表示不发送，1表示发送；code表示故障码
+ * 返回0表示成功，返回非0失败
  */
 int get_faultDetection_state(int *status, int *code)
 {
-    /* ���豸����ʵ�֣�������faultDetection���Ե�ǰֵ������� */
+    /* 由设备厂商实现，将服务faultDetection属性当前值赋予出参 */
+    log_info("get_faultDetection_state status:%d,code:%d",*status,*code);
     return 0;
 }

@@ -9,6 +9,13 @@ extern "C"
 
     typedef struct
     {
+        char Switch[3];
+        char LedEnable;
+        char PowerOffProtection;
+    } dev_500c33_t; //U2/天际系列：三键智能开关（HY0097）
+
+    typedef struct
+    {
         int ColorTemperature;
         char Luminance;
         char Switch;
@@ -16,22 +23,12 @@ extern "C"
 
     typedef struct
     {
-        char Switch_1;
-        char Switch_2;
-        char Switch_3;
+        char Switch[3];
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
     } dev_HY0107_t; //3路智能开关模块（HY0107，型号IHC1240）
 
-    typedef struct
-    {
-        char Switch_1;
-        char Switch_2;
-        char Switch_3;
-        char LedEnable;
-        char PowerOffProtection;
-    } dev_500c33_t; //U2/天际系列：三键智能开关（HY0097）
     //----------------------------------
     typedef struct
     {
@@ -54,8 +51,15 @@ extern "C"
         char TargetTemperature_3;
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
 
-    void dev_private_attribute(dev_data_t *dev, cJSON *Data);
-    void dev_private_event(dev_data_t *dev, cJSON *Data);
+    extern char *dev_modeId[];
+    extern char *attr_500c33[];
+    extern char *attr_09223f[];
+    extern char *attr_HY0107[];
+    extern char *attr_HY0093[];
+    extern char *attr_HY0134[];
+
+    int dev_private_attribute(dev_data_t *dev, cJSON *Data);
+
 #ifdef __cplusplus
 }
 #endif

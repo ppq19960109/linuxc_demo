@@ -1,6 +1,6 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2020. All rights reserved.
- * Description: HiLink SDK�������ͷ�ļ�
+ * Description: HiLink SDK网桥相关头文件
  */
 #ifndef HILINK_PROFILE_BRIDGE_H
 #define HILINK_PROFILE_BRIDGE_H
@@ -19,19 +19,19 @@ extern "C" {
 #define BRG_MAX_SUB_DEV_NUM  64
 #endif
 
-/* Hilink Device SDK ���⿪�Žӿ� */
+/* Hilink Device SDK 对外开放接口 */
 typedef struct {
-    char sn[40];     /* �豸Ψһ��ʶ������sn�ţ����ȷ�Χ��0,40] */
-    char prodId[5];  /* �豸HiLink��֤�ţ����ȷ�Χ��0,5] */
-    char model[32];  /* �豸�ͺţ����ȷ�Χ��0,32] */
-    char devType[4]; /* �豸���ͣ����ȷ�Χ��0,4] */
-    char manu[4];    /* �豸�����̣����ȷ�Χ��0,4] */
-    char mac[32];    /* �豸MAC��ַ���̶�32�ֽ� */
-    char hiv[32];    /* �豸HilinkЭ��汾�����ȷ�Χ��0,32] */
-    char fwv[64];    /* �豸�̼��汾�����ȷ�Χ[0,64] */
-    char hwv[64];    /* �豸Ӳ���汾�����ȷ�Χ[0,64] */
-    char swv[64];    /* �豸�����汾�����ȷ�Χ[0,64] */
-    int protType;    /* �豸Э�����ͣ�ȡֵ��Χ[1,3] */
+    char sn[40];     /* 设备唯一标识，比如sn号，长度范围（0,40] */
+    char prodId[5];  /* 设备HiLink认证号，长度范围（0,5] */
+    char model[32];  /* 设备型号，长度范围（0,32] */
+    char devType[4]; /* 设备类型，长度范围（0,4] */
+    char manu[4];    /* 设备制造商，长度范围（0,4] */
+    char mac[32];    /* 设备MAC地址，固定32字节 */
+    char hiv[32];    /* 设备Hilink协议版本，长度范围（0,32] */
+    char fwv[64];    /* 设备固件版本，长度范围[0,64] */
+    char hwv[64];    /* 设备硬件版本，长度范围[0,64] */
+    char swv[64];    /* 设备软件版本，长度范围[0,64] */
+    int protType;    /* 设备协议类型，取值范围[1,3] */
 } BrgDevInfo;
 
 typedef struct {
@@ -40,130 +40,130 @@ typedef struct {
 } BrgDevSvcInfo;
 
 typedef enum {
-    DEV_OFFLINE = 0,    /* �豸���� */
-    DEV_ONLINE  = 1,    /* �豸���� */
-    DEV_RESTORE = 2,    /* �豸�ָ�������ɾ���ƶ���Ϣ */
-    DEV_ADD     = 3     /* �豸�ָ�����֮������ע�� */
+    DEV_OFFLINE = 0,    /* 设备下线 */
+    DEV_ONLINE  = 1,    /* 设备上线 */
+    DEV_RESTORE = 2,    /* 设备恢复出厂，删除云端信息 */
+    DEV_ADD     = 3     /* 设备恢复出厂之后重新注册 */
 } DevOnlineStatus;
 
 typedef struct {
-    const char *svcId;    /* ����ȡ�ķ���ID */
-    const char *json;     /* Json��ʽ�������ֶΣ�ΪNULLʱ��ȡsvcId�����µ��������� */
-    unsigned int jsonLen; /* json��ΪNULLʱ��Json��ʽ�ַ������� */
+    const char *svcId;    /* 待获取的服务ID */
+    const char *json;     /* Json格式的属性字段，为NULL时获取svcId服务下的所有属性 */
+    unsigned int jsonLen; /* json不为NULL时，Json格式字符串长度 */
 } GetBrgDevCharState;
 
 /*
- * Bridge�ϱ��¹��豸״̬
- * �ú������豸�����߻��̵���
- * sn: Bridge���¹��豸Ψһ��ʶ
- * status: �¹��豸״̬
- * ע�⣺DEV_RESTORE��DEV_ADDֻ�������Ŵ���ֱ����ģʽ��ʹ��
+ * Bridge上报下挂设备状态
+ * 该函数由设备开发者或厂商调用
+ * sn: Bridge桥下挂设备唯一标识
+ * status: 下挂设备状态
+ * 注意：DEV_RESTORE、DEV_ADD只能在网桥处于直连云模式下使用
  */
 int HilinkSyncBrgDevStatus(const char *sn, DevOnlineStatus status);
 
 /*
- * ��ȡ�豸���豸��Ϣ
- * �ú������豸�����߻���ʵ��
- * sn: Bridge�¹��豸Ψһ��ʶ
- * devInfo: sdk���ٿռ䣬�ɳ�������豸��Ϣ
- * ����0: �豸��Ϣ��ȡ�ɹ���devInfoָ����豸��Ϣ��ȷ��Ч
- * ���ط�0: �豸��Ϣ��ȡʧ�ܣ�devInfoָ����豸��Ϣ��Ч
+ * 获取设备的设备信息
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge下挂设备唯一标识
+ * devInfo: sdk开辟空间，由厂商填充设备信息
+ * 返回0: 设备信息获取成功，devInfo指向的设备信息正确有效
+ * 返回非0: 设备信息获取失败，devInfo指向的设备信息无效
  */
 int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo);
 
 /*
- * ��ȡ�豸�ķ�����Ϣ��
- * �ú������豸�����߻���ʵ��
- * sn: Bridge�¹��豸Ψһ��ʶ��
- * svcInfo: sdk���ٿռ䣬�ɳ������
- * svcNum: �ɳ��̸���ʵ�����ķ����������ֵ
- * ����0: ������Ϣ��ȡ�ɹ���svcInfoָ��ķ�����Ϣ��ȷ��Ч
- * ���ط�0: ������Ϣ��ȡʧ�ܣ�svcInfoָ��ķ�����Ϣ��Ч
+ * 获取设备的服务信息。
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge下挂设备唯一标识。
+ * svcInfo: sdk开辟空间，由厂商填充
+ * svcNum: 由厂商根据实际填充的服务个数填充该值
+ * 返回0: 服务信息获取成功，svcInfo指向的服务信息正确有效
+ * 返回非0: 服务信息获取失败，svcInfo指向的服务信息无效
  */
 int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *svcNum);
 
 /*
- * �ϱ������豸����report���Ե�״̬
- * �ú������豸�����߻��̵���
- * ע��: ֻ����report�����������ֶ���ʹ�ô˽ӿ��ϱ��¼���ֻ������hilink_m2m_process��һ�������е���
- * sn: ���¹��豸SN
- * svcId: ���¹��豸����ID
- * payload: Json��ʽ���ֶ�����ֵ
- * len: payload�ĳ���
- * tid: �ӿڵ�������taskid ��ͬm2m taskid, ���ڱ�֤ͬһ�����е���
- * ����0: ����״̬�ϱ��ɹ�
- * ���ط�0: ����״̬�ϱ�ʧ��
+ * 上报桥下设备具有report属性的状态
+ * 该函数由设备开发者或厂商调用
+ * 注意: 只具有report能力的属性字段需使用此接口上报事件，只允许与hilink_m2m_process在一个任务中调用
+ * sn: 桥下挂设备SN
+ * svcId: 桥下挂设备服务ID
+ * payload: Json格式的字段与其值
+ * len: payload的长度
+ * tid: 接口调用所在taskid 需同m2m taskid, 用于保证同一任务中调用
+ * 返回0: 服务状态上报成功
+ * 返回非0: 服务状态上报失败
  */
 int HilinkReportBrgDevCharState(const char *sn, const char *svcId,
     char *payload, unsigned int len, unsigned long tid);
 
 /*
- * �ϱ�Bridge���¹��豸����״̬
- * �ú������豸�����߻��̵���
- * ע��: �˽ӿڷ����ϱ��¼�֪ͨ�������ֶ�״̬��Hilink Device SDKͳһ��ѯ���ϱ��������ʱ200ms
- * sn: Bridge���¹��豸Ψһ��ʶ
- * svcid: Bridge���¹��豸����ID
- * ����0: ����״̬�ϱ��ɹ�
- * ���ط�0: ����״̬�ϱ�ʧ��
+ * 上报Bridge桥下挂设备服务状态
+ * 该函数由设备开发者或厂商调用
+ * 注意: 此接口发送上报事件通知，服务字段状态由Hilink Device SDK统一查询后上报，大概延时200ms
+ * sn: Bridge桥下挂设备唯一标识
+ * svcid: Bridge桥下挂设备服务ID
+ * 返回0: 服务状态上报成功
+ * 返回非0: 服务状态上报失败
  */
 int HilinkUploadBrgDevCharState(const char *sn, const char *svcId);
 
 /*
- * ���÷���״̬
- * �ú������豸�����߻���ʵ��
- * sn: Bridge���¹��豸Ψһ��ʶ
- * svcId: ����ID
- * payload: ��Ҫ���õ�Json��ʽ���ֶ�����ֵ
- * len: ���յ���payload�ĳ��ȣ���ΧΪ[0��512)
- * ����M2M_SEARCH_GW_INVALID_PACKET(-101): ��ñ��Ĳ�����Ҫ��
- * ����M2M_SVC_STUTAS_VALUE_MODIFYING(-111): ����״ֵ̬�����޸��У��޸ĳɹ���ײ��豸���������ϱ�
- * ����M2M_NO_ERROR(0): ����״ֵ̬�޸ĳɹ�������Ҫ�ײ��豸�����ϱ�����Hilink Device SDK�ϱ�
+ * 设置服务状态
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ * svcId: 服务ID
+ * payload: 需要设置的Json格式的字段与其值
+ * len: 接收到的payload的长度，范围为[0，512)
+ * 返回M2M_SEARCH_GW_INVALID_PACKET(-101): 获得报文不符合要求
+ * 返回M2M_SVC_STUTAS_VALUE_MODIFYING(-111): 服务状态值正在修改中，修改成功后底层设备必须主动上报
+ * 返回M2M_NO_ERROR(0): 服务状态值修改成功，不需要底层设备主动上报，由Hilink Device SDK上报
  */
 int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payload, unsigned int len);
 
 /*
- * ��ȡ����״̬
- * �ú������豸�����߻���ʵ��
- * sn: Bridge���¹��豸Ψһ��ʶ
- * in: ��ȡ��Щ�������Ե�ֵ
- * out: ���ر�������ֶ�ֵ���ݵ�ָ��,�ڴ��ɳ��̿��٣�ʹ����ɺ���Hilink Device SDK�ͷ�
- * outLen: ��ȡ����payload�ĳ��ȣ���ΧΪ[0��512)
- * ����0: ��ȡ����״̬�ɹ�
- * ���ط�0: ��ȡ����״̬ʧ��
- * ע��: out��Ҫ��̬���룬Hilink Device SDKʹ����ɺ�����hilink_free�ӿ��ͷ�
+ * 获取服务状态
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ * in: 获取哪些服务属性的值
+ * out: 返回保存服务字段值内容的指针,内存由厂商开辟，使用完成后，由Hilink Device SDK释放
+ * outLen: 读取到的payload的长度，范围为[0，512)
+ * 返回0: 获取服务状态成功
+ * 返回非0: 获取服务状态失败
+ * 注意: out需要动态申请，Hilink Device SDK使用完成后会调用hilink_free接口释放
  */
 int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out, unsigned int *outLen);
 
 /*
- * ɾ��bridge�¹��豸
- * �ú������豸�����߻���ʵ��
- * sn: Bridge���¹��豸Ψһ��ʶ
+ * 删除bridge下挂设备
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
  */
 int HilinkDelBrgDev(const char *sn);
 
 /*
- * bride�¹��豸�ָ�����
- * �ú������豸�����߻��̵���
- * sn: Bridge���¹��豸Ψһ��ʶ
+ * bride下挂设备恢复出厂
+ * 该函数由设备开发者或厂商调用
+ * sn: Bridge桥下挂设备唯一标识
  */
 int HilinkResetBrgDev(const char *sn);
 
 /*
- * bride�¹��豸�������֪ͨSDK
- * �ú������豸�����߻��̵���
- * sn��ʾ���¹��豸Ψһ��ʶ��code��ʾ�������
+ * bride下挂设备升级完成通知SDK
+ * 该函数由设备开发者或厂商调用
+ * sn表示桥下挂设备唯一标识，code表示升级结果
  */
 void HiLinkBrgDevOtaFinish(const char *sn, int code);
 
 /*
- * ���豸devinfo���º�ɵ��ô˽ӿ�ͬ��
- * sn��ʾ���¹��豸Ψһ��ʶ��taskId��ʾ�ӿڵ�����������id
+ * 子设备devinfo更新后可调用此接口同步
+ * sn表示桥下挂设备唯一标识，taskId表示接口调用所在任务id
  */
 int HiLinkSyncBrgDevInfo(const char *sn, unsigned long taskId);
 
 /*
- * �豸�����߻��߳��̵��ô˽ӿ�ʵ�������¹����豸����/���Ե������ϱ�
- * payloadΪjson��ʽ�����ݣ�ע����������ʽ
+ * 设备开发者或者厂商调用此接口实现网桥下挂子设备服务/属性的批量上报
+ * payload为json格式的数据，注意是数组形式
     [{
       "devId": "2389294",
       "sn": "00E0FC018009",
@@ -175,8 +175,8 @@ int HiLinkSyncBrgDevInfo(const char *sn, unsigned long taskId);
         }
       }]
     }]
- * ����0��ʾ�ϱ��ɹ���������ʾʧ��
- * ע��:payload������'\0'Ϊ��������������ܵ����쳣
+ * 返回0表示上报成功，其他表示失败
+ * 注意:payload必须以'\0'为结束符，否则可能导致异常
  */
 int HILINK_ReportBrgAllSubDevState(const char *payload);
 

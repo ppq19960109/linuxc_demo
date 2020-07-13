@@ -8,6 +8,12 @@
 
 char wifi_ssid[32] = "HUAWEI-WDNJ4L";
 char wifi_psk[16] = "1234567890";
+char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
+char *cmd_add = "wpa_cli -i wlan0 add_network";
+char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
+char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
+char *cmd_udhcp = "udhcpc -i wlan0";
+
 /*
  * 获取本地ip
  * localIp表示存放Ip的缓冲
@@ -74,11 +80,6 @@ int HILINK_SetWiFiInfo(const char *ssid, unsigned int ssidLen, const char *pwd, 
     return 0;
 }
 
-char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
-char *cmd_add = "wpa_cli -i wlan0 add_network";
-char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
-char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
-char *cmd_udhcp = "udhcpc -i wlan0";
 /* 断开并重连WiFi */
 void HILINK_ReconnectWiFi(void)
 {
@@ -144,7 +145,7 @@ int HILINK_GetNetworkState(int *state)
         *state = 0;
     }
 
-    log_info("HILINK_GetNetworkState ip:%s", ip);
+    // log_info("HILINK_GetNetworkState ip:%s", ip);
     return 0;
 }
 
@@ -171,23 +172,13 @@ int HILINK_GetWiFiRssi(signed char *rssi)
 {
     log_info("HILINK_GetWiFiRssi");
     // FILE *pFile = popen("iwconfig wlan0| grep Signal level -Eo '[\-][0-9][0-9]*' | awk 'NR==1{print $1}'iwconfig wlan0| grep Signal level -Eo \'[\\-][0-9][0-9]*\' | awk \'NR==1{print $1}\'", "r");
-    FILE *pFile = popen("wpa_cli scan_results | grep HUAWEI-WDNJ4L |awk \'{print $3}\'", "r");
-    if (pFile == NULL)
-    {
-        return -1;
-    }
-    char szBuf[8] = {0};
-    char *str = fgets(szBuf, sizeof(szBuf), pFile);
-    if (str == NULL)
-    {
-        pclose(pFile);
-        return -1;
-    }
 
+    char szBuf[8] = {0};
+
+    popen_cmd("wpa_cli scan_results | grep HUAWEI-WDNJ4L |awk \'{print $3}\'", "r", szBuf, sizeof(szBuf));
     *rssi = atoi(szBuf);
     log_info("HILINK_GetWiFiRssi:%s,%d\n", szBuf, *rssi);
 
-    pclose(pFile);
     return 0;
 }
 
@@ -207,6 +198,8 @@ int HILINK_Restart(void)
 void HILINK_SetStationNumLimit(void)
 {
     log_info("HILINK_SetStationNumLimit");
+    system("hostapd_cli -iwlan0 set max_num_sta 2");
+    system("hostapd_cli -iwlan0 reload");
     return;
 }
 
@@ -214,5 +207,15 @@ void HILINK_SetStationNumLimit(void)
 void HILINK_DisconnectStation(const char *ip)
 {
     log_info("HILINK_DisconnectStation");
+    char buf[18];
+    char cmd_arp[80] = "arp ";
+    char *cmd_arp_ex = " | grep -Eo '([0-9a-fA-F]{2})(([\\s:-][0-9a-fA-F]{2}){5})'";
+    strcpy(&cmd_arp[strlen(cmd_arp)], ip);
+    strcpy(&cmd_arp[strlen(cmd_arp)], cmd_arp_ex);
+    popen_cmd(cmd_arp, "r", buf, sizeof(buf));
+
+    char cmd_disconnect[64] = "hostapd_cli -iwlan0 disassociate ";
+    strcpy(&cmd_disconnect[strlen(cmd_disconnect)], buf);
+    system(cmd_disconnect);
     return;
 }

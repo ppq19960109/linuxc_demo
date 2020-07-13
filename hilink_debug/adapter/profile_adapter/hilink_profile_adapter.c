@@ -32,27 +32,18 @@ typedef struct
 
 /* 设备信息定义 */
 dev_info_t dev_info = {
-    "135792468", //Device SN
+    "12345678", //Device SN
     PRODUCT_ID,
-    "SP mini3-HL123",
+    DEVICE_MODEL,
     DEVICE_TYPE,
     MANUAFACTURER,
-    "234567890123", //Device Mac
+    "123456789123", //Device Mac
     "1.0.0",
     "1.0.0",
     "1.0.0",
     "1.0.0",
     PROTOCOL_TYPE};
 
-// void dev_info_init(dev_info_t *dev_info)
-// {
-//     dev_info->prodId = PRODUCT_ID;
-//     dev_info->hiv = "1.0.0";
-//     dev_info->fwv = "1.0.0";
-//     dev_info->hwv = "1.0.0";
-//     dev_info->swv = "1.0.0";
-//     dev_info->prot_t = PROTOCOL_TYPE;
-// }
 /* 设备类型英文名和厂商英文名长度之和不能超过17字节 */
 typedef struct
 {
@@ -68,7 +59,7 @@ DevNameEn g_devNameEn = {
 /* 服务信息定义 */
 int gSvcNum = 1;
 svc_info_t gSvcInfo[] = {
-    {"binarySwitch", "switch"}};
+    {"switch", "switch"}};
 
 /* AC信息 */
 unsigned char A_C[48] = {
@@ -117,7 +108,7 @@ char *hilink_get_auto_bi_rsa_cipher(void)
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len)
 {
-    log_debug("svcId:%d payload:%s,len:%d", svcId, payload, len);
+    log_debug("svcId:%s payload:%s,len:%d", svcId, payload, len);
 
     if (payload != NULL)
     {
@@ -138,17 +129,21 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen)
 {
-    log_debug("svcId:%d in:%s,len:%d", svcId, in, inLen);
+    log_debug("svcId:%s in:%s,len:%d", svcId, in, inLen);
 
     if (in != NULL)
     {
         cJSON *root = cJSON_Parse(in);
         free(root);
     }
-    void *svc_out = malloc(sizeof(svc_info_t));
-    memcpy(svc_out, gSvcInfo[0].st, strlen(gSvcInfo[0].st) + 1);
-    out = (char **)&svc_out;
-    *outLen = strlen(gSvcInfo[0].st) + 1;
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "on", 0);
+    char *json = cJSON_PrintUnformatted(root);
+
+    *out = json;
+    *outLen = strlen(json);
+    free(root);
     return 0;
 }
 
@@ -160,7 +155,6 @@ void HilinkGetDeviceSn(unsigned int len, char *sn)
 {
     /* 在此处添加实现代码, 将sn赋值给*sn回传 */
     log_debug("HilinkGetDeviceSn:%d", len);
-    strcpy(sn, "567892");
     return;
 }
 
@@ -185,7 +179,8 @@ int getDeviceVersion(char **firmwareVer, char **softwareVer, char **hardwareVer)
 int HiLinkGetPinCode(void)
 {
     /* 测试时，这个数字可以随便改，只要是8位数字即可 */
-    return 12345678;
+    return -1;
+    // return 12345678;
 }
 
 /*

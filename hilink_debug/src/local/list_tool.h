@@ -5,6 +5,7 @@
 extern "C"
 {
 #endif
+
 #include "protocol_cover.h"
 
 int list_del_by_id(const char *id, struct list_head *head);

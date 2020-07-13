@@ -9,20 +9,12 @@
 
 #include "hilink_profile_adapter.h"
 #include "protocol_cover.h"
-
+#include "hilink_cover.h"
+#include "list_hilink.h"
 #ifndef NULL
 #define NULL 0
 #endif
 
-void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
-{
-    strcpy(brgDevInfo->prodId, PRODUCT_ID);
-    strcpy(brgDevInfo->hiv, "1.0.0");
-    strcpy(brgDevInfo->fwv, "1.0.0");
-    strcpy(brgDevInfo->hwv, "1.0.0");
-    strcpy(brgDevInfo->swv, "1.0.0");
-    brgDevInfo->protType = PROTOCOL_TYPE;
-}
 /*
  * 获取设备的设备信息
  * 该函数由设备开发者或厂商实现
@@ -33,27 +25,20 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
  */
 int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
 {
-    log_debug("HilinkGetBrgDevInfo");
+
     /* 厂商实现此接口 */
     if ((sn == NULL) || (devInfo == NULL))
     {
         return -1;
     }
-    dev_data_t *ptr;
-    list_for_each_entry(ptr, &protocol_data.dev_list, node)
+    dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
+    if (dev == NULL)
     {
-        if (strcmp(ptr->DeviceId, sn)==0)
-        {
-            BrgDevInfo_init(devInfo);
-            strcpy(devInfo->sn, ptr->DeviceId);
-            strcpy(devInfo->model, ptr->ModelId);
-            strcpy(devInfo->devType, DEVICE_TYPE);
-            strcpy(devInfo->mac, ptr->GatewayId);
-            strcpy(devInfo->manu, MANUAFACTURER);
-            return 0;
-        }
+        return -1;
     }
-    return -1;
+    memcpy(devInfo, &dev->brgDevInfo, sizeof(BrgDevInfo));
+    log_debug("HilinkGetBrgDevInfo sn:%s", sn);
+    return 0;
 }
 
 /*
@@ -67,13 +52,24 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
  */
 int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *svcNum)
 {
-    log_debug("HilinkGetBrgSvcInfo");
+    log_debug("HilinkGetBrgSvcInfosn:%s", sn);
     /* 厂商实现此接口 */
     if ((sn == NULL) || (svcInfo == NULL) || (svcNum == NULL))
     {
         return -1;
     }
-    dev_data_t *dev_buf = list_get_by_id(sn,&protocol_data.dev_list);
+
+    dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
+    if (dev == NULL)
+    {
+        return -1;
+    }
+    for (int i = 0; i < dev->devSvcNum; ++i)
+    {
+        strcpy(svcInfo->st[i], dev->devSvc[i].svcId);
+        strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
+    }
+    *svcNum = dev->devSvcNum;
 
     return 0;
 }
@@ -91,13 +87,13 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
  */
 int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payload, unsigned int len)
 {
-    log_debug("HilinkPutBrgDevCharState");
+    log_debug("HilinkPutBrgDevCharState svcId:%s,payload:%s", svcId, payload);
     /* 厂商实现此接口 */
     if ((sn == NULL) || (svcId == NULL) || (payload == NULL))
     {
         return -1;
     }
-    dev_data_t *dev_buf = list_get_by_id(sn,&protocol_data.dev_list);
+    hilink_tolocal(sn, svcId, payload);
 
     return 0;
 }
@@ -115,13 +111,32 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
  */
 int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out, unsigned int *outLen)
 {
-    log_debug("HilinkGetBrgDevCharState");
+    log_debug("HilinkGetBrgDevCharState svcId:%s,json:%s,jsonLen:%d", in->svcId, in->json, in->jsonLen);
     /* 厂商实现此接口 */
     if ((sn == NULL) || (in == NULL) || (out == NULL) || (outLen == NULL))
     {
         return -1;
     }
-    dev_data_t *dev_buf = list_get_by_id(sn,&protocol_data.dev_list);
+
+    dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
+    if (dev == NULL)
+    {
+        return -1;
+    }
+    for (int i = 0; i < dev->devSvcNum - 1; ++i)
+    {
+        if (strcmp(dev->devSvc[i].svcId, in->svcId) == 0)
+        {
+            if (dev->devSvc[i].svcVal == NULL)
+                return -1;
+
+            *outLen = strlen(dev->devSvc[i].svcVal) + 1;
+            *out = malloc(*outLen);
+            strcpy(*out, dev->devSvc[0].svcVal);
+
+            break;
+        }
+    }
 
     return 0;
 }
@@ -133,13 +148,12 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
  */
 int HilinkDelBrgDev(const char *sn)
 {
-    log_debug("HilinkDelBrgDev");
+    log_debug("HilinkDelBrgDev sn:%s", sn);
     /* 厂商实现此接口 */
     if (sn == NULL)
     {
         return -1;
     }
-    list_del_by_id(sn,&protocol_data.dev_list);
 
-    return 0;
+    return list_del_by_id_hilink(sn, &hilink_handle.node);
 }

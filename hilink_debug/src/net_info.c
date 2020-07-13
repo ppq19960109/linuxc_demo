@@ -224,3 +224,20 @@ int get_link_status(const char *if_name)
     close(sd);
     return 0;
 }
+
+int popen_cmd(char *cmd, char *mode, char *buf, char bufSize)
+{
+    FILE *pFile = popen(cmd, mode);
+    if (pFile == NULL)
+    {
+        return -1;
+    }
+    char *str = fgets(buf, bufSize, pFile);
+    if (str == NULL)
+    {
+        pclose(pFile);
+        return -1;
+    }
+    pclose(pFile);
+    return 0;
+}
