@@ -150,7 +150,7 @@ unsigned int HILINK_GetMaxUpdateFileSize(void)
 {
     log_debug("HILINK_GetMaxUpdateFileSize");
     /* 厂商实现此接口 */
-    return 0;
+    return 5*1024*1024;
 }
 
 /*

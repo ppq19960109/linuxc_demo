@@ -12,21 +12,24 @@ extern "C"
         char Switch[3];
         char LedEnable;
         char PowerOffProtection;
+        int countdown[3];
     } dev_500c33_t; //U2/天际系列：三键智能开关（HY0097）
 
     typedef struct
     {
-        int ColorTemperature;
-        char Luminance;
+        int ColorTemperature; //色温
+        char Luminance;       //亮度
         char Switch;
     } dev_09223f_t; //U2/天际系列：DLT液晶调光器（09223f，型号U86KTGS150-ZXP）
 
     typedef struct
     {
         char Switch[3];
+        char Switch_All;
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
+        int countdown[3];
     } dev_HY0107_t; //3路智能开关模块（HY0107，型号IHC1240）
 
     //----------------------------------

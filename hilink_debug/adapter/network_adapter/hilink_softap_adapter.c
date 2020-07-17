@@ -27,21 +27,21 @@ int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 {
     log_info("HILINK_StartSoftAp ssid:%s", ssid);
-    system("killall hostapd");
-    system("killall dnsmasq");
-    system("iptables -t nat -F");
-    system("wpa_cli -i wlan0 disable_network 0");
+    // system("killall hostapd");
+    // system("killall dnsmasq");
+    // system("iptables -t nat -F");
+    // system("wpa_cli -i wlan0 disable_network 0");
 
-    system("ifconfig wlan0 192.168.72.1");
-    system("ifconfig wlan0 down");
-    sleep(1);
-    system("ifconfig wlan0 up");
-    sleep(1);
-    system("echo \"1\" > /proc/sys/net/ipv4/ip_forward");
+    // system("ifconfig wlan0 192.168.72.1");
+    // system("ifconfig wlan0 down");
+    // sleep(1);
+    // system("ifconfig wlan0 up");
+    // sleep(1);
+    // system("echo \"1\" > /proc/sys/net/ipv4/ip_forward");
 
-    system("hostapd /userdata/hostapd_rk3308.conf -B");
-    system("dnsmasq -iwlan0  --dhcp-option=3,192.168.72.1 --dhcp-range=192.168.72.50,192.168.72.200,24h");
-    system("iptables -t nat -A POSTROUTING -s 192.168.72.1/24 -o eth0 -j MASQUERADE");
+    // system("hostapd /userdata/hostapd_rk3308.conf -B");
+    // system("dnsmasq -iwlan0  --dhcp-option=3,192.168.72.1 --dhcp-range=192.168.72.50,192.168.72.200,24h");
+    // system("iptables -t nat -A POSTROUTING -s 192.168.72.1/24 -o eth0 -j MASQUERADE");
 
     return 0;
 }
@@ -53,8 +53,8 @@ int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 int HILINK_StopSoftAp(void)
 {
     log_info("HILINK_StopSoftAp");
-    system("killall hostapd");
-    system("killall dnsmasq");
-    system("iptables -t nat -F");
+    // system("killall hostapd");
+    // system("killall dnsmasq");
+    // system("iptables -t nat -F");
     return 0;
 }

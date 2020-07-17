@@ -17,10 +17,10 @@ extern "C" {
 #define HARDWARE_VER  "20000"
 
 /* 设备产品信息 */
-#define PRODUCT_ID    "1011"
+#define PRODUCT_ID    "2AO8"
 #define DEVICE_TYPE   "020"
 #define MANUAFACTURER "312"
-#define DEVICE_MODEL  "U2"
+#define DEVICE_MODEL  "IHA1221HW"
 #define HILINK_VER    "1.0.0"
 
 /* 请确保设备类型英文名和厂商英文名长度之和不超过17字节 */

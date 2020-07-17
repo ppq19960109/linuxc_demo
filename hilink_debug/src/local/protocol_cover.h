@@ -54,6 +54,7 @@ extern "C"
     typedef struct
     {
         int socketfd;
+        int discoverMode;
         struct list_head dev_list;
     } protocol_data_t;
 

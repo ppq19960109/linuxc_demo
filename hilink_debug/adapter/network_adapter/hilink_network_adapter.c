@@ -6,7 +6,7 @@
 
 #include "net_info.h"
 
-char wifi_ssid[32] = "HUAWEI-WDNJ4L";
+char wifi_ssid[32] = "HUAWEI-WDNJ4L";//
 char wifi_psk[16] = "1234567890";
 char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
 char *cmd_add = "wpa_cli -i wlan0 add_network";
@@ -102,24 +102,24 @@ int HILINK_ConnectWiFi(void)
     //     return 0;
     // }
     log_info("HILINK_ConnectWiFi");
-    system(cmd_remove);
-    system(cmd_add);
+    // system(cmd_remove);
+    // system(cmd_add);
 
-    char cmd_ssid[64] = {"wpa_cli -i wlan0 set_network 0 ssid '\""};
-    strcpy(&cmd_ssid[strlen(cmd_ssid)], wifi_ssid);
-    strcpy(&cmd_ssid[strlen(cmd_ssid)], "\"'");
+    // char cmd_ssid[64] = {"wpa_cli -i wlan0 set_network 0 ssid '\""};
+    // strcpy(&cmd_ssid[strlen(cmd_ssid)], wifi_ssid);
+    // strcpy(&cmd_ssid[strlen(cmd_ssid)], "\"'");
 
-    char cmd_psk[64] = {"wpa_cli -i wlan0 set_network 0 psk '\""};
-    strcpy(&cmd_psk[strlen(cmd_psk)], wifi_psk);
-    strcpy(&cmd_psk[strlen(cmd_psk)], "\"'");
+    // char cmd_psk[64] = {"wpa_cli -i wlan0 set_network 0 psk '\""};
+    // strcpy(&cmd_psk[strlen(cmd_psk)], wifi_psk);
+    // strcpy(&cmd_psk[strlen(cmd_psk)], "\"'");
 
-    log_info("cmd_ssid %s", cmd_ssid);
-    log_info("cmd_psk %s", cmd_psk);
-    system(cmd_ssid);
-    system(cmd_psk);
+    // log_info("cmd_ssid %s", cmd_ssid);
+    // log_info("cmd_psk %s", cmd_psk);
+    // system(cmd_ssid);
+    // system(cmd_psk);
 
-    system(cmd_enable);
-    system(cmd_udhcp);
+    // system(cmd_enable);
+    // system(cmd_udhcp);
     return 0;
 }
 
@@ -157,7 +157,7 @@ int HILINK_GetNetworkState(int *state)
  */
 int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
 {
-    log_info("HILINK_GetWiFiBssid");
+    log_info("HILINK_GetWiFiBssid bssidLen:%d",*bssidLen);
     int ret = get_local_mac(ETH_NAME, bssid, *bssidLen);
     log_info("HILINK_GetWiFiBssid:%s %d", bssid, ret);
     return ret;
@@ -198,8 +198,8 @@ int HILINK_Restart(void)
 void HILINK_SetStationNumLimit(void)
 {
     log_info("HILINK_SetStationNumLimit");
-    system("hostapd_cli -iwlan0 set max_num_sta 2");
-    system("hostapd_cli -iwlan0 reload");
+    // system("hostapd_cli -iwlan0 set max_num_sta 2");
+    // system("hostapd_cli -iwlan0 reload");
     return;
 }
 

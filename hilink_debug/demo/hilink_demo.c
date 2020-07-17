@@ -18,6 +18,7 @@
 
 void hilink_msleep(int);
 
+extern const char *report_json[];
 int main(void)
 {
     hilink_main();
@@ -25,6 +26,7 @@ int main(void)
     protlcol_init();
     hilink_handle_init();
 
+    log_error("get_netlink_status %d", get_netlink_status(ETH_NAME));
     printf("Program is started.\r\n");
     HILINK_SetLogLevel(HILINK_LOG_ERR);
     HILINK_SdkAttr *SdkAttr = HILINK_GetSdkAttr();
@@ -40,8 +42,10 @@ int main(void)
     //-------------------------------------------------
 
     // HilinkSyncBrgDevStatus("2389294",DEV_ONLINE);
-    read_from_local(0);
+    for (int i = 0; i < 5; i++)
+        read_from_local(report_json[i]);
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
+    int i = 0;
     while (1)
     {
         hilink_msleep(1000);

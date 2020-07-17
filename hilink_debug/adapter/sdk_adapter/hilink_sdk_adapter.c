@@ -6,7 +6,7 @@
  */
 #include "hilink_sdk_adapter.h"
 
-#include "log.h"
+#include "protocol_cover.h"
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -14,69 +14,70 @@
  */
 void hilink_notify_devstatus(int status)
 {
-    switch (status) {
-        case HILINK_M2M_CLOUD_OFFLINE:
-            log_info("HILINK_M2M_CLOUD_OFFLINE\n");
-            /* 设备与云端连接断开，请在此处添加实现 */
-            break;
-        case HILINK_M2M_CLOUD_ONLINE:
-             log_info("HILINK_M2M_CLOUD_ONLINE\n");
-            /* 设备连接云端成功，请在此处添加实现 */
-            break;
-        case HILINK_M2M_LONG_OFFLINE:
-            log_info("HILINK_M2M_LONG_OFFLINE\n");
-            /* 设备与云端连接长时间断开，请在此处添加实现 */
-            break;
-        case HILINK_M2M_LONG_OFFLINE_REBOOT:
-            log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
-            /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
-            break;
-        case HILINK_UNINITIALIZED:
-            log_info("HILINK_UNINITIALIZED\n");
-            /* HiLink线程未启动，请在此处添加实现 */
-            break;
-        case HILINK_LINK_UNDER_AUTO_CONFIG:
-            log_info("HILINK_LINK_UNDER_AUTO_CONFIG\n");
-            /* 设备处于配网模式，请在此处添加实现 */
-            break;
-        case HILINK_LINK_CONFIG_TIMEOUT:
-            log_info("HILINK_LINK_CONFIG_TIMEOUT\n");
-            /* 设备处于10分钟超时状态，请在此处添加实现 */
-            break;
-        case HILINK_LINK_CONNECTTING_WIFI:
-            log_info("HILINK_LINK_CONNECTTING_WIFI\n");
-            /* 设备正在连接路由器，请在此处添加实现 */
-            break;
-        case HILINK_LINK_CONNECTED_WIFI:
-            log_info("HILINK_LINK_CONNECTED_WIFI\n");
-            /* 设备已经连上路由器，请在此处添加实现 */
-            break;
-        case HILINK_M2M_CONNECTTING_CLOUD:
-            log_info("HILINK_M2M_CONNECTTING_CLOUD\n");
-            /* 设备正在连接云端，请在此处添加实现 */
-            break;
-        case HILINK_M2M_CLOUD_DISCONNECT:
-            log_info("HILINK_M2M_CLOUD_DISCONNECT\n");
-            /* 设备与路由器的连接断开，请在此处添加实现 */
-            break;
-        case HILINK_DEVICE_REGISTERED:
-            log_info("HILINK_DEVICE_REGISTERED\n");
-            /* 设备被注册，请在此处添加实现 */
-            break;
-        case HILINK_DEVICE_UNREGISTER:
-            log_info("HILINK_DEVICE_UNREGISTER\n");
-            /* 设备被解绑，请在此处添加实现 */
-            break;
-        case HILINK_REVOKE_FLAG_SET:
-            log_info("HILINK_REVOKE_FLAG_SET\n");
-            /* 设备复位标记置位，请在此处添加实现 */
-            break;
-        case HILINK_NEGO_REG_INFO_FAIL:
-            log_info("HILINK_NEGO_REG_INFO_FAIL\n");
-            /* 设备协商配网信息失败 */
-            break;
-        default:
-            break;
+    switch (status)
+    {
+    case HILINK_M2M_CLOUD_OFFLINE:
+        log_info("HILINK_M2M_CLOUD_OFFLINE\n");
+        /* 设备与云端连接断开，请在此处添加实现 */
+        break;
+    case HILINK_M2M_CLOUD_ONLINE:
+        log_info("HILINK_M2M_CLOUD_ONLINE\n");
+        /* 设备连接云端成功，请在此处添加实现 */
+        break;
+    case HILINK_M2M_LONG_OFFLINE:
+        log_info("HILINK_M2M_LONG_OFFLINE\n");
+        /* 设备与云端连接长时间断开，请在此处添加实现 */
+        break;
+    case HILINK_M2M_LONG_OFFLINE_REBOOT:
+        log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
+        /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
+        break;
+    case HILINK_UNINITIALIZED:
+        log_info("HILINK_UNINITIALIZED\n");
+        /* HiLink线程未启动，请在此处添加实现 */
+        break;
+    case HILINK_LINK_UNDER_AUTO_CONFIG:
+        log_info("HILINK_LINK_UNDER_AUTO_CONFIG\n");
+        /* 设备处于配网模式，请在此处添加实现 */
+        break;
+    case HILINK_LINK_CONFIG_TIMEOUT:
+        log_info("HILINK_LINK_CONFIG_TIMEOUT\n");
+        /* 设备处于10分钟超时状态，请在此处添加实现 */
+        break;
+    case HILINK_LINK_CONNECTTING_WIFI:
+        log_info("HILINK_LINK_CONNECTTING_WIFI\n");
+        /* 设备正在连接路由器，请在此处添加实现 */
+        break;
+    case HILINK_LINK_CONNECTED_WIFI:
+        log_info("HILINK_LINK_CONNECTED_WIFI\n");
+        /* 设备已经连上路由器，请在此处添加实现 */
+        break;
+    case HILINK_M2M_CONNECTTING_CLOUD:
+        log_info("HILINK_M2M_CONNECTTING_CLOUD\n");
+        /* 设备正在连接云端，请在此处添加实现 */
+        break;
+    case HILINK_M2M_CLOUD_DISCONNECT:
+        log_info("HILINK_M2M_CLOUD_DISCONNECT\n");
+        /* 设备与路由器的连接断开，请在此处添加实现 */
+        break;
+    case HILINK_DEVICE_REGISTERED:
+        log_info("HILINK_DEVICE_REGISTERED\n");
+        /* 设备被注册，请在此处添加实现 */
+        break;
+    case HILINK_DEVICE_UNREGISTER:
+        log_info("HILINK_DEVICE_UNREGISTER\n");
+        /* 设备被解绑，请在此处添加实现 */
+        break;
+    case HILINK_REVOKE_FLAG_SET:
+        log_info("HILINK_REVOKE_FLAG_SET\n");
+        /* 设备复位标记置位，请在此处添加实现 */
+        break;
+    case HILINK_NEGO_REG_INFO_FAIL:
+        log_info("HILINK_NEGO_REG_INFO_FAIL\n");
+        /* 设备协商配网信息失败 */
+        break;
+    default:
+        break;
     }
 
     return;
@@ -93,15 +94,19 @@ int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart");
     /* HiLink SDK线程看门狗超时触发模组重启 */
-    if (flag == HILINK_REBOOT_WATCHDOG) {
+    if (flag == HILINK_REBOOT_WATCHDOG)
+    {
+        system("killall hilinkdemo;/userdata/hilinkdemo &");
         /* 实现模组重启前的操作(如:保存系统状态等) */
-        return -1;
+        return 1;
     }
 
     /* APP删除设备触发模组重启 */
-    if (flag == HILINK_REBOOT_DEVDELETE) {
+    if (flag == HILINK_REBOOT_DEVDELETE)
+    {
+        system("killall hilinkdemo;/userdata/hilinkdemo &");
         /* 实现模组重启前的操作(如:保存系统状态等) */
-        return 0;
+        return 1;
     }
 
     return -1;
@@ -115,6 +120,7 @@ int hilink_process_before_restart(int flag)
 int get_faultDetection_state(int *status, int *code)
 {
     /* 由设备厂商实现，将服务faultDetection属性当前值赋予出参 */
-    log_info("get_faultDetection_state status:%d,code:%d",*status,*code);
+    log_info("get_faultDetection_state status:%d,code:%d", *status, *code);
+    *status = 0;
     return 0;
 }

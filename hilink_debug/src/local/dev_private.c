@@ -11,7 +11,7 @@ char *attr_HY0134[] = {"KeyFobValue", "SceName_", "Enable_", "WindSpeed_", "Curr
 int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
 {
     log_debug("dev_private_attribute\n");
-    int index = -1;
+    int index = -1, uploadState = 0xff;
     int newFlag = 0;
     cJSON *Key, *array_sub;
     char *out;
@@ -192,11 +192,11 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
             break;
         }
         char_copy_from_json(array_sub, "Value", out);
-      }
+    }
     break;
     }
 cover:
     if (index != -1)
-        local_tohilink(dev_data, index);
+        local_tohilink(dev_data, index, uploadState);
     return 0;
 }

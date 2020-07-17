@@ -26,21 +26,73 @@ char *TYPE_Dispatch[] = {"Ctrl", "Add", "Delete", "Attribute", "DevAttri", "DevL
 //                 ]\
 // }"};
 
-const char report_json[] = {"\
-    {\
+const char *report_json[] = {
+    "{\
        \"Command\":\"Report\",\
        \"FrameNumber\":\"00\",\
        \"GatewayId\" :\"0006D12345678909\",\
        \"Type\":\"Register\",\
        \"Data\":[\
          {\
-              \"DeviceId\":\"1234567876543210\",\
+              \"DeviceId\":\"1234567876543670\",\
               \"ModelId\":\"500c33\",\
               \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
       }\
     ]\
-}\
-"};
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"2234567876543671\",\
+              \"ModelId\":\"09223f\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"3234567876543673\",\
+              \"ModelId\":\"HY0107\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"4234567876543674\",\
+              \"ModelId\":\"HY0093\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"5234567876543675\",\
+              \"ModelId\":\"HY0134\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+};
 
 int str_search(const char *key, char **pstr, int num)
 {
@@ -116,6 +168,7 @@ protocol_data_t protocol_data;
 
 void protlcol_init()
 {
+    protocol_data.discoverMode = 1;
     INIT_LIST_HEAD(&protocol_data.dev_list);
     // net_client(&protocol_data.socketfd);
 }
@@ -128,7 +181,7 @@ void protlcol_destory()
 
 int read_from_local(const char *json)
 {
-    cJSON *root = cJSON_Parse(report_json);
+    cJSON *root = cJSON_Parse(json);
     if (root == NULL)
     {
         log_error("root is NULL\n");
@@ -335,7 +388,7 @@ int write_to_local(void *ptr)
     cJSON_AddItemToArray(DataArray, arrayItem);
 
     char *json = cJSON_PrintUnformatted(root);
-    log_debug("%s\n", json);
+    log_error("%s\n", json);
 
     free(json);
 

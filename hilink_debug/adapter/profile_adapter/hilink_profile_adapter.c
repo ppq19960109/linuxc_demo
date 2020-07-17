@@ -5,7 +5,7 @@
  * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
  */
 #include "hilink_profile_adapter.h"
-#include "net_info.h"
+#include "protocol_cover.h"
 
 /* 设备类型定义 */
 typedef struct
@@ -62,28 +62,32 @@ svc_info_t gSvcInfo[] = {
     {"switch", "switch"}};
 
 /* AC信息 */
-unsigned char A_C[48] = {
-    0x49, 0x3F, 0x45, 0x4A, 0x3A, 0x72, 0x38, 0x7B, 0x36, 0x32, 0x50, 0x3C, 0x49, 0x39, 0x62, 0x38,
-    0x72, 0xCB, 0x6D, 0xC5, 0xAE, 0xE5, 0x4A, 0x82, 0xD3, 0xE5, 0x6D, 0xF5, 0x36, 0x82, 0x62, 0xEB,
-    0x89, 0x30, 0x6C, 0x88, 0x32, 0x56, 0x23, 0xFD, 0xB8, 0x67, 0x90, 0xA7, 0x7B, 0x61, 0x1E, 0xAE};
+unsigned char A_C[48] =
+    {0x68, 0x36, 0x21, 0x66, 0x51, 0x42, 0x6b, 0x7a, 0x76, 0x36, 0x42, 0x73, 0x6e, 0x45, 0x2d, 0x26, 0x85, 0x11, 0x84, 0x4a, 0x83, 0x3a, 0x6f, 0xad, 0x21, 0xaa, 0x72, 0x8a, 0x9b, 0x1f, 0x50, 0x49, 0x26, 0xc3, 0x7b, 0x35, 0xe9, 0xe5, 0x12, 0x59, 0x34, 0x97, 0x28, 0x4b, 0x79, 0xad, 0x23, 0xb7};
+// {
+//     0x49, 0x3F, 0x45, 0x4A, 0x3A, 0x72, 0x38, 0x7B, 0x36, 0x32, 0x50, 0x3C, 0x49, 0x39, 0x62, 0x38,
+//     0x72, 0xCB, 0x6D, 0xC5, 0xAE, 0xE5, 0x4A, 0x82, 0xD3, 0xE5, 0x6D, 0xF5, 0x36, 0x82, 0x62, 0xEB,
+//     0x89, 0x30, 0x6C, 0x88, 0x32, 0x56, 0x23, 0xFD, 0xB8, 0x67, 0x90, 0xA7, 0x7B, 0x61, 0x1E, 0xAE};
 
 /* BI信息 */
-char *bi_rsacipher = "611E3824A1C3EC57E2D62BD2CFA1279C"
-                     "4AE847BB4EDD69011A68C92C37005BA1"
-                     "F8664921ED8FA283870296CA532375D1"
-                     "FD13B7E0A5220A2F5D7AFA4AF9E41084"
-                     "589D25295A659258432E76D1F12EDEA8"
-                     "205816556310DA1FF0462F6C931EF3EC"
-                     "CECC34E88B22A32E519FC1DE0D290506"
-                     "C463A4BD32EA20479F725453972C8BD8"
-                     "9D0EF9FA056B7FC2CE77A19D4D4000E7"
-                     "A6EE4FCF81329DEAFDD174627C915125"
-                     "FF4C233620497E8B7C8998B070D2FB1F"
-                     "CB3FC7640769B2FBB5ADAE7B5B2DFEFF"
-                     "E527CF155DED9A73E066694703316AB2"
-                     "6B448B19F91BAFE51AD45C71D2B622EB"
-                     "206FF15B17F655F23DBA781D1AF110F7"
-                     "76E38F60CB11BEFD1CE44169E9B53FE2";
+char *bi_rsacipher = "4E1F4993CF882C6273F222D65A44C5A71F9039C42A042074AB580BFFC63C434B0E8D32A17AC098E1F3CB54AF283B684BD5AE1A907D07C27E92DA74EF3498F6DC5BEF668CC2FD5E3D774568ACB8F50C08BE650299B3134F908F8BD7A7067299AC30267EA4566DC7A7C8E58CBD3830A6839EF74228C12B1FB4935DE88FF0A51C295CA70922B34A6213F219487949B4529700894B3782D5BBDA6A958F2FDA640CB0880597AB6F278037FA68F2A397107D3723B316EE1A11A87526E8F5553058857F624CB0E1F024BBD01D4961C1A678DD6DA072379CFC960832C9BF8AD29F5E854DFCE1DC239A330EC1632C8E048F0297E1ECA6DABFCC0AF9F38E6B01E5F17A8B7E";
+
+// "611E3824A1C3EC57E2D62BD2CFA1279C"
+//                      "4AE847BB4EDD69011A68C92C37005BA1"
+//                      "F8664921ED8FA283870296CA532375D1"
+//                      "FD13B7E0A5220A2F5D7AFA4AF9E41084"
+//                      "589D25295A659258432E76D1F12EDEA8"
+//                      "205816556310DA1FF0462F6C931EF3EC"
+//                      "CECC34E88B22A32E519FC1DE0D290506"
+//                      "C463A4BD32EA20479F725453972C8BD8"
+//                      "9D0EF9FA056B7FC2CE77A19D4D4000E7"
+//                      "A6EE4FCF81329DEAFDD174627C915125"
+//                      "FF4C233620497E8B7C8998B070D2FB1F"
+//                      "CB3FC7640769B2FBB5ADAE7B5B2DFEFF"
+//                      "E527CF155DED9A73E066694703316AB2"
+//                      "6B448B19F91BAFE51AD45C71D2B622EB"
+//                      "206FF15B17F655F23DBA781D1AF110F7"
+//                      "76E38F60CB11BEFD1CE44169E9B53FE2";
 
 /* 获取加密 AC 参数  */
 unsigned char *hilink_get_auto_ac(void)
@@ -95,7 +99,7 @@ unsigned char *hilink_get_auto_ac(void)
 /* 获取加密 BI 参数 */
 char *hilink_get_auto_bi_rsa_cipher(void)
 {
-    log_debug("hilink_get_auto_bi_rsa_cipher");
+    log_debug("hilink_get_auto_bi_rsa_cipher %s", bi_rsacipher);
     return bi_rsacipher;
 }
 
@@ -110,11 +114,18 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
 {
     log_debug("svcId:%s payload:%s,len:%d", svcId, payload, len);
 
-    if (payload != NULL)
+    if (strcmp("switch", svcId) == 0)
     {
-        cJSON *root = cJSON_Parse(payload);
-        free(root);
+        if (payload != NULL)
+        {
+            cJSON *root = cJSON_Parse(payload);
+            cJSON *val = cJSON_GetObjectItem(root, "on");
+            protocol_data.discoverMode = val->valueint;
+
+            free(root);
+        }
     }
+
     return 0;
 }
 
@@ -131,19 +142,31 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
 {
     log_debug("svcId:%s in:%s,len:%d", svcId, in, inLen);
 
-    if (in != NULL)
-    {
-        cJSON *root = cJSON_Parse(in);
-        free(root);
-    }
+    if (svcId == NULL)
+        return -1;
 
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "on", 0);
+    if (strcmp(gSvcInfo[0].svc_id, svcId) == 0)
+    {
+        cJSON_AddNumberToObject(root, "on", protocol_data.discoverMode);
+    }
+    else
+    {
+        return -1;
+    }
     char *json = cJSON_PrintUnformatted(root);
+    log_info("hilink_get_char_state %s", json);
+    if (json == NULL)
+    {
+        free(root);
+        return -1;
+    }
 
     *out = json;
-    *outLen = strlen(json);
+    *outLen = strlen(json) + 1;
+
     free(root);
+
     return 0;
 }
 

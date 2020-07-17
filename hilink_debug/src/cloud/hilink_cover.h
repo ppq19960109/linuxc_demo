@@ -29,6 +29,6 @@ void hilink_handle_init();
 void hilink_handle_destory();
 
 void BrgDevInfo_init(BrgDevInfo *brgDevInfo);
-int local_tohilink(dev_data_t *src, int index);
+int local_tohilink(dev_data_t *src, int index, int uploadState);
 int hilink_tolocal(const char *sn, const char *svcId, const char *payload);
 #endif

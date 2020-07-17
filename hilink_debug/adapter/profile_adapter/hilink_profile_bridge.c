@@ -52,16 +52,18 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
  */
 int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *svcNum)
 {
-    log_debug("HilinkGetBrgSvcInfosn:%s", sn);
+    log_debug("HilinkGetBrgSvcInfo sn:%s ", sn);
     /* 厂商实现此接口 */
     if ((sn == NULL) || (svcInfo == NULL) || (svcNum == NULL))
     {
+        log_debug("HilinkGetBrgSvcInfo NULL");
         return -1;
     }
 
     dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
     if (dev == NULL)
     {
+        log_debug("HilinkGetBrgSvcInfo err");
         return -1;
     }
     for (int i = 0; i < dev->devSvcNum; ++i)
@@ -70,7 +72,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
     }
     *svcNum = dev->devSvcNum;
-
+    log_debug("HilinkGetBrgSvcInfo svcInfo:%s ", svcInfo->st[0]);
     return 0;
 }
 
@@ -123,7 +125,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
     {
         return -1;
     }
-    for (int i = 0; i < dev->devSvcNum - 1; ++i)
+    for (int i = 0; i < dev->devSvcNum; ++i)
     {
         if (strcmp(dev->devSvc[i].svcId, in->svcId) == 0)
         {
@@ -132,7 +134,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
 
             *outLen = strlen(dev->devSvc[i].svcVal) + 1;
             *out = malloc(*outLen);
-            strcpy(*out, dev->devSvc[0].svcVal);
+            strcpy(*out, dev->devSvc[i].svcVal);
 
             break;
         }

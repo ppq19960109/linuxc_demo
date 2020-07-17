@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 static int CalCrc(int crc, const char *buf, int len)
 {
@@ -129,6 +130,14 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
     return 0;
 }
 
+int file_size(char *filename)
+{
+    struct stat statbuf;
+    stat(filename, &statbuf);
+    int size = statbuf.st_size;
+
+    return size;
+}
 const char data[] = {};
 int main(int agrc, char *agrv[])
 {
@@ -177,8 +186,21 @@ int main(int agrc, char *agrv[])
 
     // }
     // pclose(pFile);
-    char *ptr;
-    char *str="SceName_11";
-    printf("val:%d,%d\n", atoi(&str[8]),strtol(&str[8], NULL, 10));
+
+    char *dev = "hilink_ac_1661.key";
+    int fd = open(dev, O_RDWR);
+    char buf[64] = {0};
+    if (fd < 0)
+    {
+        perror(dev);
+        return -1;
+    }
+    read(fd, buf, 64);
+    for (int i = 0; i < 48; i++)
+    {
+        printf("0x%x,", (unsigned char)buf[i]);
+    }
+    printf("\n");
+    close(fd);
     return 0;
 }

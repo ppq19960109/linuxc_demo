@@ -1,5 +1,5 @@
 
-CROSS_COMPILE = armv8l-linux-gnueabihf-
+# CROSS_COMPILE = armv8l-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -23,7 +23,7 @@ LIBS += -Wl,--start-group	\
 SRC += $(wildcard $(SRC_PATH)/*.c)
 
 OBJ += $(SRC:%.c=%.o)
-OBJ := arp.o
+# OBJ := arp.o
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
