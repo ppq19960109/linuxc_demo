@@ -95,9 +95,9 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
     {
         return -1;
     }
-    hilink_tolocal(sn, svcId, payload);
+    
 
-    return 0;
+    return hilink_tolocal(sn, svcId, payload);
 }
 
 /*

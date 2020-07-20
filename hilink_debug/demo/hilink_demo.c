@@ -41,7 +41,6 @@ int main(void)
     log_debug("hilink_get_devstatus:%d", devstatus);
     //-------------------------------------------------
 
-    // HilinkSyncBrgDevStatus("2389294",DEV_ONLINE);
     for (int i = 0; i < 5; i++)
         read_from_local(report_json[i]);
     /* hilink main需要运行，sleep 1s保证进程不会退出 */

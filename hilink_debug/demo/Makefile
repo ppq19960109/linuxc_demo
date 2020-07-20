@@ -42,7 +42,7 @@ OBJECTS := $(patsubst %.c, %.o, $(SOURCE_FILES))
 
 #编译选项
 
-COMPILE_FLAGS := -O  $(INCLUDE_PATH)
+COMPILE_FLAGS := -O  $(INCLUDE_PATH) -g
 LINK_FLAGS := -L$(LIB_FILE_PATH) $(LIB_FILES)
 
 #编译开始

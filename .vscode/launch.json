@@ -1,0 +1,30 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "hilinkdemo",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/hilink_debug/demo/hilinkdemo",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "为 gdb 启用整齐打印",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            // "preLaunchTask": "C/C++: gcc build active file",
+            "miDebuggerPath": "/home/ppq/armv8l-linux-gnueabihf/gcc-linaro-6.4.1-2018.05-x86_64_armv8l-linux-gnueabihf/bin/armv8l-linux-gnueabihf-gdb",
+            "miDebuggerServerAddress": "192.168.1.3:2001"
+        }
+    ]
+}

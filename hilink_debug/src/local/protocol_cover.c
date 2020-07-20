@@ -1,5 +1,9 @@
 #include "protocol_cover.h"
 #include "dev_private.h"
+#include "hilink_profile_bridge.h"
+#include "hilink_cover.h"
+#include "list_hilink.h"
+
 
 char *Command[] = {"Dispatch", "Report"};
 
@@ -258,8 +262,11 @@ int read_from_local(const char *json)
     case 1: //设备注销上报：”UnRegister”；
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
+        dev_hilink_t *dev_hilink = list_get_by_id_hilink(dev_data->DeviceId, &hilink_handle.node);
         if (dev_buf != NULL)
         {
+            HilinkSyncBrgDevStatus(dev_data->DeviceId, DEV_RESTORE);
+            list_del(&dev_hilink->node);
             list_del(&dev_buf->node);
         }
     }
@@ -270,6 +277,8 @@ int read_from_local(const char *json)
         {
             dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
             char_copy_from_json(array_sub, "Value", &dev_buf->Online);
+
+            HilinkSyncBrgDevStatus(dev_data->DeviceId, dev_buf->Online);
         }
     }
     break;
@@ -299,8 +308,8 @@ int read_from_local(const char *json)
             char_copy_from_json(array_sub, "RegisterStatus", &dev_data->RegisterStatus);
             list_add(&dev_data->node, &protocol_data.dev_list);
             dev_private_attribute(dev_data, NULL);
+            goto add;
         }
-        goto add;
     }
     break;
     case 6:
@@ -313,6 +322,7 @@ int read_from_local(const char *json)
     {
         //reboot
         list_del_all(&protocol_data.dev_list);
+        list_del_all_hilink(&hilink_handle.node);
     }
     break;
     case 8:

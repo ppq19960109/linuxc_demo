@@ -532,7 +532,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
     break;
     case 5: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
-
+        out.Data.DeviceId[strlen(out.Data.DeviceId) - 1] = '\0';
         int index = str_search(svcId, svcId_HY0134_0, sizeof(svcId_HY0134_0) / sizeof(svcId_HY0134_0[0]));
         if (index == 0)
         {
@@ -553,6 +553,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
     break;
     case 6: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
+        out.Data.DeviceId[strlen(out.Data.DeviceId) - 1] = '\0';
         int index = str_search(svcId, svcId_HY0134_1, sizeof(svcId_HY0134_1) / sizeof(svcId_HY0134_1[0]));
         if (index == 0)
         {
@@ -583,6 +584,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
     break;
     case 7: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
+        out.Data.DeviceId[strlen(out.Data.DeviceId) - 1] = '\0';
         int index = str_search(svcId, svcId_HY0134_2, sizeof(svcId_HY0134_2) / sizeof(svcId_HY0134_2[0]));
         if (index == 0)
         {
