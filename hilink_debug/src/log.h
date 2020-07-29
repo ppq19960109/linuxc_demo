@@ -27,7 +27,7 @@
 #define CLRLINE "\r\e[K" //or "\e[1K\r"
 
 #define log_color(color, fmt, ...)                                            \
-    log_printf(color "%s-[%s-%d]: " fmt NONE, __FUNCTION__, __FILE__, \
+    log_printf(color "%s-[%s-%d]: "fmt NONE, __FUNCTION__, __FILE__, \
                __LINE__, ##__VA_ARGS__)
 
 #define log_debug(fmt, ...) log_color(BLUE, fmt, ##__VA_ARGS__)

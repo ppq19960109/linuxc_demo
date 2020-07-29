@@ -34,16 +34,22 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
     strcpy(brgDevInfo->devType, DEVICE_TYPE);
     strcpy(brgDevInfo->mac, "123456789012");
 }
+char *svcId_HY0095[] = {"switch1", "indicator"};
+char *svcId_HY0096[] = {"switch1", "switch2", "indicator"};
+char *svcId_HY0097[] = {"switch1", "switch2", "switch3", "indicator"};
 
-char *svcId_500c33[] = {"switch1", "switch2", "switch3", "indicator"};
 char *svcId_09223f[] = {"cct", "brightness", "switch"};
+
+char *svcId_HY0121[] = {"switch", "indicator"};
+char *svcId_HY0122[] = {"switch1", "switch2", "indicator", "switch"};
 char *svcId_HY0107[] = {"switch1", "switch2", "switch3", "indicator", "switch"}; //, "relaystatus", "switchtype"
+
 char *svcId_HY0093[] = {"doorEvent", "status"};
 
-char *svcId_HY0134[] = {"scene", "button1"};                       //场景面板2ANF
-char *svcId_HY0134_0[] = {"switch", "temperature"};                //地暖 2ANK
-char *svcId_HY0134_1[] = {"switch", "temperature", "mode", "fan"}; //空调2ANJ
-char *svcId_HY0134_2[] = {"switch", "fan"};                        //新风 2ANI
+char *svcId_HY0134[] = {"scene", "button1", "button2", "button3", "button4", "button5", "button6"}; //场景面板2ANF
+char *svcId_HY0134_0[] = {"switch", "temperature"};                                                 //地暖 2ANK
+char *svcId_HY0134_1[] = {"switch", "temperature", "mode", "fan"};                                  //空调2ANJ
+char *svcId_HY0134_2[] = {"switch", "fan"};                                                         //新风 2ANI
 
 int modSvc(const char *sn, const char *svcId, char **svcVal, char *json)
 {
@@ -92,20 +98,92 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
 
     switch (index)
     {
-    case 0: //U2/天际系列：三键智能开关（HY0097）
+    case 0: //U2/天际系列：单键智能开关（HY0095）
     {
-        dev_500c33_t *dev_sub = (dev_500c33_t *)src->private;
+        dev_HY0095_t *dev_sub = (dev_HY0095_t *)src->private;
+        if (newFlag)
+        {
+            strcpy(brgDevInfo->prodId, "2AP1");
+            strcpy(brgDevInfo->model, "U2-86K11ND10-ZD(HW)");
+            strcpy(brgDevInfo->devType, "005");
+
+            out->devSvcNum = sizeof(svcId_HY0095) / sizeof(svcId_HY0095[0]);
+            out->devSvc = malloc(sizeof(DevSvc) * out->devSvcNum);
+            memset(out->devSvc, 0, sizeof(DevSvc) * out->devSvcNum);
+            for (i = 0; i < out->devSvcNum; ++i)
+                out->devSvc[i].svcId = (char *)svcId_HY0095[i];
+
+            HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
+        }
+        devSvcArray = out->devSvc;
+
+        //Switch
+        cJSON_AddNumberToObject(root, "on", dev_sub->Switch);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "on");
+
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+        ++pos;
+
+        //indicator
+        cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "mode");
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+    }
+    break;
+    case 1: //U2/天际系列：双键智能开关（HY0096）
+    {
+        dev_HY0096_t *dev_sub = (dev_HY0096_t *)src->private;
+        if (newFlag)
+        {
+            strcpy(brgDevInfo->prodId, "2AP0");
+            strcpy(brgDevInfo->model, "U2-86K21ND10-ZD(HW)");
+            strcpy(brgDevInfo->devType, "005");
+
+            out->devSvcNum = sizeof(svcId_HY0096) / sizeof(svcId_HY0096[0]);
+            out->devSvc = malloc(sizeof(DevSvc) * out->devSvcNum);
+            memset(out->devSvc, 0, sizeof(DevSvc) * out->devSvcNum);
+            for (i = 0; i < out->devSvcNum; ++i)
+                out->devSvc[i].svcId = (char *)svcId_HY0096[i];
+
+            HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
+        }
+        devSvcArray = out->devSvc;
+
+        //Switch
+        for (i = 0; i < 2; ++i)
+        {
+            dev_sub->Switch[i] = 1;
+            cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
+            json = cJSON_PrintUnformatted(root);
+            cJSON_DeleteItemFromObject(root, "on");
+
+            modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+            ++pos;
+        }
+        //indicator
+        dev_sub->LedEnable = 1;
+        cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "mode");
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+    }
+    break;
+    case 2: //U2/天际系列：三键智能开关（HY0097）
+    {
+        dev_HY0097_t *dev_sub = (dev_HY0097_t *)src->private;
         if (newFlag)
         {
             strcpy(brgDevInfo->prodId, "2AN9");
             strcpy(brgDevInfo->model, "U2-86K31ND10-ZD(HW)");
             strcpy(brgDevInfo->devType, "005");
 
-            out->devSvcNum = sizeof(svcId_500c33) / sizeof(svcId_500c33[0]);
+            out->devSvcNum = sizeof(svcId_HY0097) / sizeof(svcId_HY0097[0]);
             out->devSvc = malloc(sizeof(DevSvc) * out->devSvcNum);
             memset(out->devSvc, 0, sizeof(DevSvc) * out->devSvcNum);
             for (i = 0; i < out->devSvcNum; ++i)
-                out->devSvc[i].svcId = (char *)svcId_500c33[i];
+                out->devSvc[i].svcId = (char *)svcId_HY0097[i];
 
             HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
         }
@@ -122,14 +200,16 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
             modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
             ++pos;
         }
+        log_debug("local_tohilink indicator");
         //indicator
+        dev_sub->LedEnable = 1;
         cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "mode");
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 1:
+    case 3:
     {
         if (newFlag)
         {
@@ -148,6 +228,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         devSvcArray = out->devSvc;
         dev_09223f_t *dev_sub = (dev_09223f_t *)src->private;
         //cct
+        dev_sub->ColorTemperature=4500;
         cJSON_AddNumberToObject(root, "colorTemperature", dev_sub->ColorTemperature);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "colorTemperature");
@@ -160,13 +241,93 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
         ++pos;
         //Switch
+
         cJSON_AddNumberToObject(root, "on", dev_sub->Switch);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "on");
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 2:
+    case 4: //1路智能开关模块（HY0121，型号IHC1238）
+    {
+        dev_HY0121_t *dev_sub = (dev_HY0121_t *)src->private;
+        if (newFlag)
+        {
+            strcpy(brgDevInfo->prodId, "2AOZ");
+            strcpy(brgDevInfo->model, "IHC1238HW");
+            strcpy(brgDevInfo->devType, "064");
+
+            out->devSvcNum = sizeof(svcId_HY0121) / sizeof(svcId_HY0121[0]);
+            out->devSvc = malloc(sizeof(DevSvc) * out->devSvcNum);
+            memset(out->devSvc, 0, sizeof(DevSvc) * out->devSvcNum);
+            for (i = 0; i < out->devSvcNum; ++i)
+                out->devSvc[i].svcId = (char *)svcId_HY0121[i];
+
+            HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
+        }
+        devSvcArray = out->devSvc;
+
+        //Switch
+
+        cJSON_AddNumberToObject(root, "on", dev_sub->Switch);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "on");
+
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+        ++pos;
+
+        //indicator
+        cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "mode");
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+        ++pos;
+    }
+    break;
+    case 5: //2路智能开关模块（HY0122，型号IHC1239）
+    {
+        dev_HY0122_t *dev_sub = (dev_HY0122_t *)src->private;
+        if (newFlag)
+        {
+            strcpy(brgDevInfo->prodId, "2AOY");
+            strcpy(brgDevInfo->model, "IHC1239HW");
+            strcpy(brgDevInfo->devType, "064");
+
+            out->devSvcNum = sizeof(svcId_HY0122) / sizeof(svcId_HY0122[0]);
+            out->devSvc = malloc(sizeof(DevSvc) * out->devSvcNum);
+            memset(out->devSvc, 0, sizeof(DevSvc) * out->devSvcNum);
+            for (i = 0; i < out->devSvcNum; ++i)
+                out->devSvc[i].svcId = (char *)svcId_HY0122[i];
+
+            HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
+        }
+        devSvcArray = out->devSvc;
+
+        //Switch
+        for (i = 0; i < 2; ++i)
+        {
+            dev_sub->Switch[i] = 1;
+            cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
+            json = cJSON_PrintUnformatted(root);
+            cJSON_DeleteItemFromObject(root, "on");
+
+            modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+            ++pos;
+        }
+        //indicator
+        cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "mode");
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+        ++pos;
+        //switch
+        cJSON_AddNumberToObject(root, "on", dev_sub->Switch_All);
+        json = cJSON_PrintUnformatted(root);
+        cJSON_DeleteItemFromObject(root, "on");
+        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+    }
+    break;
+    case 6: //3路智能开关模块（HY0107，型号IHC1240）
     {
         dev_HY0107_t *dev_sub = (dev_HY0107_t *)src->private;
         if (newFlag)
@@ -220,7 +381,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         // modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 3:
+    case 7:
     {
         if (newFlag)
         {
@@ -252,7 +413,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 4: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 8: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
         dev_HY0134_t *dev_sub = (dev_HY0134_t *)src->private;
         dev_hilink_t *out_sub[3] = {0};
@@ -391,17 +552,17 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         cJSON_DeleteItemFromObject(root, "num");
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
         pos++;
-
-        cJSON_AddStringToObject(root, "name", "智镜");
-        json = cJSON_PrintUnformatted(root);
-        cJSON_DeleteItemFromObject(root, "name");
-        modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+        for (i = 0; i < 6; ++i)
+        {
+            sprintf(dev_sub->SceName[i],"场景%d",i);
+            cJSON_AddStringToObject(root, "name", dev_sub->SceName[i]);
+            json = cJSON_PrintUnformatted(root);
+            cJSON_DeleteItemFromObject(root, "name");
+            modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
+            ++pos;
+        }
     }
     break;
-    case 5:
-        break;
-    case 6:
-        break;
     default:
         goto fail;
     }
@@ -415,7 +576,7 @@ fail:
     return -1;
 }
 
-char *dev_hilink_modeId[] = {"2AN9", "2AN7", "2ANO", "2AN8", "2ANF", "2ANK", "2ANJ", "2ANI"};
+char *dev_hilink_modeId[] = {"2AP1", "2AP0", "2AN9", "2AN7", "2AOZ", "2AOY", "2ANO", "2AN8", "2ANF", "2ANK", "2ANJ", "2ANI"};
 int FrameNumber;
 
 int getValueFromJson(cJSON *val, char *dst)
@@ -426,9 +587,7 @@ int getValueFromJson(cJSON *val, char *dst)
     }
     else
     {
-        char str[8];
-        sprintf(str, "%d", val->valueint);
-        strcpy(dst, str);
+        sprintf(dst, "%d", val->valueint);
     }
     return 0;
 }
@@ -451,10 +610,10 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
     cJSON *val;
     switch (modeId_index)
     {
-    case 0: //U2/天际系列：三键智能开关（HY0097）
+    case 0: //U2/天际系列：单键智能开关（HY0095）
     {
-        int index = str_search(svcId, svcId_500c33, sizeof(svcId_500c33) / sizeof(svcId_500c33[0]));
-        strcpy(out.Data.Key, attr_500c33[index]);
+        int index = str_search(svcId, svcId_HY0095, sizeof(svcId_HY0095) / sizeof(svcId_HY0095[0]));
+        strcpy(out.Data.Key, attr_HY0095[index]);
 
         if (cJSON_HasObjectItem(root, "on"))
         {
@@ -472,7 +631,49 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         }
     }
     break;
-    case 1: //U2/天际系列：DLT液晶调光器（09223f，型号U86KTGS150-ZXP）
+    case 1: //U2/天际系列：双键智能开关（HY0096）
+    {
+        int index = str_search(svcId, svcId_HY0096, sizeof(svcId_HY0096) / sizeof(svcId_HY0096[0]));
+        strcpy(out.Data.Key, attr_HY0096[index]);
+
+        if (cJSON_HasObjectItem(root, "on"))
+        {
+            strcpy(out.Type, "Ctrl");
+            val = cJSON_GetObjectItem(root, "on");
+        }
+        else if (cJSON_HasObjectItem(root, "mode"))
+        {
+            strcpy(out.Type, "Attribute");
+            val = cJSON_GetObjectItem(root, "mode");
+        }
+        else
+        {
+            goto fail;
+        }
+    }
+    break;
+    case 2: //U2/天际系列：三键智能开关（HY0097）
+    {
+        int index = str_search(svcId, svcId_HY0097, sizeof(svcId_HY0097) / sizeof(svcId_HY0097[0]));
+        strcpy(out.Data.Key, attr_HY0097[index]);
+
+        if (cJSON_HasObjectItem(root, "on"))
+        {
+            strcpy(out.Type, "Ctrl");
+            val = cJSON_GetObjectItem(root, "on");
+        }
+        else if (cJSON_HasObjectItem(root, "mode"))
+        {
+            strcpy(out.Type, "Attribute");
+            val = cJSON_GetObjectItem(root, "mode");
+        }
+        else
+        {
+            goto fail;
+        }
+    }
+    break;
+    case 3: //U2/天际系列：DLT液晶调光器（09223f，型号U86KTGS150-ZXP）
     {
         int index = str_search(svcId, svcId_09223f, sizeof(svcId_09223f) / sizeof(svcId_09223f[0]));
         strcpy(out.Data.Key, attr_09223f[index]);
@@ -489,7 +690,49 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
             goto fail;
     }
     break;
-    case 2: //3路智能开关模块（HY0107，型号IHC1240）
+    case 4: //1路智能开关模块（HY0121，型号IHC1238）
+    {
+        int index = str_search(svcId, svcId_HY0121, sizeof(svcId_HY0121) / sizeof(svcId_HY0121[0]));
+        strcpy(out.Data.Key, attr_HY0121[index]);
+
+        if (cJSON_HasObjectItem(root, "on"))
+        {
+            strcpy(out.Type, "Ctrl");
+            val = cJSON_GetObjectItem(root, "on");
+        }
+        else if (cJSON_HasObjectItem(root, "mode"))
+        {
+            strcpy(out.Type, "Attribute");
+            val = cJSON_GetObjectItem(root, "mode");
+        }
+        else
+        {
+            goto fail;
+        }
+    }
+    break;
+    case 5: //2路智能开关模块（HY0122，型号IHC1239）
+    {
+        int index = str_search(svcId, svcId_HY0122, sizeof(svcId_HY0122) / sizeof(svcId_HY0122[0]));
+        strcpy(out.Data.Key, attr_HY0122[index]);
+
+        if (cJSON_HasObjectItem(root, "on"))
+        {
+            strcpy(out.Type, "Ctrl");
+            val = cJSON_GetObjectItem(root, "on");
+        }
+        else if (cJSON_HasObjectItem(root, "mode"))
+        {
+            strcpy(out.Type, "Attribute");
+            val = cJSON_GetObjectItem(root, "mode");
+        }
+        else
+        {
+            goto fail;
+        }
+    }
+    break;
+    case 6: //3路智能开关模块（HY0107，型号IHC1240）
     {
         int index = str_search(svcId, svcId_HY0107, sizeof(svcId_HY0107) / sizeof(svcId_HY0107[0]));
         strcpy(out.Data.Key, attr_HY0107[index]);
@@ -510,17 +753,14 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         }
     }
     break;
-    case 3: //门磁传感器（HY0093，型号IHG5201）
+    case 7: //门磁传感器（HY0093，型号IHG5201）
         goto fail;
-    case 4: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 8: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
         int index = str_search(svcId, svcId_HY0134, sizeof(svcId_HY0134) / sizeof(svcId_HY0134[0]));
-        if (index == 0)
+        if (index >= 1)
         {
-        }
-        else if (index == 1)
-        {
-            strcpy(out.Data.Key, "SceName_1");
+            sprintf(out.Data.Key,"SceName_%d",index);
             val = cJSON_GetObjectItem(root, "name");
         }
         else
@@ -530,7 +770,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         strcpy(out.Type, "Ctrl");
     }
     break;
-    case 5: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 9: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
         out.Data.DeviceId[strlen(out.Data.DeviceId) - 1] = '\0';
         int index = str_search(svcId, svcId_HY0134_0, sizeof(svcId_HY0134_0) / sizeof(svcId_HY0134_0[0]));
@@ -551,7 +791,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         strcpy(out.Type, "Ctrl");
     }
     break;
-    case 6: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 10: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
         out.Data.DeviceId[strlen(out.Data.DeviceId) - 1] = '\0';
         int index = str_search(svcId, svcId_HY0134_1, sizeof(svcId_HY0134_1) / sizeof(svcId_HY0134_1[0]));
@@ -582,7 +822,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         strcpy(out.Type, "Ctrl");
     }
     break;
-    case 7: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 11: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
     {
         out.Data.DeviceId[strlen(out.Data.DeviceId) - 1] = '\0';
         int index = str_search(svcId, svcId_HY0134_2, sizeof(svcId_HY0134_2) / sizeof(svcId_HY0134_2[0]));
@@ -603,11 +843,10 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         strcpy(out.Type, "Ctrl");
     }
     break;
-    case 8:
-    {
+    default:
+        break;
     }
-    break;
-    }
+
     getValueFromJson(val, out.Data.Value);
     write_to_local(&out);
     free(root);

@@ -21,14 +21,11 @@ void hilink_msleep(int);
 extern const char *report_json[];
 int main(void)
 {
-    hilink_main();
-
     protlcol_init();
     hilink_handle_init();
 
-    log_error("get_netlink_status %d", get_netlink_status(ETH_NAME));
     printf("Program is started.\r\n");
-    HILINK_SetLogLevel(HILINK_LOG_ERR);
+    HILINK_SetLogLevel(HILINK_LOG_WARN);
     HILINK_SdkAttr *SdkAttr = HILINK_GetSdkAttr();
     log_debug("HILINK_SdkAttr monitorTaskStackSize:%d,deviceMainTaskStackSize:%d,bridgeMainTaskStackSize:%d",
               SdkAttr->monitorTaskStackSize, SdkAttr->deviceMainTaskStackSize, SdkAttr->bridgeMainTaskStackSize);
@@ -40,11 +37,12 @@ int main(void)
     int devstatus = hilink_get_devstatus();
     log_debug("hilink_get_devstatus:%d", devstatus);
     //-------------------------------------------------
+    hilink_main();
 
-    for (int i = 0; i < 5; i++)
-        read_from_local(report_json[i]);
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
-    int i = 0;
+    for (int i = 0; i < 9; i++)
+        read_from_local(report_json[i]);
+    
     while (1)
     {
         hilink_msleep(1000);

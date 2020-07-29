@@ -96,7 +96,7 @@ int hilink_process_before_restart(int flag)
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
-        system("killall hilinkdemo;/userdata/hilinkdemo &");
+        system("killall hilinkapp;/app/hilinkapp &");
         /* 实现模组重启前的操作(如:保存系统状态等) */
         return 1;
     }
@@ -104,7 +104,7 @@ int hilink_process_before_restart(int flag)
     /* APP删除设备触发模组重启 */
     if (flag == HILINK_REBOOT_DEVDELETE)
     {
-        system("killall hilinkdemo;/userdata/hilinkdemo &");
+        system("killall hilinkapp;/app/hilinkapp &");
         /* 实现模组重启前的操作(如:保存系统状态等) */
         return 1;
     }
@@ -122,5 +122,18 @@ int get_faultDetection_state(int *status, int *code)
     /* 由设备厂商实现，将服务faultDetection属性当前值赋予出参 */
     log_info("get_faultDetection_state status:%d,code:%d", *status, *code);
     *status = 0;
+    return 0;
+}
+
+
+/*
+ * 获取当前设备唯一身份标识
+ * 返回0，获取成功；返回非0，获取失败。
+ * 注意: (1)仅android系统设备适配此接口
+ *       (2)固定长度6字节
+ *       (3)整个设备生命周期不可改变，包括设备重启和恢复出厂等
+ */
+int HILINK_GetUniqueIdentifier(unsigned char *id, unsigned int len)
+{
     return 0;
 }

@@ -4,7 +4,6 @@
 #include "hilink_cover.h"
 #include "list_hilink.h"
 
-
 char *Command[] = {"Dispatch", "Report"};
 
 char *TYPE_Report[] = {"Register", "UnRegister", "OnOff", "Attribute", "DevAttri", "DevList", "Event", "ReFactory", "CooInfo", "NeighborInfo", "ChildrenInfo", "SetSig", "GetSig"};
@@ -39,7 +38,7 @@ const char *report_json[] = {
        \"Data\":[\
          {\
               \"DeviceId\":\"1234567876543670\",\
-              \"ModelId\":\"500c33\",\
+              \"ModelId\":\"HY0097\",\
               \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
       }\
     ]\
@@ -92,6 +91,58 @@ const char *report_json[] = {
          {\
               \"DeviceId\":\"5234567876543675\",\
               \"ModelId\":\"HY0134\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"4574567876543675\",\
+              \"ModelId\":\"HY0095\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"5234567876543432\",\
+              \"ModelId\":\"HY0096\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"5234564376543432\",\
+              \"ModelId\":\"HY0121\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"523455676543432\",\
+              \"ModelId\":\"HY0122\",\
               \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
       }\
     ]\
@@ -172,9 +223,9 @@ protocol_data_t protocol_data;
 
 void protlcol_init()
 {
-    protocol_data.discoverMode = 1;
+    protocol_data.discoverMode = 0;
     INIT_LIST_HEAD(&protocol_data.dev_list);
-    // net_client(&protocol_data.socketfd);
+    net_client(&protocol_data.socketfd);
 }
 
 void protlcol_destory()
@@ -398,8 +449,9 @@ int write_to_local(void *ptr)
     cJSON_AddItemToArray(DataArray, arrayItem);
 
     char *json = cJSON_PrintUnformatted(root);
-    log_error("%s\n", json);
-
+    log_warn("%s protocol_data.socketfd:%d\n", json, protocol_data.socketfd);
+    if (protocol_data.socketfd != NULL)
+        write(protocol_data.socketfd, json, strlen(json) + 1);
     free(json);
 
     free(root);

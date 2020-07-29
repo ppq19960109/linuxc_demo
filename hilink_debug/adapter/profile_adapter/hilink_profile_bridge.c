@@ -14,6 +14,7 @@
 #ifndef NULL
 #define NULL 0
 #endif
+int hilink_strlen(const char *);
 
 /*
  * 获取设备的设备信息
@@ -72,7 +73,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
     }
     *svcNum = dev->devSvcNum;
-    log_debug("HilinkGetBrgSvcInfo svcInfo:%s ", svcInfo->st[0]);
+    // log_debug("HilinkGetBrgSvcInfo svcInfo:%s ", svcInfo->st[0]);
     return 0;
 }
 
@@ -95,7 +96,6 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
     {
         return -1;
     }
-    
 
     return hilink_tolocal(sn, svcId, payload);
 }
@@ -135,11 +135,34 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
             *outLen = strlen(dev->devSvc[i].svcVal) + 1;
             *out = malloc(*outLen);
             strcpy(*out, dev->devSvc[i].svcVal);
-
+            log_debug("HilinkGetBrgDevCharState %s", *out);
             break;
         }
     }
 
+    return 0;
+}
+
+/*
+ * 获取Bridge下挂设备房间号
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ * roomId: 返回设备房间号
+ * roomIdLen: roomId内存大小，拷贝不可超过该长度，返回实际拷贝的字节数
+ * devName: 返回设备名称（可选）
+ * devNameLen: devName内存大小，拷贝不可超过该长度，返回实际拷贝的字节数
+ * 返回0: 获取下挂设备房间号成功
+ * 返回非0: 获取下挂设备房间号失败
+ */
+int HILINK_GetBrgSubDevRoomInfo(const char *sn, char *roomId, unsigned int *roomIdLen,
+                                char *devName, unsigned int *devNameLen)
+
+{
+    /* 厂商实现此接口 */
+    if ((sn == NULL) || (roomId == NULL) || (roomIdLen == NULL) || (devName == NULL) || (devNameLen == NULL))
+    {
+        return -1;
+    }
     return 0;
 }
 
@@ -156,6 +179,125 @@ int HilinkDelBrgDev(const char *sn)
     {
         return -1;
     }
-
+    list_del_by_id(sn, &protocol_data.dev_list);
     return list_del_by_id_hilink(sn, &hilink_handle.node);
+}
+
+/*
+ * 根据sn返回三元组的confirmationKey信息
+ * 如果未计算完成则返回1，失败返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_GetBrgDevCfmKey(const char *sn, char *devConfirmationKey, unsigned int devConfirmationKeyLen)
+{
+    log_debug("HILINK_GetBrgDevCfmKey sn:%s", sn);
+    /* 厂商实现此接口 */
+    if ((sn == NULL) || (devConfirmationKey == NULL))
+    {
+        return -1;
+    }
+
+    if (hilink_strlen(devConfirmationKey) > devConfirmationKeyLen)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+int HILINK_GetBrgDevThirdProdId(const char *sn, char *thirdProdId, unsigned int thirdProdIdLen)
+{
+    log_debug("HILINK_GetBrgDevThirdProdId sn:%s", sn);
+    /* 厂商实现此接口 */
+    if ((sn == NULL) || (thirdProdId == NULL))
+    {
+        return -1;
+    }
+
+    if (hilink_strlen(thirdProdId) > thirdProdIdLen)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * 根据sn返回三元组的confirmation和random信息
+ * 如果未计算完成则返回或者失败都返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_GetBrgDevCfmAndRnd(const char *sn, char *devConfirmation, unsigned int devConfirmationLen,
+                              char *devRandom, unsigned int devRandomLen)
+{
+    log_debug("HILINK_GetBrgDevCfmAndRnd sn:%s", sn);
+    /* 厂商实现此接口 */
+    if ((sn == NULL) || (devConfirmation == NULL) || (devRandom == NULL))
+    {
+        return -1;
+    }
+
+    if ((hilink_strlen(devConfirmation) > devConfirmationLen) || (hilink_strlen(devRandom) > devRandomLen))
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * 根据sn返回云的confirmation和random信息
+ * 如果未计算完成则返回或者失败都返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_NotifyBrgSubDevCloudCfmAndRnd(const char *sn, const char *cloudConfirmation,
+                                         unsigned int cloudConfirmationLen, const char *cloudRandom, unsigned int cloudRandomLen)
+{
+    log_debug("HILINK_NotifyBrgSubDevCloudCfmAndRnd sn:%s", sn);
+    /* 厂商实现此接口 */
+    if ((sn == NULL) || (cloudConfirmation == NULL) || (cloudRandom == NULL))
+    {
+        return -1;
+    }
+
+    if ((hilink_strlen(cloudConfirmation) > cloudConfirmationLen) || (hilink_strlen(cloudRandom) > cloudRandomLen))
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
+ * 根据sn返回云的鉴权信息
+ * 如果失败返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_NotifyBrgSubDevCloudCfmResult(const char *sn, int result)
+{
+    log_debug("HILINK_NotifyBrgSubDevCloudCfmResult sn:%s", sn);
+    /* 厂商实现此接口 */
+    if (sn == NULL)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+/*
+ * 获取子设备的最大数目,最大数目不超过500,不小于64,超出该范围
+ * 默认使用64.
+ * 该函数由设备开发者或厂商实现
+ * 返回值：设备开发者设置的下挂设备的最大数目
+ */
+unsigned int HILINK_GetBrgSubDevMaxNum()
+{
+    /* 厂商实现此接口 */
+    unsigned int maxNum = 128;
+
+    return maxNum;
 }

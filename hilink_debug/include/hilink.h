@@ -50,6 +50,8 @@ int hilink_restore_factory_settings(void);
  * 参数config表示用户获取的配置信息缓存
  * 返回0表示获取成功，返回-1表示获取失败
  * config的内存分配和初始化由调用者完成;用户可获取的配置信息最大长度为32字节
+ * 注意:1、需要在hilink_main初始化之后使用
+ *      2、如果用户存储的是字符串，请用户保证存储的字符串长度不超过31字节，保证预留字符串结束符
  */
 int HilinkGetUserConfig(unsigned short len, char *config);
 
@@ -59,6 +61,8 @@ int HilinkGetUserConfig(unsigned short len, char *config);
  * 参数len表示用户配置信息长度
  * 返回0表示设置成功，返回-1表示设置失败
  * 信息写入为覆盖更新，每次写入前会清空旧的数据;用户可存储的配置信息最大长度为32字节
+ * 注意:1、需要在hilink_main初始化之后使用
+ *      2、如果用户存储的是字符串，请用户保证存储的字符串长度不超过31字节，保证预留字符串结束符
  */
 int HilinkSetUserConfig(const char *config, unsigned short len);
 
@@ -102,14 +106,6 @@ int hilink_get_utc_time_info(pstHILINK_TIME_INFO p_time_info);
 int hilink_convert_time(unsigned long long time_ms, pstHILINK_TIME_INFO p_time_info);
 
 /*
- * 设置HiLink组网打开关闭
- * 参数flag为0表示关闭(保留HiLink注册),为1表示打开,为2表示完全关闭
- * 返回0表示设置成功，返回-1表示设置失败
- * 此函数由设备开发者调用;SDK默认为1打开
- */
-int HiLinkSetGatewayMode(int flag);
-
-/*
  * 设备离线时，如果在App上删除了设备，设备再次上线时云端会给设备下发Errcode=5或Errcode=6错误码。
  * 该接口用于使能SDK处理云端下发的Errcode=5或Errcode=6错误码。
  * enable为0表示SDK不处理云端下发的Errcode=5或Errcode=6错误码，此时SDK不会清除设备端注册信息，
@@ -126,14 +122,6 @@ void HILINK_EnableProcessDelErrCode(int enable);
  */
 int HiLinkGetPinCode(void);
 
-/*
- * 设置配网信息
- * configInfo为APP发送过来的加密后的WiFi信息的buff,len为WiFi信息的长度
- * userData为接受扩展信息的buff，userDataLen为接受扩展信息buff的长度
- * 返回0表示设置成功，其他表示失败
- */
-int HILINK_SetNetConfigInfo(const unsigned char *configInfo, unsigned int len,
-                            char *userData, unsigned int userDataLen);
 /*
  * HiLink SDK外部诊断信息记录接口
  * 该接口已经对外提供给第三方厂商使用，为了前向兼容，暂不按最新编码规范整改
@@ -213,6 +201,37 @@ int HILINK_IsSensitiveDevice(void);
 
 /* 厂商调用该接口获取匿名结构体 */
 const void *HILINK_GetVoiceContext(void);
+
+/*
+ * 设备处于待用户识别状态时通知用户: 表现为持续蜂鸣或闪灯2s.
+ * 参数enable表示识别状态,1为开始蜂鸣或闪灯,0为结束蜂鸣或闪灯.
+ * 注意: 函数由设备开发者或厂商实现,仅在hi3861模组使用.
+ */
+void HILINK_SetNanIdentifyStatus(int enable);
+
+/*
+ * 设置WIFI安全距离的功率
+ * 参数power:表示安全距离对应的发射通道功率,默认-52,范围为[-70, -40];
+ * 需要保证空口功率小于等于-65dBm,根据真实设备来调整.
+ * 返回值:0表示设置成功,-1表示设置失败.
+ * 注意: 函数由设备开发者或厂商调用，仅在hi3861模组使用.
+ */
+int HILINK_SetSafeDistancePower(char power);
+
+/*
+ * 设置是否使能PKI特性
+ * 参数enable:表示使能还是不使能,传1表示使能,传0表示不使能
+ * 注意: (1)函数由设备开发者或厂商调用,仅在支持PKI特性的模组使用
+ *       (2)仅限新品类产品使用,已经商用的产品的新版本不能开启
+ *       (3)开启该特性时,务必确保产线有相应的测试流程
+ */
+void HILINK_EnablePkiVerify(int enable);
+
+/*
+ * 产测模式下使能预置PKI证书模式, 使能后才能通过AT命令写入证书
+ * 注意: 函数由设备开发者或厂商调用,仅在hi3861模组使用.
+ */
+int HILINK_EnableFactoryPkiMode(void);
 
 #ifdef __cplusplus
 #if __cplusplus

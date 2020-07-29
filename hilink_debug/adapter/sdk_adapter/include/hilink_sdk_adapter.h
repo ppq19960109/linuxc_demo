@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2019-2020. All rights reserved.
  * Description: HiLink SDK适配头文件
  * Create: 2019-04-20
  * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
@@ -56,9 +56,11 @@ void hilink_notify_devstatus(int status);
 /*
  * 实现模组重启前的设备操作
  * flag为0表示HiLink SDK 线程看门狗触发模组重启; 为1表示APP删除设备触发模组重启
- * 返回0表示处理成功, 系统可以重启，使用硬重启; 返回1表示处理成功, 系统可以重启，使用软重启;
+ * 返回0表示处理成功, 系统可以重启，使用硬重启;
+ * 返回1表示处理成功, 如果通过HILINK_SetSdkAttr()注册了软重启(sdkAttr.rebootSoftware), 则使用软重启,
+ *     否则不重启HiLink应用, 回退HiLink内部状态, 重新进入配网;
  * 返回负值表示处理失败, 系统不能重启
- * 注意，此函数由设备厂商实现；若APP删除设备触发模组重启时，设备操作完务必返回0，否则会导致删除设备异常
+ * 注意，此函数由设备厂商实现
  */
 int hilink_process_before_restart(int flag);
 
@@ -68,6 +70,15 @@ int hilink_process_before_restart(int flag);
  * 返回0表示成功，返回非0失败
  */
 int get_faultDetection_state(int *status, int *code);
+
+/*
+ * 获取当前设备唯一身份标识
+ * 返回0，获取成功；返回非0，获取失败。
+ * 注意: (1)仅android系统设备适配此接口
+ *       (2)固定长度6字节
+ *       (3)整个设备生命周期不可改变，包括设备重启和恢复出厂等
+ */
+int HILINK_GetUniqueIdentifier(unsigned char *id, unsigned int len);
 
 #ifdef __cplusplus
 }

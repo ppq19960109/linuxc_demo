@@ -16,7 +16,7 @@ extern "C" {
 #define ST_STR_MAX_LEN  32
 #define SVCID_STR_MAX_LEN    64
 #ifndef BRG_MAX_SUB_DEV_NUM
-#define BRG_MAX_SUB_DEV_NUM  64
+#define BRG_MAX_SUB_DEV_NUM  500
 #endif
 
 /* Hilink Device SDK 对外开放接口 */
@@ -40,10 +40,12 @@ typedef struct {
 } BrgDevSvcInfo;
 
 typedef enum {
-    DEV_OFFLINE = 0,    /* 设备下线 */
-    DEV_ONLINE  = 1,    /* 设备上线 */
-    DEV_RESTORE = 2,    /* 设备恢复出厂，删除云端信息 */
-    DEV_ADD     = 3     /* 设备恢复出厂之后重新注册 */
+    DEV_OFFLINE       = 0, /* 设备下线 */
+    DEV_ONLINE        = 1, /* 设备上线 */
+    DEV_RESTORE       = 2, /* 设备恢复出厂，删除云端信息 */
+    DEV_ADD           = 3, /* 设备恢复出厂之后重新注册 */
+    DEV_TRIPLE_ONLINE = 4, /* 使用三元组鉴权进行设备上线 */
+    DEV_TRIPLE_ADD    = 5  /* 使用三元组鉴权设备恢复出厂之后重新注册 */
 } DevOnlineStatus;
 
 typedef struct {
@@ -95,7 +97,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
  * 返回非0: 服务状态上报失败
  */
 int HilinkReportBrgDevCharState(const char *sn, const char *svcId,
-    char *payload, unsigned int len, unsigned long tid);
+    const char *payload, unsigned int len, unsigned long tid);
 
 /*
  * 上报Bridge桥下挂设备服务状态
@@ -133,6 +135,20 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
  * 注意: out需要动态申请，Hilink Device SDK使用完成后会调用hilink_free接口释放
  */
 int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out, unsigned int *outLen);
+
+/*
+ * 获取Bridge下挂设备房间号
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ * roomId: 返回设备房间号
+ * roomIdLen: roomId内存大小，拷贝不可超过该长度，返回实际拷贝的字节数
+ * devName: 返回设备名称（可选）
+ * devNameLen: devName内存大小，拷贝不可超过该长度，返回实际拷贝的字节数
+ * 返回0: 获取下挂设备房间号成功
+ * 返回非0: 获取下挂设备房间号失败
+ */
+int HILINK_GetBrgSubDevRoomInfo(const char *sn, char *roomId, unsigned int *roomIdLen,
+    char *devName, unsigned int *devNameLen);
 
 /*
  * 删除bridge下挂设备
@@ -179,6 +195,56 @@ int HiLinkSyncBrgDevInfo(const char *sn, unsigned long taskId);
  * 注意:payload必须以'\0'为结束符，否则可能导致异常
  */
 int HILINK_ReportBrgAllSubDevState(const char *payload);
+
+/*
+ * 根据sn返回三元组的PROD ID信息
+ * 如果未计算完成则返回1，失败返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_GetBrgDevThirdProdId(const char *sn, char *thirdProdId, unsigned int thirdProdIdLen);
+
+/*
+ * 根据sn返回三元组的confirmationKey信息
+ * 如果未计算完成则返回1，失败返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_GetBrgDevCfmKey(const char *sn, char *devConfirmationKey, unsigned int devConfirmationKeyLen);
+
+/*
+ * 根据sn返回三元组的confirmation和random信息
+ * 如果未计算完成则返回或者失败都返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_GetBrgDevCfmAndRnd(const char *sn, char *devConfirmation, unsigned int devConfirmationLen,
+    char *devRandom, unsigned int devRandomLen);
+
+/*
+ * 根据sn返回云的confirmation和random信息
+ * 如果未计算完成则返回或者失败都返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_NotifyBrgSubDevCloudCfmAndRnd(const char *sn, const char *cloudConfirmation,
+    unsigned int cloudConfirmationLen, const char *cloudRandom, unsigned int cloudRandomLen);
+
+/*
+ * 根据sn返回云的鉴权信息
+ * 如果失败返回-1，成功返回0
+ * 该函数由设备开发者或厂商实现
+ * sn: Bridge桥下挂设备唯一标识
+ */
+int HILINK_NotifyBrgSubDevCloudCfmResult(const char *sn, int result);
+
+/*
+ * 获取子设备的最大数目,最大数目不超过500,不小于64,超出该范围
+ * 默认使用64.
+ * 该函数由设备开发者或厂商实现
+ * 返回值：设备开发者设置的下挂设备的最大数目
+ */
+unsigned int HILINK_GetBrgSubDevMaxNum();
 
 #ifdef __cplusplus
 }

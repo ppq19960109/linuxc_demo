@@ -33,6 +33,11 @@ extern "C" {
 // 异常终止
 #define SEND_DATA_ERROR        2
 
+typedef enum {
+    SUB_DEV_UPDATE_SUCCESS = 0,
+    SUB_DEV_UPDATE_FAIL
+} SubDevUpdateStatus;
+
 /*
  * 获取MCU当前版本
  * version表示版本字符串
@@ -149,6 +154,54 @@ unsigned int HILINK_GetMaxUpdateFileSize(void);
  * HiLink SDK调用此接口后便会退出升级流程，交由厂商的安装程序来完成软件的安装。
  */
 int HILINK_StartSoftwareIntall(void);
+
+/*
+ * 获取桥下子设备的当前版本
+ * version返回同一proId品类的最低版本号
+ * 返回值是RETURN_OK时，表示获取成功，反之失败
+ */
+int HILINK_GetBrgSubDevVersion(const char *proId, unsigned int proIdLen,
+    char *version, unsigned int versionLen);
+/*
+ * HiLink SDK调用厂商适配的此接口通知厂商发送桥下子设备固件数据
+ * data表示发送的数据
+ * len表示发送的数据的长度
+ * offset表示发送的数据起始位置相对于完整固件包的偏移量
+ * 返回值是RETURN_OK时，表示接收成功，反之失败
+ */
+int HILINK_NotifyBrgSubDevOtaData(const char *proId, unsigned int proIdLen,
+    const unsigned char *data, unsigned int len, unsigned int offset);
+/*
+ * HiLink SDK调用厂商适配的此接口通知桥下子设备固件传输的状态
+ * flag表示升级流程标志
+ * 当flag是START_SEND_DATA时，表示通知模组即将开始发送桥下子设备固件数据包
+ * 当flag是STOP_SEND_DATA时，表示通知模组完整的桥下子设备固件包已发送完成
+ * 当flag是SEND_DATA_ERROR时，表示通知模组本次桥下子设备固件升级异常终止
+ * len表示MCU固件包的大小
+ * type表示升级类型
+ * 当type是UPDATE_TYPE_MANUAL时，表示本次升级流程是由用户主动发起的手动升级
+ * 当type是UPDATE_TYPE_AUTO时，表示本次升级流程是经过用户同意，由设备在凌晨2:00至4:00间业务空闲时主动发起的自动升级
+ * 返回值是RETURN_OK时，表示处理成功，HiLink SDK继续正常处理后续流程
+ * 返回值是RETURN_ERROR时，表示处理失败，HiLink SDK将终止本次桥下子设备升级流程
+ * 注意
+ * 当flag是STOP_SEND_DATA时，此接口需返回桥下子设备侧固件升级的结果；当flag是其它值时，需返回接口接收到此消息后的处理结果。
+ * 自动升级流程在凌晨进行，因此厂商在实现升级流程相关功能时，确保在升级的下载安装固件和重启设备时避免对用户产生影响，
+ * 比如发出声音，光亮等。
+ */
+int HILINK_NotifyBrgSubDevOtaStatus(const char *proId, unsigned int proIdLen, int flag,
+    unsigned int len, unsigned int type);
+/*
+ * 上报给模组桥下子设备的升级进度
+ * progress合法值是[0,100]，建议5%递增上报，无需频繁上报。
+ */
+void HILINK_ReportBrgSubDevUpdateProgress(const char *proId, unsigned int proIdLen, int progress);
+/*
+ * 上报给模组桥下子设备的升级状态
+ * 上报的状态在SubDevUpdateStatus枚举中
+ * 无论是成功还是失败，都需要确保升级结束后将升级状态上报给模组。
+ */
+void HILINK_ReportBrgSubDevUpdateStatus(const char *proId, unsigned int proIdLen, SubDevUpdateStatus status);
+
 
 #ifdef __cplusplus
 }

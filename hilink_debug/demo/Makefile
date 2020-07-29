@@ -19,6 +19,11 @@ INCLUDE_PATH += -I$(BASE_PATH)/src
 INCLUDE_PATH += -I$(BASE_PATH)/src/cloud
 INCLUDE_PATH += -I$(BASE_PATH)/src/local
 INCLUDE_PATH += -I$(BASE_PATH)/src/adapter
+INCLUDE_PATH += -I$(BASE_PATH)/src/upgrade
+INCLUDE_PATH += -I$(BASE_PATH)/src/cJSON
+INCLUDE_PATH += -I$(BASE_PATH)/src/md5
+INCLUDE_PATH += -I$(BASE_PATH)/lib/curl/include/curl
+
 #适配源文件
 SOURCE_FILES := $(wildcard $(BASE_PATH)/adapter/network_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/config_adapter/*.c)
@@ -29,11 +34,15 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/cloud/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/local/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/adapter/*.c)
-#库文件路径
-LIB_FILE_PATH := $(BASE_PATH)/lib
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/upgrade/*.c)
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/cJSON/*.c)
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/md5/*.c)
 
+#库文件路径
+LIB_FILE_PATH := -L$(BASE_PATH)/lib
+# LIB_FILE_PATH += -L$(BASE_PATH)/lib/curl/lib
 #库文件
-LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic -ldl -lm -lpthread -Wl,--end-group 
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic -ldl -lm -lpthread  -lhilinkdevicesdk -lhilinkota -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
 #编译出的.o文件
 
@@ -42,15 +51,15 @@ OBJECTS := $(patsubst %.c, %.o, $(SOURCE_FILES))
 
 #编译选项
 
-COMPILE_FLAGS := -O  $(INCLUDE_PATH) -g
-LINK_FLAGS := -L$(LIB_FILE_PATH) $(LIB_FILES)
+COMPILE_FLAGS := -O  $(INCLUDE_PATH)
+LINK_FLAGS := $(LIB_FILE_PATH) $(LIB_FILES)
 
 #编译开始
 .PHONY: all clean
-all:  hilinkdemo
+all:  hilinkapp
 
 #进程
-hilinkdemo: $(OBJECTS)
+hilinkapp: $(OBJECTS)
 	$(CC) -o $@ $(OBJECTS) $(LINK_FLAGS)
 
 #编译.o
@@ -59,4 +68,4 @@ $(OBJECTS):%.o : %.c
 
 #清理
 clean:
-	rm -f $(OBJECTS) hilinkdemo
+	rm -f $(OBJECTS) hilinkapp

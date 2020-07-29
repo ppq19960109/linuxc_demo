@@ -9,11 +9,25 @@ extern "C"
 
     typedef struct
     {
+        char Switch;
+        char LedEnable;
+        char PowerOffProtection;
+        int countdown;
+    } dev_HY0095_t; //U2/天际系列：单键智能开关（HY0095）
+    typedef struct
+    {
+        char Switch[2];
+        char LedEnable;
+        char PowerOffProtection;
+        int countdown[3];
+    } dev_HY0096_t; //U2/天际系列：双键智能开关（HY0096）
+    typedef struct
+    {
         char Switch[3];
         char LedEnable;
         char PowerOffProtection;
         int countdown[3];
-    } dev_500c33_t; //U2/天际系列：三键智能开关（HY0097）
+    } dev_HY0097_t; //U2/天际系列：三键智能开关（HY0097）
 
     typedef struct
     {
@@ -22,6 +36,24 @@ extern "C"
         char Switch;
     } dev_09223f_t; //U2/天际系列：DLT液晶调光器（09223f，型号U86KTGS150-ZXP）
 
+    typedef struct
+    {
+        char Switch;
+        char Switch_All;
+        char LedEnable;
+        char PowerOffProtection;
+        char KeyMode;
+        int countdown;
+    } dev_HY0121_t; //1路智能开关模块（HY0121，型号IHC1238）
+    typedef struct
+    {
+        char Switch[2];
+        char Switch_All;
+        char LedEnable;
+        char PowerOffProtection;
+        char KeyMode;
+        int countdown[2];
+    } dev_HY0122_t; //2路智能开关模块（HY0122，型号IHC1239）
     typedef struct
     {
         char Switch[3];
@@ -55,8 +87,12 @@ extern "C"
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
 
     extern char *dev_modeId[];
-    extern char *attr_500c33[];
+    extern char *attr_HY0095[];
+    extern char *attr_HY0096[];
+    extern char *attr_HY0097[];
     extern char *attr_09223f[];
+    extern char *attr_HY0121[];
+    extern char *attr_HY0122[];
     extern char *attr_HY0107[];
     extern char *attr_HY0093[];
     extern char *attr_HY0134[];

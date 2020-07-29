@@ -190,7 +190,7 @@ int HILINK_GetWiFiRssi(signed char *rssi)
 int HILINK_Restart(void)
 {
     log_info("HILINK_Restart");
-    system("reboot");
+    system("killall hilinkapp;/app/hilinkapp &");
     return 0;
 }
 

@@ -13,7 +13,7 @@ extern "C"
 #include <stdlib.h>
 #include "list.h"
 #include "cJSON.h"
-#include "sqlite3.h"
+// #include "sqlite3.h"
 #include "log.h"
 #include "client.h"
 
@@ -37,7 +37,7 @@ extern "C"
     {
         char DeviceId[18];
         char ModelId[16];
-        char Key[16];
+        char Key[18];
         char Value[16];
         void *private;
     };

@@ -65,8 +65,6 @@ void HilinkGetDeviceSn(unsigned int len, char *sn);
 /* 获取当前设备版本号 */
 int getDeviceVersion(char **firmwareVer, char **softwareVer, char **hardwareVer);
 
-
-// void dev_info_init(dev_info_t *dev_info);
 #ifdef __cplusplus
 }
 #endif
