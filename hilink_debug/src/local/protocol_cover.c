@@ -271,7 +271,7 @@ int read_from_local(const char *json)
         log_error("Data is NULL\n");
         goto fail;
     }
-    //
+    //从type数组中查找type
     int type = str_search(Type->valuestring, TYPE_Report, sizeof(TYPE_Report) / 4);
     if (type == -1)
     {

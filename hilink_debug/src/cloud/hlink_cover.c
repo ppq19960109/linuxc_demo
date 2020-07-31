@@ -126,6 +126,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         ++pos;
 
         //indicator
+
         cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "mode");
@@ -192,7 +193,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         //Switch
         for (i = 0; i < 3; ++i)
         {
-            dev_sub->Switch[i] = 1;
+
             cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "on");
@@ -202,14 +203,14 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         }
         log_debug("local_tohilink indicator");
         //indicator
-        dev_sub->LedEnable = 1;
+
         cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "mode");
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 3:
+    case 3://DLT调光
     {
         if (newFlag)
         {
@@ -381,7 +382,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         // modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 7:
+    case 7://门窗传感器
     {
         if (newFlag)
         {
@@ -530,7 +531,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
                 break;
             }
         }
-
+//场景面板
         if (newFlag)
         {
             strcpy(brgDevInfo->prodId, "2ANF");
@@ -575,7 +576,7 @@ fail:
     free(root);
     return -1;
 }
-
+//hilink modeid
 char *dev_hilink_modeId[] = {"2AP1", "2AP0", "2AN9", "2AN7", "2AOZ", "2AOY", "2ANO", "2AN8", "2ANF", "2ANK", "2ANJ", "2ANI"};
 int FrameNumber;
 
@@ -591,7 +592,7 @@ int getValueFromJson(cJSON *val, char *dst)
     }
     return 0;
 }
-
+//hlink转换成haryan的json格式
 int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
 {
     dev_hilink_t *in = list_get_by_id_hilink(sn, &hilink_handle.node);

@@ -42,6 +42,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0095_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0095_t));
             if (newFlag)
                 goto cover;
         }
@@ -68,6 +69,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0096_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0096_t));
             if (newFlag)
                 goto cover;
         }
@@ -97,6 +99,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0097_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0097_t));
             if (newFlag)
                 goto cover;
         }
@@ -129,6 +132,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_09223f_t));
+            memset(dev_data->private, 0, sizeof(dev_09223f_t));
             if (newFlag)
                 goto cover;
         }
@@ -155,6 +159,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0121_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0121_t));
             if (newFlag)
                 goto cover;
         }
@@ -184,6 +189,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0122_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0122_t));
             if (newFlag)
                 goto cover;
         }
@@ -216,6 +222,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0107_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0107_t));
             if (newFlag)
                 goto cover;
         }
@@ -251,6 +258,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0093_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0093_t));
             if (newFlag)
                 goto cover;
         }
@@ -281,6 +289,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (dev_data->private == NULL)
         {
             dev_data->private = malloc(sizeof(dev_HY0134_t));
+            memset(dev_data->private, 0, sizeof(dev_HY0134_t));
             if (newFlag)
                 goto cover;
         }
