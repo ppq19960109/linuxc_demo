@@ -24,7 +24,7 @@ SRC += $(wildcard $(SRC_PATH)/*.c)
 
 # OBJ += $(SRC:%.c=%.o)
 # OBJ := arp.o
-OBJ := main.o
+OBJ := ap.o
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<

@@ -2,8 +2,8 @@
 PWD := .
 BASE_PATH := $(PWD)/..
 
-# CROSS = aarch64-linux-gnu-
-CROSS = armv8l-linux-gnueabihf-
+CROSS = arm-rockchip-linux-gnueabihf-
+# CROSS = armv8l-linux-gnueabihf-
 # CROSS = arm-linux-gnueabihf-
 # CC := /opt/toolchains/mips-mti-linux-gnu/2019.09-01/bin/mips-mti-linux-gnu-gcc
 # AR := /opt/toolchains/mips-mti-linux-gnu/2019.09-01/bin/mips-mti-linux-gnu-ar
@@ -42,7 +42,7 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/md5/*.c)
 LIB_FILE_PATH := -L$(BASE_PATH)/lib
 # LIB_FILE_PATH += -L$(BASE_PATH)/lib/curl/lib
 #库文件
-LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic -ldl -lm -lpthread  -lhilinkdevicesdk -lhilinkota -Wl,--end-group 
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic -ldl -lm -lpthread   -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
 #编译出的.o文件
 

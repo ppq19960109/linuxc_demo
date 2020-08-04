@@ -6,12 +6,13 @@
 
 #include "net_info.h"
 
-char wifi_ssid[32] = "HUAWEI-WDNJ4L";//
+char wifi_ssid[32] = "HUAWEI-WDNJ4L"; //
 char wifi_psk[16] = "1234567890";
 char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
 char *cmd_add = "wpa_cli -i wlan0 add_network";
 char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
 char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
+char *cmd_save = "wpa_cli -i wlan0 save_config";
 char *cmd_udhcp = "udhcpc -i wlan0";
 
 /*
@@ -102,24 +103,24 @@ int HILINK_ConnectWiFi(void)
     //     return 0;
     // }
     log_info("HILINK_ConnectWiFi");
-    // system(cmd_remove);
-    // system(cmd_add);
+    system(cmd_remove);
+    system(cmd_add);
 
-    // char cmd_ssid[64] = {"wpa_cli -i wlan0 set_network 0 ssid '\""};
-    // strcpy(&cmd_ssid[strlen(cmd_ssid)], wifi_ssid);
-    // strcpy(&cmd_ssid[strlen(cmd_ssid)], "\"'");
+    char cmd_ssid[64] = {"wpa_cli -i wlan0 set_network 0 ssid '\""};
+    strcpy(&cmd_ssid[strlen(cmd_ssid)], wifi_ssid);
+    strcpy(&cmd_ssid[strlen(cmd_ssid)], "\"'");
 
-    // char cmd_psk[64] = {"wpa_cli -i wlan0 set_network 0 psk '\""};
-    // strcpy(&cmd_psk[strlen(cmd_psk)], wifi_psk);
-    // strcpy(&cmd_psk[strlen(cmd_psk)], "\"'");
+    char cmd_psk[64] = {"wpa_cli -i wlan0 set_network 0 psk '\""};
+    strcpy(&cmd_psk[strlen(cmd_psk)], wifi_psk);
+    strcpy(&cmd_psk[strlen(cmd_psk)], "\"'");
 
-    // log_info("cmd_ssid %s", cmd_ssid);
-    // log_info("cmd_psk %s", cmd_psk);
-    // system(cmd_ssid);
-    // system(cmd_psk);
+    log_info("cmd_ssid %s", cmd_ssid);
+    log_info("cmd_psk %s", cmd_psk);
+    system(cmd_ssid);
+    system(cmd_psk);
 
-    // system(cmd_enable);
-    // system(cmd_udhcp);
+    system(cmd_enable);
+    system(cmd_udhcp);
     return 0;
 }
 
@@ -157,7 +158,7 @@ int HILINK_GetNetworkState(int *state)
  */
 int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
 {
-    log_info("HILINK_GetWiFiBssid bssidLen:%d",*bssidLen);
+    log_info("HILINK_GetWiFiBssid bssidLen:%d", *bssidLen);
     int ret = get_local_mac(ETH_NAME, bssid, *bssidLen);
     log_info("HILINK_GetWiFiBssid:%s %d", bssid, ret);
     return ret;
@@ -174,8 +175,9 @@ int HILINK_GetWiFiRssi(signed char *rssi)
     // FILE *pFile = popen("iwconfig wlan0| grep Signal level -Eo '[\-][0-9][0-9]*' | awk 'NR==1{print $1}'iwconfig wlan0| grep Signal level -Eo \'[\\-][0-9][0-9]*\' | awk \'NR==1{print $1}\'", "r");
 
     char szBuf[8] = {0};
-
-    popen_cmd("wpa_cli scan_results | grep HUAWEI-WDNJ4L |awk \'{print $3}\'", "r", szBuf, sizeof(szBuf));
+    char cmd[100] = {0};
+    sprintf(cmd, "wpa_cli scan_results | grep %s |awk \'{print $3}\'", wifi_ssid);
+    popen_cmd(cmd, "r", szBuf, sizeof(szBuf));
     *rssi = atoi(szBuf);
     log_info("HILINK_GetWiFiRssi:%s,%d\n", szBuf, *rssi);
 
@@ -190,7 +192,7 @@ int HILINK_GetWiFiRssi(signed char *rssi)
 int HILINK_Restart(void)
 {
     log_info("HILINK_Restart");
-    system("killall hilinkapp;/app/hilinkapp &");
+    system("reboot");
     return 0;
 }
 
@@ -198,8 +200,8 @@ int HILINK_Restart(void)
 void HILINK_SetStationNumLimit(void)
 {
     log_info("HILINK_SetStationNumLimit");
-    // system("hostapd_cli -iwlan0 set max_num_sta 2");
-    // system("hostapd_cli -iwlan0 reload");
+    system("hostapd_cli -iwlan0 set max_num_sta 2");
+    system("hostapd_cli -iwlan0 reload");
     return;
 }
 

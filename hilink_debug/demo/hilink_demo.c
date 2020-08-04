@@ -46,6 +46,7 @@ int main(void)
     while (1)
     {
         hilink_msleep(1000);
+        // HilinkGetRebootFlag();
     }
     hilink_handle_destory();
     protlcol_destory();

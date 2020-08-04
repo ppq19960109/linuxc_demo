@@ -450,7 +450,7 @@ int write_to_local(void *ptr)
 
     char *json = cJSON_PrintUnformatted(root);
     log_warn("%s protocol_data.socketfd:%d\n", json, protocol_data.socketfd);
-    if (protocol_data.socketfd != NULL)
+    if (protocol_data.socketfd != 0)
         write(protocol_data.socketfd, json, strlen(json) + 1);
     free(json);
 

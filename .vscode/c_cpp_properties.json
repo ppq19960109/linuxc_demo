@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/home/ppq/imx6ull/imx6ull/linux-imx-rel_imx_4.1.15_2.1.0_ga/include",
-                "/home/ppq/imx6ull/imx6ull/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/include"
+                "/home/ppq/imx6ull/imx6ull/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/include",
+                "/usr/include/python3.8/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

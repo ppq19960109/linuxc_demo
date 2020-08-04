@@ -1,6 +1,6 @@
 
 def add(a,b):
-    print "in python function add"
-    return a+b
+    print("agr1 %d agr2 %s" %(a,b))
+    return a,"hi",(1,23)
 
-print('add val',add(1,3))
+# print('add:',add(1,"good"))

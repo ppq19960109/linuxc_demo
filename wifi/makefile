@@ -1,5 +1,5 @@
 
-# CROSS_COMPILE = armv8l-linux-gnueabihf-
+CROSS_COMPILE = arm-rockchip-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -8,37 +8,32 @@ SRC_INCPATH = $(TOPDIR)
 SRC_PATH = $(TOPDIR)
 
 
+
 CFLAGS += -I$(SRC_INCPATH) 
-CFLAGS += -g #-Wall
-# CFLAGS += `python3-config --cflags` `python3-config --ldflags` -fPIC
-CFLAGS += -I/usr/include/python3.8/
+CFLAGS += -g -Wall
 
-
-LDFLAGS += -L$(TOPDIR)/
-LDFLAGS += -L/usr/lib/python3.8/config-3.8-x86_64-linux-gnu 
-
+LDFLAGS += -L$(TOPDIR)
 
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic 	\
-		-Wl,-Bdynamic -ldl -lm -lpthread -lpython3.8	\
+		-Wl,-Bdynamic -ldl -lm -lpthread -lDeviceIo -lasound \
 		-Wl,--end-group
 
 SRC += $(wildcard $(SRC_PATH)/*.c)
 
-# OBJ += $(SRC:%.c=%.o)
-OBJ +=py.o
+ OBJ += $(SRC:%.c=%.o)
+
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-TARGET := py
+TARGET := wifi
 .PHONY : clean all
 
 all: $(TARGET)
 
 $(TARGET) : $(OBJ)
-	@echo "OBJ:"$(OBJ)
 	$(CC) $^  $(CFLAGS)  $(LDFLAGS) $(LIBS) -o $@
 
 clean :

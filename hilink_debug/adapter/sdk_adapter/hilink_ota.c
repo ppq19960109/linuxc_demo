@@ -9,7 +9,6 @@
 #include "protocol_cover.h"
 #include <time.h>
 
-
 #define UPDATE_PATH "/userdata/update/"
 #define UPDATE_FILE "upgrade.bin"
 #define UPDATE_PATH_ALL "/userdata/update/upgrade.bin"
@@ -101,9 +100,14 @@ int HilinkOtaEndProcess(int status)
 
 int HilinkGetRebootFlag(void)
 {
+    /*    stHILINK_TIME_INFO hilink_time;
+    int ret = hilink_get_local_time_info(&hilink_time);
+    log_debug("HilinkGetRebootFlag time:%d %d %d %d %d", hilink_time.year, hilink_time.month, hilink_time.day, hilink_time.hour, hilink_time.min);
+    if (hilink_time.hour < 2 || hilink_time.hour > 4)
+    */
     time_t tm = time(NULL);
     struct tm *localtm = localtime(&tm);
-    log_debug("HilinkGetRebootFlag time:%s %d", asctime(localtm),localtm->tm_hour);
+    log_debug("HilinkGetRebootFlag time:%s %d", asctime(localtm), localtm->tm_hour);
     if (localtm->tm_hour < 2 || localtm->tm_hour > 4)
         return MODULE_CANNOT_REBOOT;
     /* 厂商实现此接口 */
@@ -197,8 +201,17 @@ int HILINK_StartSoftwareIntall(void)
     system("chmod 777 " UPDATE_PATH_ALL);
     //test
     system("cp -rf /userdata/nfs/upgrade.bin " UPDATE_PATH);
-    system("cd " UPDATE_PATH ";./" UPDATE_FILE " &");
 
+
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, "bootTime", 60);
+    cJSON_AddNumberToObject(root, "progress", 100);
+    char *json = cJSON_PrintUnformatted(root);
+    hilink_report_char_state("update", json, strlen(json + 1), pthread_self());
+    free(json);
+    free(root);
+
+    system("cd " UPDATE_PATH ";./" UPDATE_FILE " &");
     /* 厂商实现此接口 */
     return RETURN_OK;
 }

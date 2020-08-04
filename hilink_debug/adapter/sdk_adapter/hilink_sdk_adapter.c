@@ -96,7 +96,7 @@ int hilink_process_before_restart(int flag)
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
-        system("killall hilinkapp;/app/hilinkapp &");
+
         /* 实现模组重启前的操作(如:保存系统状态等) */
         return 1;
     }
@@ -104,7 +104,7 @@ int hilink_process_before_restart(int flag)
     /* APP删除设备触发模组重启 */
     if (flag == HILINK_REBOOT_DEVDELETE)
     {
-        system("killall hilinkapp;/app/hilinkapp &");
+
         /* 实现模组重启前的操作(如:保存系统状态等) */
         return 1;
     }
