@@ -9,13 +9,13 @@ SRC_PATH = $(TOPDIR)
 
 
 CFLAGS += -I$(SRC_INCPATH) 
-CFLAGS += -g #-Wall
-# CFLAGS += `python3-config --cflags` `python3-config --ldflags` -fPIC
+CFLAGS += -g -Wall
+CFLAGS += `python3-config --cflags` `python3-config --ldflags` -fPIC
 CFLAGS += -I/usr/include/python3.8/
 
 
 LDFLAGS += -L$(TOPDIR)/
-LDFLAGS += -L/usr/lib/python3.8/config-3.8-x86_64-linux-gnu 
+LDFLAGS += -L/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/
 
 
 
@@ -26,13 +26,13 @@ LIBS += -Wl,--start-group	\
 
 SRC += $(wildcard $(SRC_PATH)/*.c)
 
-# OBJ += $(SRC:%.c=%.o)
-OBJ +=py.o
+OBJ += $(SRC:%.c=%.o)
+
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-TARGET := py
+TARGET := cpy_demo
 .PHONY : clean all
 
 all: $(TARGET)

@@ -22,7 +22,7 @@ extern "C"
     int get_netlink_status(const char *if_name);
     int get_link_status(const char *if_name);
 
-    int popen_cmd(char *cmd, char *mode, char *buf, char bufSize);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,12 +1,13 @@
 
 CROSS_COMPILE = arm-rockchip-linux-gnueabihf-
+# CROSS_COMPILE = armv8l-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
 TOPDIR = .
 SRC_INCPATH = $(TOPDIR)
 SRC_PATH = $(TOPDIR)
-
+ROCK_LD_PATH = /home/ppq/host
 
 
 CFLAGS += -I$(SRC_INCPATH) 

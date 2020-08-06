@@ -40,7 +40,7 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/md5/*.c)
 
 #库文件路径
 LIB_FILE_PATH := -L$(BASE_PATH)/lib
-# LIB_FILE_PATH += -L$(BASE_PATH)/lib/curl/lib
+
 #库文件
 LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic -ldl -lm -lpthread   -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 

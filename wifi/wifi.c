@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <Rk_wifi.h>
+#include <DeviceIo/Rk_wifi.h>
 
 int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 {
@@ -45,8 +45,12 @@ int main(int argc, char **argv)
     // else
     // {
     RK_wifi_enable(1);
-    RK_wifi_connect("HUAWEI-WDNJ4L", "1234567890");
+    // RK_wifi_connect("HUAWEI-WDNJ4L", "1234567890");
     // }
+    RK_wifi_disconnect_network();
+    RK_wifi_disable_ap();
+
+    RK_wifi_enable_ap("Rkchip-123", "1234567890","10.201.126.1");
     for (;;)
         ;
     // 断开WIFI并关闭WIFI模块
