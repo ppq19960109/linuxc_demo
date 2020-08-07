@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
-
+#include "log.h"
 
 
 void log_printf(char* format, ...) {

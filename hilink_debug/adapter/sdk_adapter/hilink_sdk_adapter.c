@@ -7,6 +7,7 @@
 #include "hilink_sdk_adapter.h"
 
 #include "protocol_cover.h"
+#include "hilink_cover.h"
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -93,6 +94,8 @@ void hilink_notify_devstatus(int status)
 int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart");
+    hilink_handle_destory();
+    protlcol_destory();
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
@@ -124,7 +127,6 @@ int get_faultDetection_state(int *status, int *code)
     *status = 0;
     return 0;
 }
-
 
 /*
  * 获取当前设备唯一身份标识

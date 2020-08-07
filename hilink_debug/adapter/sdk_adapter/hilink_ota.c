@@ -6,6 +6,7 @@
  */
 #include "hilink_ota.h"
 #include "hilink.h"
+#include "hilink_sdk_adapter.h"
 #include "protocol_cover.h"
 #include <time.h>
 
@@ -211,6 +212,7 @@ int HILINK_StartSoftwareIntall(void)
     free(json);
     free(root);
 
+    hilink_process_before_restart(1);
     system("cd " UPDATE_PATH ";./" UPDATE_FILE " &");
     /* 厂商实现此接口 */
     return RETURN_OK;

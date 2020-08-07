@@ -2,3 +2,4 @@
 *.db
 *.bmp
 build/
+*demo

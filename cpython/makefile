@@ -10,7 +10,7 @@ SRC_PATH = $(TOPDIR)
 
 CFLAGS += -I$(SRC_INCPATH) 
 CFLAGS += -g -Wall
-CFLAGS += `python3-config --cflags` `python3-config --ldflags` -fPIC
+# CFLAGS += `python3-config --cflags` `python3-config --ldflags` -fPIC
 CFLAGS += -I/usr/include/python3.8/
 
 

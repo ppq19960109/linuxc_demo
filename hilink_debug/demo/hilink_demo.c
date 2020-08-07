@@ -11,6 +11,7 @@
 #include "hilink_network_adapter.h"
 #include "hilink_softap_adapter.h"
 #include "hilink_profile_bridge.h"
+#include "hilink_sdk_adapter.h"
 
 #include "net_info.h"
 #include "protocol_cover.h"
@@ -19,8 +20,36 @@
 void hilink_msleep(int);
 
 extern const char *report_json[];
+
+
+#include <signal.h>
+void signal_handler(int signal)
+{ 
+    printf("signal is %d\n", signal);
+    if(signal==SIGINT||signal==SIGQUIT||signal==SIGKILL||signal==SIGTERM)
+    {
+        hilink_process_before_restart(1);
+        exit(0);
+    }
+}
+
 int main(void)
 {
+
+    signal(SIGQUIT,signal_handler);
+    signal(SIGKILL,signal_handler);
+    signal(SIGTERM,signal_handler);
+
+    struct sigaction act, oldact;
+    act.sa_handler = signal_handler;
+    sigemptyset(&act.sa_mask); 
+    // sigaddset(&act.sa_mask, SIGQUIT); //见注(1)
+    act.sa_flags = SA_RESETHAND | SA_NODEFER; //见注(2)
+    // act.sa_flags = 0; //见注(3)
+
+    sigaction(SIGINT, &act, &oldact);
+ 
+
     protlcol_init();
     hilink_handle_init();
 
@@ -29,7 +58,7 @@ int main(void)
     HILINK_SdkAttr *SdkAttr = HILINK_GetSdkAttr();
     log_debug("HILINK_SdkAttr monitorTaskStackSize:%d,deviceMainTaskStackSize:%d,bridgeMainTaskStackSize:%d",
               SdkAttr->monitorTaskStackSize, SdkAttr->deviceMainTaskStackSize, SdkAttr->bridgeMainTaskStackSize);
-    HiLinkSetGatewayMode(1);
+    // HiLinkSetGatewayMode(1);
     HILINK_EnableProcessDelErrCode(1);
     HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE);
     enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
@@ -48,7 +77,7 @@ int main(void)
         hilink_msleep(1000);
         // HilinkGetRebootFlag();
     }
-    hilink_handle_destory();
-    protlcol_destory();
+    hilink_process_before_restart(1);
+
     return 0;
 }

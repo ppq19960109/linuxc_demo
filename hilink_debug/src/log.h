@@ -1,6 +1,8 @@
 #ifndef __LOG_H_
 #define __LOG_H_
 
+#include <stdbool.h>
+
 #define NONE "\e[0m\n"
 #define BLACK "\e[0;30m"
 #define L_BLACK "\e[1;30m"
