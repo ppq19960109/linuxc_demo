@@ -5,6 +5,7 @@
  * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
  */
 #include "hilink_sdk_adapter.h"
+#include "hilink_softap_adapter.h"
 
 #include "protocol_cover.h"
 #include "hilink_cover.h"
@@ -32,6 +33,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_LONG_OFFLINE_REBOOT:
         log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
         /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
+        hilink_process_before_restart(1);
         break;
     case HILINK_UNINITIALIZED:
         log_info("HILINK_UNINITIALIZED\n");
@@ -68,10 +70,12 @@ void hilink_notify_devstatus(int status)
     case HILINK_DEVICE_UNREGISTER:
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
+        hilink_restore_factory_settings();
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");
         /* 设备复位标记置位，请在此处添加实现 */
+
         break;
     case HILINK_NEGO_REG_INFO_FAIL:
         log_info("HILINK_NEGO_REG_INFO_FAIL\n");
@@ -94,8 +98,10 @@ void hilink_notify_devstatus(int status)
 int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart");
+
     hilink_handle_destory();
     protlcol_destory();
+    // HILINK_StopSoftAp();
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
@@ -124,7 +130,7 @@ int get_faultDetection_state(int *status, int *code)
 {
     /* 由设备厂商实现，将服务faultDetection属性当前值赋予出参 */
     log_info("get_faultDetection_state status:%d,code:%d", *status, *code);
-    *status = 0;
+    *status = 1;
     return 0;
 }
 

@@ -163,6 +163,9 @@ int HILINK_GetBrgSubDevRoomInfo(const char *sn, char *roomId, unsigned int *room
     {
         return -1;
     }
+    char* name="1";
+    strcpy(roomId,name);
+    *roomIdLen=strlen(name)+1;
     return 0;
 }
 
@@ -179,8 +182,10 @@ int HilinkDelBrgDev(const char *sn)
     {
         return -1;
     }
+    list_del_by_id_hilink(sn, &hilink_handle.node);
     list_del_by_id(sn, &protocol_data.dev_list);
-    return list_del_by_id_hilink(sn, &hilink_handle.node);
+    
+    return hilink_delete(sn);
 }
 
 /*

@@ -124,7 +124,7 @@ ssize_t Write(int fd, const void *ptr, size_t nbytes)
 again:
     if ((n = write(fd, ptr, nbytes)) == -1)
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+        if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK  )
             goto again;
         else
             return -1;

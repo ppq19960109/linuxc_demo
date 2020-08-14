@@ -120,7 +120,7 @@ const char *report_json[] = {
               \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
       }\
     ]\
-    }",
+    }@",
     "{\
        \"Command\":\"Report\",\
        \"FrameNumber\":\"00\",\
@@ -133,7 +133,7 @@ const char *report_json[] = {
               \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
       }\
     ]\
-    }",
+    }4",
     "{\
        \"Command\":\"Report\",\
        \"FrameNumber\":\"00\",\
@@ -146,7 +146,7 @@ const char *report_json[] = {
               \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
       }\
     ]\
-    }",
+    }12",
 };
 
 int str_search(const char *key, char **pstr, int num)
@@ -344,11 +344,11 @@ int read_from_local(const char *json)
         dev_private_attribute(dev_buf, Data);
     }
     break;
-    case 4:
+    case 4://设备全部属性上报：”DevAttri”;
     {
     }
     break;
-    case 5:
+    case 5://设备列表上报：”DevList”
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
         if (dev_buf == NULL)
@@ -363,36 +363,37 @@ int read_from_local(const char *json)
         }
     }
     break;
-    case 6:
+    case 6://设备事件上报：”Event”；恢复出厂设置上报：”
     {
         dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
         dev_private_attribute(dev_buf, Data);
     }
     break;
-    case 7:
+    case 7: //恢复出厂设置上报：”ReFactory”；
     {
         //reboot
         list_del_all(&protocol_data.dev_list);
         list_del_all_hilink(&hilink_handle.node);
+        hilink_restore_factory_settings();
     }
     break;
-    case 8:
+    case 8: //COO网络信息上报：”CooInfo”；
     {
     }
     break;
-    case 9:
+    case 9: //邻居信息上报：”NeighborInfo”;
     {
     }
     break;
-    case 10:
+    case 10: //子节点信息上报：”ChildrenInfo”；
     {
     }
     break;
-    case 11:
+    case 11://设置签名结果上报: “SetSig”；
     {
     }
     break;
-    case 12:
+    case 12://查询签名结果上报: “GetSig”
     {
     }
     break;
@@ -418,6 +419,22 @@ fail:
 }
 
 //-----------------------------------------------------
+int writeToHaryan(const char* data,int socketfd,char* sendBuf,int bufLen){
+    int datalen=strlen(data);
+    if(datalen+3<=bufLen)
+    {
+        sendBuf[0]==0x02;
+        strcpy(&sendBuf[1],data);
+        sendBuf[datalen+1]==0x03;
+        sendBuf[datalen+2]==0x00;
+        if (socketfd != 0)
+        {
+            return Write(socketfd, sendBuf, datalen+3);
+        }
+        log_warn("%s \nprotocol_data.socketfd:%d\n", &sendBuf[1], socketfd);
+    }
+    return -1;
+}
 
 int write_to_local(void *ptr)
 {
@@ -449,9 +466,20 @@ int write_to_local(void *ptr)
     cJSON_AddItemToArray(DataArray, arrayItem);
 
     char *json = cJSON_PrintUnformatted(root);
-    log_warn("%s protocol_data.socketfd:%d\n", json, protocol_data.socketfd);
-    if (protocol_data.socketfd != 0)
-        write(protocol_data.socketfd, json, strlen(json) + 1);
+    // log_warn("%s \nprotocol_data.socketfd:%d\n", json, protocol_data.socketfd);
+
+    // int jsonlen=strlen(json);
+    // if(jsonlen+3<=sizeof(protocol_data.sendData))
+    // {
+    //     protocol_data.sendData[0]==0x02;
+    //     strcpy(&protocol_data.sendData[1],json);
+    //     protocol_data.sendData[jsonlen+1]==0x03;
+    //     protocol_data.sendData[jsonlen+2]==0x00;
+    //     if (protocol_data.socketfd != 0)
+    //         write(protocol_data.socketfd, protocol_data.sendData, jsonlen+3);
+    //     log_warn("%s \nprotocol_data.socketfd:%d\n", &protocol_data.sendData[1], protocol_data.socketfd);
+    // }
+    writeToHaryan(json,protocol_data.socketfd,protocol_data.sendData,256);
     free(json);
 
     free(root);

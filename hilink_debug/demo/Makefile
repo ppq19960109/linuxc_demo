@@ -22,6 +22,7 @@ INCLUDE_PATH += -I$(BASE_PATH)/src/adapter
 INCLUDE_PATH += -I$(BASE_PATH)/src/upgrade
 INCLUDE_PATH += -I$(BASE_PATH)/src/cJSON
 INCLUDE_PATH += -I$(BASE_PATH)/src/md5
+INCLUDE_PATH += -I$(BASE_PATH)/src/rk3308
 INCLUDE_PATH += -I$(BASE_PATH)/lib/curl/include/curl
 
 #适配源文件
@@ -37,12 +38,12 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/upgrade/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/cJSON/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/src/md5/*.c)
-
+SOURCE_FILES += $(wildcard $(BASE_PATH)/src/rk3308/*.c)
 #库文件路径
 LIB_FILE_PATH := -L$(BASE_PATH)/lib
 
 #库文件
-LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic -ldl -lm -lpthread   -Wl,--end-group 
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic  -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
 #编译出的.o文件
 

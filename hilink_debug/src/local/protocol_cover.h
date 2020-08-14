@@ -16,7 +16,7 @@ extern "C"
 // #include "sqlite3.h"
 #include "log.h"
 #include "client.h"
-
+#include "hilink.h"
     typedef struct
     {
         char GatewayId[16];
@@ -56,6 +56,7 @@ extern "C"
         int socketfd;
         int discoverMode;
         struct list_head dev_list;
+        char sendData[256];
     } protocol_data_t;
 
     extern protocol_data_t protocol_data;
@@ -71,6 +72,7 @@ extern "C"
     int isStrNotNull(const char *str);
     int str_search(const char *key,  char **pstr, int num);
     int strn_search(const char *key, char **pstr, int num, int n);
+    int writeToHaryan(const char* data,int socketfd,char* sendBuf,int bufLen);
 #ifdef __cplusplus
 }
 #endif

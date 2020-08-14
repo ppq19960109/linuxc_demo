@@ -38,7 +38,7 @@ dev_info_t dev_info = {
     DEVICE_MODEL,
     DEVICE_TYPE,
     MANUAFACTURER,
-    "123456789123", //Device Mac
+    "123456", //Device Mac
     "1.0.0",
     "1.0.0",
     "1.0.0",

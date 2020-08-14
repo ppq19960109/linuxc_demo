@@ -15,7 +15,7 @@ void hilink_handle_init()
 
 void hilink_handle_destory()
 {
-    list_del_all(&hilink_handle.node);
+    list_del_all_hilink(&hilink_handle.node);
 }
 
 void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
@@ -210,7 +210,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 3://DLT调光
+    case 3: //DLT调光
     {
         if (newFlag)
         {
@@ -229,7 +229,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         devSvcArray = out->devSvc;
         dev_09223f_t *dev_sub = (dev_09223f_t *)src->private;
         //cct
-        dev_sub->ColorTemperature=4500;
+        dev_sub->ColorTemperature = 4500;
         cJSON_AddNumberToObject(root, "colorTemperature", dev_sub->ColorTemperature);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "colorTemperature");
@@ -382,7 +382,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         // modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
     }
     break;
-    case 7://门窗传感器
+    case 7: //门窗传感器
     {
         if (newFlag)
         {
@@ -531,7 +531,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
                 break;
             }
         }
-//场景面板
+        //场景面板
         if (newFlag)
         {
             strcpy(brgDevInfo->prodId, "2ANF");
@@ -555,7 +555,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         pos++;
         for (i = 0; i < 6; ++i)
         {
-            sprintf(dev_sub->SceName[i],"场景%d",i);
+            sprintf(dev_sub->SceName[i], "场景%d", i);
             cJSON_AddStringToObject(root, "name", dev_sub->SceName[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "name");
@@ -761,7 +761,7 @@ int hilink_tolocal(const char *sn, const char *svcId, const char *payload)
         int index = str_search(svcId, svcId_HY0134, sizeof(svcId_HY0134) / sizeof(svcId_HY0134[0]));
         if (index >= 1)
         {
-            sprintf(out.Data.Key,"SceName_%d",index);
+            sprintf(out.Data.Key, "SceName_%d", index);
             val = cJSON_GetObjectItem(root, "name");
         }
         else
@@ -856,4 +856,16 @@ fail:
     free(root);
     log_error("hilink_tolocal");
     return -1;
+}
+
+int hilink_delete(const char *sn)
+{
+    local_dev_t out;
+
+    out.FrameNumber = FrameNumber++;
+    strcpy(out.Type, "Delete");
+    strcpy(out.Data.DeviceId, sn);
+    write_to_local(&out);
+
+    return 0;
 }

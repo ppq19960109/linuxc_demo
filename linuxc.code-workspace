@@ -61,7 +61,8 @@
 			"net_info.h": "c",
 			"hilink_netconfig_mode_mgt.h": "c",
 			"ifaddrs.h": "c",
-			"if.h": "c"
+			"if.h": "c",
+			"string_view": "c"
 		}
 	}
 }

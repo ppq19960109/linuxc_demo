@@ -3,8 +3,10 @@
  * Description: softAp适配实现 (需设备厂商实现)
  */
 #include "hilink_softap_adapter.h"
+#include "hilink_netconfig_mode_mgt.h"
 
 #include "net_info.h"
+#include "wifi.h"
 /*
  * 获取广播ip
  * broadcastIp表示存放Ip的缓冲
@@ -15,7 +17,17 @@
 int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 {
     log_info("HILINK_GetBroadcastIp");
-    return get_local_broadcastIp(ETH_NAME, broadcastIp, len);
+    int ret;
+    enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
+    if (net_mode == HILINK_NETCONFIG_WIFI)
+    {
+        ret = get_local_broadcastIp("wlan0", broadcastIp, len);
+    }
+    else
+    {
+        ret = get_local_broadcastIp(ETH_NAME, broadcastIp, len);
+    }
+    return ret;
 }
 
 /*
@@ -24,25 +36,37 @@ int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
  * ssidLen表示ssid长度, 最大取值64
  * 返回0表示成功，返回-1表示失败
  */
+
 int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 {
     log_info("HILINK_StartSoftAp ssid:%s", ssid);
+    char cmdline[128] = {0};
+
+    create_hostapd_file(AP_NAME, ssid, "1234567890");
+
     system("killall hostapd");
     system("killall dnsmasq");
     system("iptables -t nat -F");
-    system("wpa_cli -i wlan0 disable_network 0");
-
-    system("ifconfig wlan0 192.168.72.1");
-    system("ifconfig wlan0 down");
-    sleep(1);
-    system("ifconfig wlan0 up");
-    sleep(1);
     system("echo \"1\" > /proc/sys/net/ipv4/ip_forward");
 
-    system("hostapd /userdata/hostapd_rk3308.conf -B");
-    system("dnsmasq -iwlan0  --dhcp-option=3,192.168.72.1 --dhcp-range=192.168.72.50,192.168.72.200,24h");
-    system("iptables -t nat -A POSTROUTING -s 192.168.72.1/24 -o eth0 -j MASQUERADE");
+    sprintf(cmdline, "ifconfig %s %s.1 netmask 255.255.255.0", AP_NAME, IPADDR);
+    console_run(cmdline);
+    sprintf(cmdline, "route add default gw %s %s.1", AP_NAME, IPADDR);
+    console_run(cmdline);
 
+    sprintf(cmdline, "ifconfig %s down", AP_NAME);
+    console_run(cmdline);
+    sleep(1);
+    sprintf(cmdline, "ifconfig %s up", AP_NAME);
+    console_run(cmdline);
+
+    sprintf(cmdline, "hostapd %s -B", HOSTAPD_CONF_DIR);
+    console_run(cmdline);
+
+    sprintf(cmdline, "dnsmasq -i%s  --dhcp-option=3,%s.1 --dhcp-range=%s.50,%s.200,24h", AP_NAME, IPADDR, IPADDR, IPADDR);
+    console_run(cmdline);
+    sprintf(cmdline, "iptables -t nat -A POSTROUTING -s %s.1/24 -o eth0 -j MASQUERADE", IPADDR);
+    console_run(cmdline);
     return 0;
 }
 

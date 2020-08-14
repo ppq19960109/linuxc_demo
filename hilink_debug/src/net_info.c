@@ -46,6 +46,7 @@ int get_local_ip(const char *eth_inf, char *ip, unsigned char len)
     snprintf(ip, len, "%s", inet_ntoa(sin.sin_addr));
 
     close(sd);
+    return 0;
 }
 
 int get_local_mac(const char *eth_inf, char *mac, unsigned char len)
@@ -68,14 +69,26 @@ int get_local_mac(const char *eth_inf, char *mac, unsigned char len)
         close(sd);
         return -1;
     }
-
-    snprintf(mac, len, "%02x%02x%02x%02x%02x%02x",
-             (unsigned char)ifr.ifr_hwaddr.sa_data[0],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[1],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[2],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[3],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[4],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
+    if (len == -1)
+    {
+        sprintf(mac, "%02x%02x%02x%02x%02x%02x",
+                (unsigned char)ifr.ifr_hwaddr.sa_data[0],
+                (unsigned char)ifr.ifr_hwaddr.sa_data[1],
+                (unsigned char)ifr.ifr_hwaddr.sa_data[2],
+                (unsigned char)ifr.ifr_hwaddr.sa_data[3],
+                (unsigned char)ifr.ifr_hwaddr.sa_data[4],
+                (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
+    }
+    else
+    {
+        snprintf(mac, len, "%02x%02x%02x%02x%02x%02x",
+                 (unsigned char)ifr.ifr_hwaddr.sa_data[0],
+                 (unsigned char)ifr.ifr_hwaddr.sa_data[1],
+                 (unsigned char)ifr.ifr_hwaddr.sa_data[2],
+                 (unsigned char)ifr.ifr_hwaddr.sa_data[3],
+                 (unsigned char)ifr.ifr_hwaddr.sa_data[4],
+                 (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
+    }
 
     close(sd);
 
@@ -224,4 +237,3 @@ int get_link_status(const char *if_name)
     close(sd);
     return 0;
 }
-
