@@ -6,13 +6,6 @@ extern "C"
 {
 #endif
 
-#include "log.h"
-#include "cJSON.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 #define ETH_NAME "eth0"//"wlan0" "eth0"//"ens33"
 
     int get_local_ip(const char *eth_inf, char *ip, unsigned char len);

@@ -15,6 +15,9 @@
 #include <linux/sockios.h>
 #include <linux/ethtool.h>
 
+#include "log.h"
+#include "cJSON.h"
+
 #define MAC_SIZE 18
 #define IP_SIZE 16
 

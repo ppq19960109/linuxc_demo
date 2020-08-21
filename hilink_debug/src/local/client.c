@@ -1,9 +1,22 @@
-#include "client.h"
-#include "protocol_cover.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/ip.h> /* superset of previous */
+#include <arpa/inet.h>
+#include <pthread.h>
 #include <signal.h>
 #include <time.h>
 
-#define SERVER_PORT 9090
+#include "client.h"
+#include "protocol_cover.h"
+#include "socket.h"
+
+#define SERVER_PORT 7000 //7000
+
+#define RECVLEN 4096
+char tcpBuf[RECVLEN + 1];
 
 const char *heart =
     {"{ \
@@ -18,8 +31,9 @@ void timer_thread(union sigval v)
 void timer_signal_handler(int signal)
 {
     printf("timer_signal_handler function! %s\n", heart);
-    // writeToHaryan(heart,protocol_data.socketfd,protocol_data.sendData,256);
+    writeToHaryan(heart, protocol_data.socketfd, protocol_data.sendData, SENDTOLOCAL_SIZE);
 }
+
 timer_t start_timer()
 {
     struct sigaction act;
@@ -46,9 +60,9 @@ timer_t start_timer()
 
     /* 第一次间隔it.it_value这么长,以后每次都是it.it_interval这么长,就是说it.it_value变0的时候会>装载it.it_interval的值 */
     struct itimerspec it;
-    it.it_interval.tv_sec = 5; // 回调函数执行频率为1s运行1次
+    it.it_interval.tv_sec = 60; // 回调函数执行频率为1s运行1次
     it.it_interval.tv_nsec = 0;
-    it.it_value.tv_sec = 2; // 倒计时3秒开始调用回调函数
+    it.it_value.tv_sec = 5; // 倒计时3秒开始调用回调函数
     it.it_value.tv_nsec = 0;
 
     if (timer_settime(timerid, 0, &it, NULL) == -1)
@@ -68,7 +82,6 @@ int net_client_srart()
     server.sin_addr.s_addr = inet_addr("127.0.0.1"); //ip地址
 
     int sockfd = Socket(AF_INET, SOCK_STREAM);
-    start_timer();
     // Bind(sockfd, (struct sockaddr *)&server, sizeof(struct sockaddr));
     while (Connect(sockfd, (struct sockaddr *)&server, sizeof(struct sockaddr)) != 0)
     {
@@ -80,53 +93,18 @@ int net_client_srart()
 void *thread_hander(void *arg)
 {
     int *fd = ((int *)arg);
+    int i;
     while (1)
     {
         *fd = net_client_srart();
         int sockfd = *fd;
-        char buf[256];
-        int readLen, pos, step = 0;
+        int readLen = 0;
         timer_t timerid = start_timer();
+        write_cmd("Add", NULL);
+        write_cmd("DevsInfo", NULL);
         while (1)
         {
-            // memset(buf, 0, sizeof(buf));
-            // while (step < 2)
-            // {
-            //     switch (step)
-            //     {
-            //     case 0:
-            //         readLen = Recv(sockfd, buf, 1, 0);
-            //         if (readLen == 1)
-            //         {
-            //             if (buf[0] == '{')
-            //             {
-            //                 step = 1;
-            //                 pos = 1;
-            //             }
-            //         }
-            //         break;
-            //     case 1:
-            //         readLen = Recv(sockfd, buf + pos, sizeof(buf) - pos, 0);
-            //         if (readLen < 0)
-            //         {
-            //             return;
-            //         }
-            //         pos += readLen;
-            //         if (pos >= 256)
-            //         {
-            //             step = 3;
-            //             break;
-            //         }
-            //         if (buf[pos - 1] == '}')
-            //         {
-            //             step = 2;
-            //         }
-            //         break;
-            //     }
-            // }
-
-            readLen = Recv(sockfd, buf, sizeof(buf), 0);
-            // log_debug("Read:%s len:%d\n", buf, readLen);
+            readLen = Recv(sockfd, tcpBuf, RECVLEN, 0);
             if (readLen == 0)
             {
                 log_debug("client close");
@@ -138,11 +116,22 @@ void *thread_hander(void *arg)
             }
             else
             {
-                printf("%s\n", &buf[1]);
-                // Write(STDOUT_FILENO, buf, readLen);
-                if (buf[0] == 0x02)
-                    read_from_local(&buf[1]);
-                // step = 0;
+                if (tcpBuf[0] == 0x02)
+                {
+                    tcpBuf[readLen] = '\0';
+                    log_debug("%d,%s", readLen, &tcpBuf[1]);
+                    for (i = 0; i < readLen; ++i)
+                    {
+                        if (tcpBuf[i] == 2)
+                            read_from_local(&tcpBuf[i + 1]);
+                    }
+                }
+                else
+                {
+                    tcpBuf[readLen] = '\0';
+                    log_debug("%s", tcpBuf);
+                    read_from_local(tcpBuf);
+                }
             }
         }
         close(sockfd);
@@ -162,6 +151,7 @@ void net_client(int *sockfd)
 
     sigset_t set;
     sigemptyset(&set);
+    sigaddset(&set, SIGALRM);
     sigaddset(&set, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 }

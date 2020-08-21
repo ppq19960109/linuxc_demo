@@ -1,10 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "hilink_cover.h"
-#include "protocol_cover.h"
+
 #include "list_hilink.h"
 #include "dev_private.h"
 
-#include "hilink_profile_bridge.h"
 #include "hilink_profile_adapter.h"
+
 
 hilink_handle_t hilink_handle;
 
@@ -69,9 +73,9 @@ int modSvc(const char *sn, const char *svcId, char **svcVal, char *json)
     }
 }
 
-int local_tohilink(dev_data_t *src, int index, int uploadState)
+int local_tohilink(dev_data_t *src, int index)
 {
-    log_debug("local_tohilink index:%d", index);
+    log_info("local_tohilink index:%d", index);
     int newFlag = 0, pos = 0, i;
     char *json;
 
@@ -84,7 +88,6 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         list_add(&out->node, &hilink_handle.node);
     }
 
-    DevSvc *devSvcArray;
     BrgDevInfo *brgDevInfo = &out->brgDevInfo;
 
     if (newFlag)
@@ -93,9 +96,13 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         strcpy(brgDevInfo->sn, src->DeviceId);
         strcpy(brgDevInfo->mac, src->GatewayId);
     }
+    if(strcmp(brgDevInfo->fwv, src->Version))
+    {
+        strcpy(brgDevInfo->fwv, src->Version);
+    }
 
     cJSON *root = cJSON_CreateObject();
-
+    DevSvc *devSvcArray;
     switch (index)
     {
     case 0: //U2/天际系列：单键智能开关（HY0095）
@@ -126,7 +133,6 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         ++pos;
 
         //indicator
-
         cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "mode");
@@ -155,7 +161,7 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         //Switch
         for (i = 0; i < 2; ++i)
         {
-            dev_sub->Switch[i] = 1;
+            // dev_sub->Switch[i] = 1;
             cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "on");
@@ -189,11 +195,9 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
             HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
         }
         devSvcArray = out->devSvc;
-
         //Switch
         for (i = 0; i < 3; ++i)
         {
-
             cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "on");
@@ -201,7 +205,6 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
             modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
             ++pos;
         }
-        log_debug("local_tohilink indicator");
         //indicator
 
         cJSON_AddNumberToObject(root, "mode", dev_sub->LedEnable);
@@ -466,7 +469,10 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
                 out_sub[j]->devSvc = malloc(sizeof(DevSvc) * out_sub[j]->devSvcNum);
                 memset(out_sub[j]->devSvc, 0, sizeof(DevSvc) * out_sub[j]->devSvcNum);
                 for (i = 0; i < out_sub[j]->devSvcNum; ++i)
+                {
+                    log_info("svcId:%s", svcId[i]);
                     out_sub[j]->devSvc[i].svcId = svcId[i];
+                }
                 HilinkSyncBrgDevStatus(brgDevInfo->sn, DEV_ONLINE);
             }
 
@@ -555,7 +561,8 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
         pos++;
         for (i = 0; i < 6; ++i)
         {
-            sprintf(dev_sub->SceName[i], "场景%d", i);
+            if (strlen(dev_sub->SceName[i]) == 0)
+                sprintf(dev_sub->SceName[i], "场景%d", i);
             cJSON_AddStringToObject(root, "name", dev_sub->SceName[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "name");
@@ -570,9 +577,14 @@ int local_tohilink(dev_data_t *src, int index, int uploadState)
     list_print_all_hilink(&hilink_handle.node);
 
     free(root);
-
+ 
     return 0;
 fail:
+    log_error("hilink modelId not exist");
+    if (out != NULL)
+    {
+        list_del_dev_hilink(out);
+    }
     free(root);
     return -1;
 }
@@ -860,12 +872,11 @@ fail:
 
 int hilink_delete(const char *sn)
 {
-    local_dev_t out;
+    local_dev_t out={0};
 
     out.FrameNumber = FrameNumber++;
     strcpy(out.Type, "Delete");
     strcpy(out.Data.DeviceId, sn);
-    write_to_local(&out);
-
-    return 0;
+    
+    return write_to_local(&out);
 }

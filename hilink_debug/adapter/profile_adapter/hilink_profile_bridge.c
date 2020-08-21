@@ -5,12 +5,18 @@
  *              请开发者仔细阅读文件中的注释说明，参考或修改实现。
  * Create: 2019-03-27
  */
-#include "hilink_profile_bridge.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include "hilink_profile_bridge.h"
 #include "hilink_profile_adapter.h"
-#include "protocol_cover.h"
+
 #include "hilink_cover.h"
 #include "list_hilink.h"
+#include "protocol_cover.h"
+#include "list_tool.h"
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -73,7 +79,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
     }
     *svcNum = dev->devSvcNum;
-    // log_debug("HilinkGetBrgSvcInfo svcInfo:%s ", svcInfo->st[0]);
+    log_debug("HilinkGetBrgSvcInfo svcInfo:%s ", svcInfo->st[0]);
     return 0;
 }
 
@@ -182,9 +188,11 @@ int HilinkDelBrgDev(const char *sn)
     {
         return -1;
     }
+    HilinkSyncBrgDevStatus(sn, DEV_RESTORE);
     list_del_by_id_hilink(sn, &hilink_handle.node);
     list_del_by_id(sn, &protocol_data.dev_list);
-    
+    list_print_all_hilink(&hilink_handle.node);
+    list_print_all(&protocol_data.dev_list);
     return hilink_delete(sn);
 }
 

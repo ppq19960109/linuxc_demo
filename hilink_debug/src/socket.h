@@ -1,17 +1,7 @@
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/types.h> /* See NOTES */
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netinet/ip.h> /* superset of previous */
-#include <arpa/inet.h>
-#include <sys/wait.h>
 
 void perr_exit(const char *str);
 int Socket(int domain, int type);

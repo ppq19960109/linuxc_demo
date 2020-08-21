@@ -1,33 +1,34 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "socket.h"
 #include "protocol_cover.h"
 #include "dev_private.h"
-#include "hilink_profile_bridge.h"
-#include "hilink_cover.h"
+#include "list_tool.h"
+
 #include "list_hilink.h"
+#include "hilink.h"
+// char *Command[] = {"Dispatch", "Report"};
 
-char *Command[] = {"Dispatch", "Report"};
+char *TYPE_Report[] = {
+    "Register",
+    "UnRegister",
+    "OnOff",
+    "Attribute",
+    "DevAttri",
+    "DevList",
+    "DevsInfo",
+    "Event",
+    "ReFactory",
+    "CooInfo",
+    "NeighborInfo",
+    "ChildrenInfo",
+    "SetSig",
+    "GetSig",
+};
 
-char *TYPE_Report[] = {"Register", "UnRegister", "OnOff", "Attribute", "DevAttri", "DevList", "Event", "ReFactory", "CooInfo", "NeighborInfo", "ChildrenInfo", "SetSig", "GetSig"};
-
-char *TYPE_Dispatch[] = {"Ctrl", "Add", "Delete", "Attribute", "DevAttri", "DevList", "NeighborInfo", "ChildrenInfo", "ReFactory", "RepeatReport", "SetSig", "GetSig", "SubName"};
-
-// const char report_test_json[] = {"{\
-//       \"Command\":\"Report\",\
-//       \"FrameNumber\":\"00\",\
-//       \"GatewayId\":\"0006D12345678909\",\
-//       \"Type\":\"DevList\",\
-//       \"TotalNumber\":\"21\",\
-//       \"AlreadyReportNumber\":\"21\",\
-//       \"Data\":[\
-//                 {\
-//                 \"DeviceId\":\"1234567876543210\",\
-//                 \"ModelId\":\"0a0c3c\",\
-//                 \"Name\":\"三位开关\",\
-//                 \"Version\":\"20180201\",\
-//                 \"Online\": \"1\",\
-//                 \"RegisterStatus\": \"1\"\
-//                 }\
-//                 ]\
-// }"};
+// char *TYPE_Dispatch[] = {"Ctrl", "Add", "Delete", "Attribute", "DevAttri", "DevList", "NeighborInfo", "ChildrenInfo", "ReFactory", "RepeatReport", "SetSig", "GetSig", "SubName"};
 
 const char *report_json[] = {
     "{\
@@ -242,7 +243,7 @@ int read_from_local(const char *json)
         log_error("root is NULL\n");
         goto fail;
     }
-    log_debug("%s\n", cJSON_Print(root));
+    // log_debug("%s\n", cJSON_Print(root));
 
     //command字段
     cJSON *Command = cJSON_GetObjectItem(root, "Command");
@@ -272,39 +273,42 @@ int read_from_local(const char *json)
         goto fail;
     }
     //从type数组中查找type
-    int type = str_search(Type->valuestring, TYPE_Report, sizeof(TYPE_Report) / 4);
+    int type = str_search(Type->valuestring, TYPE_Report, sizeof(TYPE_Report) / POINTER_SIZE);
     if (type == -1)
     {
         log_error("Type is no exist\n");
         goto fail;
     }
 
-    cJSON *array_sub = cJSON_GetArrayItem(Data, 0);
-
-    dev_data_t *dev_data = (dev_data_t *)malloc(sizeof(dev_data_t));
-    memset(dev_data, 0, sizeof(dev_data_t));
+    dev_data_t dev_data;
     //GatewayId字段
-    str_copy_from_json(root, "GatewayId", dev_data->GatewayId);
-    str_copy_from_json(array_sub, "DeviceId", dev_data->DeviceId);
-    str_copy_from_json(array_sub, "ModelId", dev_data->ModelId);
-    cJSON *Key = cJSON_GetObjectItem(array_sub, "Key");
-    if (Key != NULL)
-    {
-        log_info("Key is %s\n", Key->valuestring);
-    }
+    // str_copy_from_json(root, "GatewayId", dev_data.GatewayId);
 
+    cJSON *array_sub = cJSON_GetArrayItem(Data, 0);
+    str_copy_from_json(array_sub, "DeviceId", dev_data.DeviceId);
+
+    dev_data_t *dev_buf;
     switch (type)
     {
     case 0: //设备注册上报：”Register”；
     {
-        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
+        // dev_data_t *dev_add;
+        dev_buf = list_get_by_id(dev_data.DeviceId, &protocol_data.dev_list);
         if (dev_buf == NULL)
         {
-            str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
-            str_copy_from_json(array_sub, "Secret", dev_data->Secret);
-            list_add(&dev_data->node, &protocol_data.dev_list);
-            dev_private_attribute(dev_data, NULL);
-            goto add;
+            dev_buf = (dev_data_t *)malloc(sizeof(dev_data_t));
+            memset(dev_buf, 0, sizeof(dev_data_t));
+            str_copy_from_json(root, "GatewayId", dev_buf->GatewayId);
+            str_copy_from_json(array_sub, "DeviceId", dev_buf->DeviceId);
+            str_copy_from_json(array_sub, "ModelId", dev_buf->ModelId);
+
+            if (dev_private_attribute(dev_buf, NULL) != 0)
+            {
+                free(dev_buf);
+                break;
+            }
+
+            list_add(&dev_buf->node, &protocol_data.dev_list);
         }
         str_copy_from_json(array_sub, "DeviceType", dev_buf->DeviceType);
         str_copy_from_json(array_sub, "Secret", dev_buf->Secret);
@@ -312,88 +316,179 @@ int read_from_local(const char *json)
     break;
     case 1: //设备注销上报：”UnRegister”；
     {
-        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        dev_hilink_t *dev_hilink = list_get_by_id_hilink(dev_data->DeviceId, &hilink_handle.node);
-        if (dev_buf != NULL)
+        log_debug("设备注销上报：”UnRegister”；");
+        dev_buf = list_get_by_id(dev_data.DeviceId, &protocol_data.dev_list);
+        dev_hilink_t *dev_hilink = list_get_by_id_hilink(dev_data.DeviceId, &hilink_handle.node);
+        if (dev_hilink != NULL)
         {
-            HilinkSyncBrgDevStatus(dev_data->DeviceId, DEV_RESTORE);
-            list_del(&dev_hilink->node);
-            list_del(&dev_buf->node);
+            HilinkSyncBrgDevStatus(dev_data.DeviceId, DEV_RESTORE);
+            list_del_dev_hilink(dev_hilink);
+            // list_del(&dev_hilink->node);
+            list_del_dev(dev_buf);
+            // list_del(&dev_buf->node);
         }
     }
     break;
     case 2: //设备在线状态上报, “OnOff”
     {
-        if (Key != NULL && strcmp(Key->valuestring, "Online") == 0)
+        cJSON *Key = cJSON_GetObjectItem(array_sub, "Key");
+        dev_buf = list_get_by_id(dev_data.DeviceId, &protocol_data.dev_list);
+        if (dev_buf != NULL && Key != NULL && strcmp(Key->valuestring, "Online") == 0)
         {
-            dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
             char_copy_from_json(array_sub, "Value", &dev_buf->Online);
-
-            HilinkSyncBrgDevStatus(dev_data->DeviceId, dev_buf->Online);
+            HilinkSyncBrgDevStatus(dev_data.DeviceId, dev_buf->Online);
         }
     }
     break;
     case 3: //设备属性上报：”Attribute”；
     {
-        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        if (Key != NULL && strcmp(Key->valuestring, "Version") == 0)
-        {
-            str_copy_from_json(array_sub, "Value", dev_buf->Version);
-        }
+        // log_debug("设备属性上报：”Attribute”；");
 
-        dev_private_attribute(dev_buf, Data);
-    }
-    break;
-    case 4://设备全部属性上报：”DevAttri”;
-    {
-    }
-    break;
-    case 5://设备列表上报：”DevList”
-    {
-        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        if (dev_buf == NULL)
+        dev_buf = list_get_by_id(dev_data.DeviceId, &protocol_data.dev_list);
+        if (dev_buf != NULL)
         {
-            str_copy_from_json(array_sub, "DeviceType", dev_data->DeviceType);
-            str_copy_from_json(array_sub, "Version", dev_data->Version);
-            str_copy_from_json(array_sub, "Online", &dev_data->Online);
-            char_copy_from_json(array_sub, "RegisterStatus", &dev_data->RegisterStatus);
-            list_add(&dev_data->node, &protocol_data.dev_list);
-            dev_private_attribute(dev_data, NULL);
-            goto add;
+            cJSON *Key = cJSON_GetObjectItem(array_sub, "Key");
+            if (Key != NULL && strcmp(Key->valuestring, "Version") == 0)
+            {
+                str_copy_from_json(array_sub, "Value", dev_buf->Version);
+            }
+
+            dev_private_attribute(dev_buf, Data);
+        }
+        else
+        {
+            log_error("device not exist");
         }
     }
     break;
-    case 6://设备事件上报：”Event”；恢复出厂设置上报：”
+    case 4: //设备全部属性上报：”DevAttri”;
     {
-        dev_data_t *dev_buf = list_get_by_id(dev_data->DeviceId, &protocol_data.dev_list);
-        dev_private_attribute(dev_buf, Data);
     }
     break;
-    case 7: //恢复出厂设置上报：”ReFactory”；
+    case 5: //设备列表上报：”DevList”
     {
-        //reboot
+        int array_size = cJSON_GetArraySize(Data);
+        dev_data_t *dev_add;
+        for (int cnt = 0; cnt < array_size; cnt++)
+        {
+            array_sub = cJSON_GetArrayItem(Data, cnt);
+            dev_buf = list_get_by_id(cJSON_GetObjectItem(array_sub, "DeviceId")->valuestring, &protocol_data.dev_list);
+            if (dev_buf == NULL)
+            {
+                dev_add = (dev_data_t *)malloc(sizeof(dev_data_t));
+                memset(dev_add, 0, sizeof(dev_data_t));
+                str_copy_from_json(root, "GatewayId", dev_buf->GatewayId);
+                str_copy_from_json(array_sub, "DeviceId", dev_add->DeviceId);
+                str_copy_from_json(array_sub, "ModelId", dev_add->ModelId);
+                str_copy_from_json(array_sub, "Version", dev_add->Version);
+                str_copy_from_json(array_sub, "Online", &dev_add->Online);
+                char_copy_from_json(array_sub, "RegisterStatus", &dev_add->RegisterStatus);
+
+                if (dev_private_attribute(dev_add, NULL) != 0)
+                {
+                    free(dev_add);
+                    continue;
+                }
+                list_add(&dev_add->node, &protocol_data.dev_list);
+            }
+            else
+            {
+                if (strcmp(cJSON_GetObjectItem(array_sub, "ModelId")->valuestring, dev_buf->ModelId))
+                {
+                    log_error("DeviceId identical,but ModelId inequality");
+                    break;
+                }
+                str_copy_from_json(array_sub, "Version", dev_buf->Version);
+                str_copy_from_json(array_sub, "Online", &dev_buf->Online);
+
+                char_copy_from_json(array_sub, "RegisterStatus", &dev_buf->RegisterStatus);
+                dev_private_attribute(dev_buf, NULL);
+
+                HilinkSyncBrgDevStatus(dev_buf->DeviceId, dev_buf->Online);
+            }
+        }
+    }
+    break;
+    case 6: //获取设备列表详细信息(网关指令)DevsInfo
+    {
+        // log_debug("DevsInfo");
+        int array_size = cJSON_GetArraySize(Data);
+
+        for (int cnt = 0; cnt < array_size; cnt++)
+        {
+            array_sub = cJSON_GetArrayItem(Data, cnt);
+            // str_copy_from_json(array_sub, "DeviceId", dev_data.DeviceId);
+            // str_copy_from_json(array_sub, "ModelId", dev_data->ModelId);
+            dev_buf = list_get_by_id(cJSON_GetObjectItem(array_sub, "DeviceId")->valuestring, &protocol_data.dev_list);
+            if (dev_buf == NULL)
+            {
+                dev_buf = (dev_data_t *)malloc(sizeof(dev_data_t));
+                memset(dev_buf, 0, sizeof(dev_data_t));
+                str_copy_from_json(root, "GatewayId", dev_buf->GatewayId);
+                str_copy_from_json(array_sub, "DeviceId", dev_buf->DeviceId);
+                str_copy_from_json(array_sub, "ModelId", dev_buf->ModelId);
+                str_copy_from_json(array_sub, "Version", dev_buf->Version);
+                str_copy_from_json(array_sub, "Online", &dev_buf->Online);
+                char_copy_from_json(array_sub, "RegisterStatus", &dev_buf->RegisterStatus);
+
+                if (dev_private_attribute(dev_buf, cJSON_GetObjectItem(array_sub, "Params")) != 0)
+                {
+                    free(dev_buf);
+                    continue;
+                }
+                list_add(&dev_buf->node, &protocol_data.dev_list);
+            }
+            else
+            {
+                if (strcmp(cJSON_GetObjectItem(array_sub, "ModelId")->valuestring, dev_buf->ModelId))
+                {
+                    log_error("DeviceId identical,but ModelId inequality");
+                    break;
+                }
+                str_copy_from_json(array_sub, "Version", dev_buf->Version);
+                str_copy_from_json(array_sub, "Online", &dev_buf->Online);
+
+                char_copy_from_json(array_sub, "RegisterStatus", &dev_buf->RegisterStatus);
+                dev_private_attribute(dev_buf, cJSON_GetObjectItem(array_sub, "Params"));
+
+                HilinkSyncBrgDevStatus(dev_buf->DeviceId, dev_buf->Online);
+            }
+        }
+    }
+    break;
+    case 7: //设备事件上报：”Event”；恢复出厂设置上报：”
+    {
+        dev_buf = list_get_by_id(dev_data.DeviceId, &protocol_data.dev_list);
+        if (dev_buf != NULL)
+        {
+            dev_private_attribute(dev_buf, Data);
+        }
+    }
+    break;
+    case 8: //恢复出厂设置上报：”ReFactory”；
+    {
         list_del_all(&protocol_data.dev_list);
         list_del_all_hilink(&hilink_handle.node);
         hilink_restore_factory_settings();
     }
     break;
-    case 8: //COO网络信息上报：”CooInfo”；
+    case 9: //COO网络信息上报：”CooInfo”；
     {
     }
     break;
-    case 9: //邻居信息上报：”NeighborInfo”;
+    case 10: //邻居信息上报：”NeighborInfo”;
     {
     }
     break;
-    case 10: //子节点信息上报：”ChildrenInfo”；
+    case 11: //子节点信息上报：”ChildrenInfo”；
     {
     }
     break;
-    case 11://设置签名结果上报: “SetSig”；
+    case 12: //设置签名结果上报: “SetSig”；
     {
     }
     break;
-    case 12://查询签名结果上报: “GetSig”
+    case 13: //查询签名结果上报: “GetSig”
     {
     }
     break;
@@ -407,10 +502,10 @@ int read_from_local(const char *json)
     // {
     //     cJSON *array_sub = cJSON_GetArrayItem(Data, cnt);
     // }
-    free(dev_data);
-add:
+    //     free(dev_data);
+    // add:
     free(root);
-    list_print_all(&protocol_data.dev_list);
+    // list_print_all(&protocol_data.dev_list);
     return 0;
 fail:
     free(root);
@@ -419,19 +514,88 @@ fail:
 }
 
 //-----------------------------------------------------
-int writeToHaryan(const char* data,int socketfd,char* sendBuf,int bufLen){
-    int datalen=strlen(data);
-    if(datalen+3<=bufLen)
+void local_reFactory()
+{
+    list_del_all(&protocol_data.dev_list);
+    list_del_all_hilink(&hilink_handle.node);
+    hilink_restore_factory_settings();
+}
+
+char *hanyar_cmd[] = {"Add", "DevsInfo", "DevAttri", "ReFactory"};
+
+int write_cmd(char *cmd, char *DeviceId)
+{
+    local_dev_t local_cmd = {0};
+    int index_cmd = str_search(cmd, hanyar_cmd, POINTER_SIZE);
+    switch (index_cmd)
     {
-        sendBuf[0]==0x02;
-        strcpy(&sendBuf[1],data);
-        sendBuf[datalen+1]==0x03;
-        sendBuf[datalen+2]==0x00;
+    case 0:
+    {
+        local_cmd.FrameNumber = 0;
+        strcpy(local_cmd.Type, "Add");
+        strcpy(local_cmd.Data.DeviceId, "0000000000000000");
+        strcpy(local_cmd.Data.Key, "Time");
+        strcpy(local_cmd.Data.Value, "255");
+    }
+    break;
+    case 1:
+    {
+        local_cmd.FrameNumber = 0;
+        strcpy(local_cmd.Type, "DevsInfo");
+        strcpy(local_cmd.Data.DeviceId, "0000000000000000");
+        strcpy(local_cmd.Data.Key, "DevsInfo");
+    }
+    break;
+    case 2:
+    {
+        local_cmd.FrameNumber = 0;
+        strcpy(local_cmd.Type, "DevAttri");
+        strcpy(local_cmd.Data.DeviceId, DeviceId);
+        strcpy(local_cmd.Data.Key, "All");
+    }
+    break;
+    case 3:
+    {
+        local_cmd.FrameNumber = 0;
+        strcpy(local_cmd.Type, "ReFactory");
+    }
+    break;
+    default:
+        return -1;
+    }
+
+    // HilinkGetDeviceSn(sizeof(net_access_cmd.Data.DeviceId),net_access_cmd.Data.DeviceId);
+    // if(strlen(net_access_cmd.Data.DeviceId)==0)
+    // {
+    //     HILINK_GetMacAddr(net_access_cmd.Data.DeviceId, sizeof(net_access_cmd.Data.DeviceId));
+    // }
+    int ret = write_to_local(&local_cmd);
+    if (ret < 0)
+    {
+        log_error("write_net_access error");
+    }
+    return ret;
+}
+
+int writeToHaryan(const char *data, int socketfd, char *sendBuf, int bufLen)
+{
+    int datalen = strlen(data);
+    if (datalen + 3 <= bufLen)
+    {
+        sendBuf[0] = 0x02;
+        strcpy(&sendBuf[1], data);
+        sendBuf[datalen + 1] = 0x03;
+        sendBuf[datalen + 2] = 0x00;
         if (socketfd != 0)
         {
-            return Write(socketfd, sendBuf, datalen+3);
+            log_warn("%s \nprotocol_data.socketfd:%d\n", &sendBuf[1], socketfd);
+            // for(int i=0;i<datalen + 3;++i)
+            // {
+            //     printf("%x,",sendBuf[i]);
+            // }
+            // printf("\n");
+            return Write(socketfd, sendBuf, datalen + 3);
         }
-        log_warn("%s \nprotocol_data.socketfd:%d\n", &sendBuf[1], socketfd);
     }
     return -1;
 }
@@ -466,24 +630,16 @@ int write_to_local(void *ptr)
     cJSON_AddItemToArray(DataArray, arrayItem);
 
     char *json = cJSON_PrintUnformatted(root);
-    // log_warn("%s \nprotocol_data.socketfd:%d\n", json, protocol_data.socketfd);
 
-    // int jsonlen=strlen(json);
-    // if(jsonlen+3<=sizeof(protocol_data.sendData))
-    // {
-    //     protocol_data.sendData[0]==0x02;
-    //     strcpy(&protocol_data.sendData[1],json);
-    //     protocol_data.sendData[jsonlen+1]==0x03;
-    //     protocol_data.sendData[jsonlen+2]==0x00;
-    //     if (protocol_data.socketfd != 0)
-    //         write(protocol_data.socketfd, protocol_data.sendData, jsonlen+3);
-    //     log_warn("%s \nprotocol_data.socketfd:%d\n", &protocol_data.sendData[1], protocol_data.socketfd);
-    // }
-    writeToHaryan(json,protocol_data.socketfd,protocol_data.sendData,256);
+    int ret = writeToHaryan(json, protocol_data.socketfd, protocol_data.sendData, SENDTOLOCAL_SIZE);
+    if (ret < 0)
+    {
+        log_error("writeToHaryan error");
+    }
     free(json);
 
     free(root);
-    return 0;
+    return ret;
 fail:
     free(root);
     return -1;

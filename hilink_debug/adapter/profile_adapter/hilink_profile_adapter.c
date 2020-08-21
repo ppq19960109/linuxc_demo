@@ -4,10 +4,15 @@
  * Create: 2019-04-20
  * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "hilink_profile_adapter.h"
 #include "hilink.h"
-#include "protocol_cover.h"
 
+#include "protocol_cover.h"
+#include "list_tool.h"
 /* 设备类型定义 */
 typedef struct
 {

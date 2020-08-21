@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "list_tool.h"
 
 dev_data_t *list_get_by_id(const char *id, struct list_head *head)
@@ -25,6 +29,7 @@ void list_del_dev(dev_data_t *ptr)
         free(ptr->private);
     }
     free(ptr);
+    ptr = NULL;
 }
 
 int list_del_by_id(const char *id, struct list_head *head)
@@ -59,18 +64,18 @@ void list_print_all(struct list_head *head)
     {
         return;
     }
-
+    log_debug(" ---------------------list_print_all\n");
     int i = 0;
     list_for_each_entry(ptr, head, node)
     {
-        log_info(" ---------------------entry num:%d\n", i++);
-        log_info("GatewayId:%s\n", ptr->GatewayId);
-        log_info("DeviceType:%s\n", ptr->DeviceType);
-        log_info("DeviceId:%s\n", ptr->DeviceId);
-        log_info("ModelId:%s\n", ptr->ModelId);
-        log_info("Version:%s\n", ptr->Version);
-        log_info("Secret:%s\n", ptr->Secret);
-        log_info("Online:%s\n", ptr->Online);
-        log_info("RegisterStatus:%s\n", ptr->RegisterStatus);
+        log_debug(" ---------------------entry num:%d\n", ++i);
+        log_debug("GatewayId:%s\n", ptr->GatewayId);
+        log_debug("DeviceType:%s\n", ptr->DeviceType);
+        log_debug("DeviceId:%s\n", ptr->DeviceId);
+        log_debug("ModelId:%s\n", ptr->ModelId);
+        // log_debug("Version:%s\n", ptr->Version);
+        // log_debug("Secret:%s\n", ptr->Secret);
+        log_debug("Online:%c\n", ptr->Online);
+        log_debug("RegisterStatus:%c\n", ptr->RegisterStatus);
     }
 }

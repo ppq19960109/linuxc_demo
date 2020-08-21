@@ -1,3 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h> /* See NOTES */
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/wait.h>
+
 #include "socket.h"
 
 void perr_exit(const char *str)
@@ -101,12 +112,12 @@ again:
     return n;
 }
 
-ssize_t Recv(int fd, void *ptr, size_t nbytes,int flag)
+ssize_t Recv(int fd, void *ptr, size_t nbytes, int flag)
 {
     ssize_t n;
 
 again:
-    if ((n = recv(fd, ptr, nbytes,flag)) == -1)
+    if ((n = recv(fd, ptr, nbytes, flag)) == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
             goto again;
@@ -124,7 +135,7 @@ ssize_t Write(int fd, const void *ptr, size_t nbytes)
 again:
     if ((n = write(fd, ptr, nbytes)) == -1)
     {
-        if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK  )
+        if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
             goto again;
         else
             return -1;

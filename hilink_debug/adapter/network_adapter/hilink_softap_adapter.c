@@ -2,11 +2,15 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
  * Description: softAp适配实现 (需设备厂商实现)
  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "hilink_softap_adapter.h"
 #include "hilink_netconfig_mode_mgt.h"
 
 #include "net_info.h"
 #include "wifi.h"
+#include "log.h"
 /*
  * 获取广播ip
  * broadcastIp表示存放Ip的缓冲

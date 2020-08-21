@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+
 #include <DeviceIo/Rk_wifi.h>
-#include <cJSON.h>
+#include "cJSON.h"
 #include "wifi.h"
 
 int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
@@ -56,14 +57,14 @@ int getWiFiBssid(char *bssid, unsigned char *bssidLen)
 
     strcpy(bssid, WIFI_INFO_Connection.bssid);
     *bssidLen = strlen(WIFI_INFO_Connection.bssid);
-    printf("bssidLen:%d,bssid:%s\n", *bssidLen, bssid);
+    printf("bssidLen:%d,bssid:%s ret:%d\n", *bssidLen, bssid,ret);
     return ret;
 }
 
 int getWiFiRssi(signed char *rssi, char *ssid)
 {
     char *json = RK_wifi_scan_r_sec(0x14);
-    printf("RK_wifi_scan_r_sec:%s\n", json);
+    // printf("RK_wifi_scan_r_sec:%s\n", json);
     cJSON *root = cJSON_Parse(json);
     int array_size = cJSON_GetArraySize(root);
     cJSON *array_sub;
@@ -74,10 +75,12 @@ int getWiFiRssi(signed char *rssi, char *ssid)
         if (strcmp(scan_ssid->valuestring, ssid) == 0)
         {
             *rssi = cJSON_GetObjectItem(array_sub, "rssi")->valueint;
-            printf("rssi:%d\n", *rssi);
+            // printf("rssi:%d\n", *rssi);
+            free(root);
             return 0;
         }
     }
+    free(root);
     return -1;
 }
 

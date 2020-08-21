@@ -9,6 +9,7 @@
 
 #include "protocol_cover.h"
 #include "hilink_cover.h"
+
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -70,12 +71,13 @@ void hilink_notify_devstatus(int status)
     case HILINK_DEVICE_UNREGISTER:
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
-        hilink_restore_factory_settings();
+        write_cmd("ReFactory", NULL);
+        local_reFactory();
+
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");
         /* 设备复位标记置位，请在此处添加实现 */
-
         break;
     case HILINK_NEGO_REG_INFO_FAIL:
         log_info("HILINK_NEGO_REG_INFO_FAIL\n");
@@ -101,7 +103,7 @@ int hilink_process_before_restart(int flag)
 
     hilink_handle_destory();
     protlcol_destory();
-    // HILINK_StopSoftAp();
+    HILINK_StopSoftAp();
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {

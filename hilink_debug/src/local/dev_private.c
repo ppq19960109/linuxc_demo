@@ -1,7 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "dev_private.h"
 #include "hilink_cover.h"
 
-char *dev_modeId[] = {"HY0095", "HY0096", "HY0097", "09223f", "HY0121", "HY0122", "HY0107", "HY0093", "HY0134"};
+char *dev_modeId[] = {"TS0001", "TS0002", "TS0003", "09223f", "HY0121", "HY0122", "HY0107", "HY0093", "HY0134"};
 
 char *attr_HY0095[] = {"Switch", "LedEnable", "PowerOffProtection"};
 char *attr_HY0096[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection"};
@@ -20,19 +24,14 @@ char *attr_HY0134[] = {"KeyFobValue", "SceName_", "Enable_", "WindSpeed_", "Curr
 int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
 {
     log_debug("dev_private_attribute\n");
-    int index = -1, uploadState = 0xff;
-    int newFlag = 0;
+    int index, index_sub;
+
     cJSON *Key, *array_sub;
     char *out;
+
+    int array_size, cnt;
     if (Data != NULL)
-    {
-        array_sub = cJSON_GetArrayItem(Data, 0);
-        Key = cJSON_GetObjectItem(array_sub, "Key");
-    }
-    else
-    {
-        newFlag = 1;
-    }
+        array_size = cJSON_GetArraySize(Data);
 
     index = str_search(dev_data->ModelId, dev_modeId, sizeof(dev_modeId) / sizeof(dev_modeId[0]));
     switch (index)
@@ -43,25 +42,32 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0095_t));
             memset(dev_data->private, 0, sizeof(dev_HY0095_t));
-            if (newFlag)
-                goto cover;
         }
+        if (Data == NULL)
+            break;
         dev_HY0095_t *dev = (dev_HY0095_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0095, sizeof(attr_HY0095) / sizeof(attr_HY0095[0]));
 
-        switch (index_sub)
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->Switch;
-            break;
-        case 1:
-            out = &dev->LedEnable;
-            break;
-        case 2:
-            out = &dev->PowerOffProtection;
-            break;
+            array_sub = cJSON_GetArrayItem(Data, cnt);
+            Key = cJSON_GetObjectItem(array_sub, "Key");
+            //---------------------------------------
+            index_sub = str_search(Key->valuestring, attr_HY0095, sizeof(attr_HY0095) / sizeof(attr_HY0095[0]));
+
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->Switch;
+                break;
+            case 1:
+                out = &dev->LedEnable;
+                break;
+            case 2:
+                out = &dev->PowerOffProtection;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 1: //U2/天际系列：双键智能开关（HY0096）
@@ -70,28 +76,35 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0096_t));
             memset(dev_data->private, 0, sizeof(dev_HY0096_t));
-            if (newFlag)
-                goto cover;
         }
+        if (Data == NULL)
+            break;
         dev_HY0096_t *dev = (dev_HY0096_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0096, sizeof(attr_HY0096) / sizeof(attr_HY0096[0]));
 
-        switch (index_sub)
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->Switch[0];
-            break;
-        case 1:
-            out = &dev->Switch[1];
-            break;
-        case 2:
-            out = &dev->LedEnable;
-            break;
-        case 3:
-            out = &dev->PowerOffProtection;
-            break;
+            array_sub = cJSON_GetArrayItem(Data, cnt);
+            Key = cJSON_GetObjectItem(array_sub, "Key");
+            //---------------------------------------
+            index_sub = str_search(Key->valuestring, attr_HY0096, sizeof(attr_HY0096) / POINTER_SIZE);
+
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->Switch[0];
+                break;
+            case 1:
+                out = &dev->Switch[1];
+                break;
+            case 2:
+                out = &dev->LedEnable;
+                break;
+            case 3:
+                out = &dev->PowerOffProtection;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 2: //U2/天际系列：三键智能开关（HY0097）
@@ -100,31 +113,38 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0097_t));
             memset(dev_data->private, 0, sizeof(dev_HY0097_t));
-            if (newFlag)
-                goto cover;
         }
+        if (Data == NULL)
+            break;
         dev_HY0097_t *dev = (dev_HY0097_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0097, sizeof(attr_HY0097) / sizeof(attr_HY0097[0]));
 
-        switch (index_sub)
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->Switch[0];
-            break;
-        case 1:
-            out = &dev->Switch[1];
-            break;
-        case 2:
-            out = &dev->Switch[2];
-            break;
-        case 3:
-            out = &dev->LedEnable;
-            break;
-        case 4:
-            out = &dev->PowerOffProtection;
-            break;
+            array_sub = cJSON_GetArrayItem(Data, cnt);
+            Key = cJSON_GetObjectItem(array_sub, "Key");
+            //---------------------------------------
+            index_sub = str_search(Key->valuestring, attr_HY0097, sizeof(attr_HY0097) / POINTER_SIZE);
+
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->Switch[0];
+                break;
+            case 1:
+                out = &dev->Switch[1];
+                break;
+            case 2:
+                out = &dev->Switch[2];
+                break;
+            case 3:
+                out = &dev->LedEnable;
+                break;
+            case 4:
+                out = &dev->PowerOffProtection;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 3: //U2/天际系列：DLT液晶调光器（09223f，型号U86KTGS150-ZXP）
@@ -133,24 +153,25 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_09223f_t));
             memset(dev_data->private, 0, sizeof(dev_09223f_t));
-            if (newFlag)
-                goto cover;
         }
-
+        if (Data == NULL)
+            break;
         dev_09223f_t *dev = (dev_09223f_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_09223f, sizeof(attr_09223f) / sizeof(attr_09223f[0]));
-
-        switch (index_sub)
+        index_sub = str_search(Key->valuestring, attr_09223f, sizeof(attr_09223f) / POINTER_SIZE);
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            int_copy_from_json(array_sub, "Value", &dev->ColorTemperature);
-            break;
-        case 1:
-            char_copy_from_json(array_sub, "Value", &dev->Switch);
-            break;
-        case 2:
-            char_copy_from_json(array_sub, "Value", &dev->Luminance);
-            break;
+            switch (index_sub)
+            {
+            case 0:
+                int_copy_from_json(array_sub, "Value", &dev->ColorTemperature);
+                break;
+            case 1:
+                char_copy_from_json(array_sub, "Value", &dev->Switch);
+                break;
+            case 2:
+                char_copy_from_json(array_sub, "Value", &dev->Luminance);
+                break;
+            }
         }
     }
     break;
@@ -160,28 +181,30 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0121_t));
             memset(dev_data->private, 0, sizeof(dev_HY0121_t));
-            if (newFlag)
-                goto cover;
         }
+        if (Data == NULL)
+            break;
         dev_HY0121_t *dev = (dev_HY0121_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0121, sizeof(attr_HY0121) / sizeof(attr_HY0121[0]));
-
-        switch (index_sub)
+        index_sub = str_search(Key->valuestring, attr_HY0121, sizeof(attr_HY0121) / POINTER_SIZE);
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->Switch;
-            break;
-        case 1:
-            out = &dev->LedEnable;
-            break;
-        case 2:
-            out = &dev->PowerOffProtection;
-            break;
-        case 3:
-            out = &dev->KeyMode;
-            break;
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->Switch;
+                break;
+            case 1:
+                out = &dev->LedEnable;
+                break;
+            case 2:
+                out = &dev->PowerOffProtection;
+                break;
+            case 3:
+                out = &dev->KeyMode;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 5: //2路智能开关模块（HY0122，型号IHC1239）
@@ -190,31 +213,33 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0122_t));
             memset(dev_data->private, 0, sizeof(dev_HY0122_t));
-            if (newFlag)
-                goto cover;
         }
+        if (Data == NULL)
+            break;
         dev_HY0122_t *dev = (dev_HY0122_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0122, sizeof(attr_HY0122) / sizeof(attr_HY0122[0]));
-
-        switch (index_sub)
+        index_sub = str_search(Key->valuestring, attr_HY0122, sizeof(attr_HY0122) / POINTER_SIZE);
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->Switch[0];
-            break;
-        case 1:
-            out = &dev->Switch[1];
-            break;
-        case 2:
-            out = &dev->LedEnable;
-            break;
-        case 3:
-            out = &dev->PowerOffProtection;
-            break;
-        case 4:
-            out = &dev->KeyMode;
-            break;
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->Switch[0];
+                break;
+            case 1:
+                out = &dev->Switch[1];
+                break;
+            case 2:
+                out = &dev->LedEnable;
+                break;
+            case 3:
+                out = &dev->PowerOffProtection;
+                break;
+            case 4:
+                out = &dev->KeyMode;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 6: //3路智能开关模块（HY0107，型号IHC1240）
@@ -223,34 +248,36 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0107_t));
             memset(dev_data->private, 0, sizeof(dev_HY0107_t));
-            if (newFlag)
-                goto cover;
         }
+        if (Data == NULL)
+            break;
         dev_HY0107_t *dev = (dev_HY0107_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0107, sizeof(attr_HY0107) / sizeof(attr_HY0107[0]));
-
-        switch (index_sub)
+        int index_sub = str_search(Key->valuestring, attr_HY0107, sizeof(attr_HY0107) / POINTER_SIZE);
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->Switch[0];
-            break;
-        case 1:
-            out = &dev->Switch[1];
-            break;
-        case 2:
-            out = &dev->Switch[2];
-            break;
-        case 3:
-            out = &dev->LedEnable;
-            break;
-        case 4:
-            out = &dev->PowerOffProtection;
-            break;
-        case 5:
-            out = &dev->KeyMode;
-            break;
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->Switch[0];
+                break;
+            case 1:
+                out = &dev->Switch[1];
+                break;
+            case 2:
+                out = &dev->Switch[2];
+                break;
+            case 3:
+                out = &dev->LedEnable;
+                break;
+            case 4:
+                out = &dev->PowerOffProtection;
+                break;
+            case 5:
+                out = &dev->KeyMode;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 7: //门磁传感器（HY0093，型号IHG5201）
@@ -259,29 +286,30 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0093_t));
             memset(dev_data->private, 0, sizeof(dev_HY0093_t));
-            if (newFlag)
-                goto cover;
         }
-
+        if (Data == NULL)
+            break;
         dev_HY0093_t *dev = (dev_HY0093_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0093, sizeof(attr_HY0093) / sizeof(attr_HY0093[0]));
-
-        switch (index_sub)
+        index_sub = str_search(Key->valuestring, attr_HY0093, sizeof(attr_HY0093) / POINTER_SIZE);
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->ContactAlarm;
-            break;
-        case 1:
-            out = &dev->BatteryPercentage;
-            break;
-        case 2:
-            out = &dev->LowBatteryAlarm;
-            break;
-        case 3:
-            out = &dev->TamperAlarm;
-            break;
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->ContactAlarm;
+                break;
+            case 1:
+                out = &dev->BatteryPercentage;
+                break;
+            case 2:
+                out = &dev->LowBatteryAlarm;
+                break;
+            case 3:
+                out = &dev->TamperAlarm;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
     case 8: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
@@ -290,47 +318,51 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         {
             dev_data->private = malloc(sizeof(dev_HY0134_t));
             memset(dev_data->private, 0, sizeof(dev_HY0134_t));
-            if (newFlag)
-                goto cover;
         }
-
+        if (Data == NULL)
+            break;
         dev_HY0134_t *dev = (dev_HY0134_t *)dev_data->private;
-        int index_sub = strn_search(Key->valuestring, attr_HY0134, sizeof(attr_HY0134) / sizeof(attr_HY0134[0]), 7);
-
-        switch (index_sub)
+        index_sub = strn_search(Key->valuestring, attr_HY0134, sizeof(attr_HY0134) / POINTER_SIZE, 7);
+        for (cnt = 0; cnt < array_size; ++cnt)
         {
-        case 0:
-            out = &dev->KeyFobValue;
-            break;
-        case 1:
-            out = dev->SceName[atoi(&Key->valuestring[8] - 1)];
-            str_copy_from_json(array_sub, "Value", out);
-            goto cover;
-        case 2:
-            out = &dev->Enable[atoi(&Key->valuestring[7] - 1)];
-            break;
-        case 3:
-            out = &dev->Switch[atoi(&Key->valuestring[10] - 1)];
-            break;
-        case 4:
-            out = &dev->CurrentTemperature_1;
-            break;
-        case 5:
-            out = &dev->TargetTemperature_1;
-            break;
-        case 6:
-            out = &dev->WorkMode_1;
-            break;
-        case 7:
-            out = &dev->TargetTemperature_3;
-            break;
+            switch (index_sub)
+            {
+            case 0:
+                out = &dev->KeyFobValue;
+                break;
+            case 1:
+                out = dev->SceName[atoi(&Key->valuestring[8] - 1)];
+                str_copy_from_json(array_sub, "Value", out);
+                break;
+            case 2:
+                out = &dev->Enable[atoi(&Key->valuestring[7] - 1)];
+                break;
+            case 3:
+                out = &dev->Switch[atoi(&Key->valuestring[10] - 1)];
+                break;
+            case 4:
+                out = &dev->CurrentTemperature_1;
+                break;
+            case 5:
+                out = &dev->TargetTemperature_1;
+                break;
+            case 6:
+                out = &dev->WorkMode_1;
+                break;
+            case 7:
+                out = &dev->TargetTemperature_3;
+                break;
+            }
+            char_copy_from_json(array_sub, "Value", out);
         }
-        char_copy_from_json(array_sub, "Value", out);
     }
     break;
+    default:
+    {
+        log_error("hanyar modelId not exist");
     }
-cover:
-    if (index != -1)
-        local_tohilink(dev_data, index, uploadState);
-    return 0;
+        return -1;
+    }
+
+    return local_tohilink(dev_data, index);
 }

@@ -6,17 +6,14 @@ extern "C"
 {
 #endif
 
-#include <stdio.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <stdlib.h>
 #include "list.h"
 #include "cJSON.h"
-// #include "sqlite3.h"
 #include "log.h"
 #include "client.h"
-#include "hilink.h"
+
+#define POINTER_SIZE 4
+#define SENDTOLOCAL_SIZE 512
+
     typedef struct
     {
         char GatewayId[16];
@@ -30,8 +27,6 @@ extern "C"
         void *private;
         struct list_head node;
     } dev_data_t;
-
-#include "list_tool.h"
 
     struct local_data_t
     {
@@ -56,9 +51,9 @@ extern "C"
         int socketfd;
         int discoverMode;
         struct list_head dev_list;
-        char sendData[256];
+        char sendData[SENDTOLOCAL_SIZE];
     } protocol_data_t;
-
+    //-----------------------------------------------
     extern protocol_data_t protocol_data;
 
     void protlcol_init();
@@ -70,9 +65,12 @@ extern "C"
     int read_from_local(const char *json);
     int write_to_local(void *ptr);
     int isStrNotNull(const char *str);
-    int str_search(const char *key,  char **pstr, int num);
+    int str_search(const char *key, char **pstr, int num);
     int strn_search(const char *key, char **pstr, int num, int n);
-    int writeToHaryan(const char* data,int socketfd,char* sendBuf,int bufLen);
+    int writeToHaryan(const char *data, int socketfd, char *sendBuf, int bufLen);
+    int write_cmd(char *cmd, char *DeviceId);
+    void local_reFactory();
+
 #ifdef __cplusplus
 }
 #endif

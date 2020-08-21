@@ -4,11 +4,17 @@
  *              其中升级相关功能的接口需要开发者或厂商进行实现，HiLink SDK在收到升级相关命令时会调用对应接口;
  *              请开发者仔细阅读文件中的注释说明，参考或修改实现。
  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <pthread.h>
+
 #include "hilink_ota.h"
 #include "hilink.h"
 #include "hilink_sdk_adapter.h"
+
 #include "protocol_cover.h"
-#include <time.h>
 
 #define UPDATE_PATH "/userdata/update/"
 #define UPDATE_FILE "upgrade.bin"

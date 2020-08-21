@@ -2,21 +2,25 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
  * Description: 网络适配实现 (需设备厂商实现)
  */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "hilink_network_adapter.h"
 #include "hilink_netconfig_mode_mgt.h"
 
 #include "net_info.h"
 #include "wifi.h"
+#include "log.h"
 
 char wifi_ssid[32];
 char wifi_psk[32];
 
-char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
-char *cmd_add = "wpa_cli -i wlan0 add_network";
-char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
-char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
-char *cmd_save = "wpa_cli -i wlan0 save_config";
-char *cmd_udhcp = "udhcpc -i wlan0";
+// char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
+// char *cmd_add = "wpa_cli -i wlan0 add_network";
+// char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
+// char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
+// char *cmd_save = "wpa_cli -i wlan0 save_config";
+// char *cmd_udhcp = "udhcpc -i wlan0";
 
 /*
  * 获取本地ip
@@ -37,7 +41,7 @@ int HILINK_GetLocalIp(char *localIp, unsigned char len)
     {
         ret = get_local_ip(ETH_NAME, localIp, len);
     }
-    // log_info("HILINK_GetLocalIp:%s %d", localIp, len);
+    // log_info("HILINK_GetLocalIp:%s %d,ret:%d", localIp, len,ret);
     return ret;
 }
 
@@ -79,7 +83,12 @@ int HILINK_GetWiFiSsid(char *ssid, unsigned int *ssidLen)
     // strcpy(ssid, wifi_ssid);
     // *ssidLen = strlen(wifi_ssid); //rk3308_net
     // return 0;
-    return getWiFiSsid(ssid, ssidLen);
+    int ret = getWiFiSsid(ssid, ssidLen);
+    if (ret == 0)
+    {
+        strcpy(wifi_ssid, ssid);
+    }
+    return ret;
 }
 
 /*
@@ -192,7 +201,9 @@ int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
     log_info("HILINK_GetWiFiBssid");
     // int ret = get_local_mac(ETH_NAME, bssid, -1);
     // *bssidLen = strlen(bssid);
-    // return ret;
+    // strcpy(bssid,"00:9a:cd:12:34:56");
+    // *bssidLen = strlen("00:9a:cd:85:cb:8c")+1;
+    // return 0;
     return getWiFiBssid(bssid, bssidLen);
 }
 
@@ -203,7 +214,7 @@ int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
  */
 int HILINK_GetWiFiRssi(signed char *rssi)
 {
-    log_info("HILINK_GetWiFiRssi");
+    // log_info("HILINK_GetWiFiRssi");
     // FILE *pFile = popen("iwconfig wlan0| grep Signal level -Eo '[\-][0-9][0-9]*' | awk 'NR==1{print $1}'iwconfig wlan0| grep Signal level -Eo \'[\\-][0-9][0-9]*\' | awk \'NR==1{print $1}\'", "r");
 
     // char szBuf[8] = {0};
@@ -224,7 +235,7 @@ int HILINK_GetWiFiRssi(signed char *rssi)
 int HILINK_Restart(void)
 {
     log_info("HILINK_Restart");
-    system("reboot");
+    system("sync;reboot");
     return 0;
 }
 
@@ -246,7 +257,7 @@ void HILINK_DisconnectStation(const char *ip)
     char buf[20];
 
     popen_cmd(cmdline, "r", buf, sizeof(buf));
-    printf("arp ret:%s\n",buf);
+    printf("arp ret:%s\n", buf);
     sprintf(cmdline, "hostapd_cli  disassociate %s", buf);
 
     console_run(cmdline);

@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "list_hilink.h"
 
 dev_hilink_t *list_get_by_id_hilink(const char *id, struct list_head *head)
@@ -29,6 +33,7 @@ void list_del_dev_hilink(dev_hilink_t *ptr)
         free(ptr->devSvc);
 
     free(ptr);
+    ptr=NULL;
 }
 
 int list_del_by_id_hilink(const char *id, struct list_head *head)
@@ -63,11 +68,11 @@ void list_print_all_hilink(struct list_head *head)
     {
         return;
     }
-
+    log_info(" ---------------------list_print_all_hilink\n");
     int i = 0;
     list_for_each_entry(ptr, head, node)
     {
-        log_info(" ---------------------hilink entry num:%d\n", i++);
+        log_info(" ---------------------hilink entry num:%d\n", ++i);
         log_info("sn:%s\n", ptr->brgDevInfo.sn);
         log_info("prodId:%s\n", ptr->brgDevInfo.prodId);
         log_info("model:%s\n", ptr->brgDevInfo.model);

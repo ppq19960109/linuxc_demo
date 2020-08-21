@@ -3,7 +3,10 @@
  * Description: HiLink SDK的demo程序
  * Create: 2019-03-05
  */
+#include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
+
 #include "hilink.h"
 #include "hilink_interface.h"
 #include "hilink_log_manage.h"
@@ -14,7 +17,6 @@
 #include "hilink_profile_bridge.h"
 #include "hilink_sdk_adapter.h"
 
-#include "net_info.h"
 #include "protocol_cover.h"
 #include "hilink_cover.h"
 
@@ -60,7 +62,7 @@ int main(void)
     // log_debug("HILINK_SdkAttr monitorTaskStackSize:%d,deviceMainTaskStackSize:%d,bridgeMainTaskStackSize:%d",
     //           SdkAttr->monitorTaskStackSize, SdkAttr->deviceMainTaskStackSize, SdkAttr->bridgeMainTaskStackSize);
     // HiLinkSetGatewayMode(1);
-    HILINK_SetLogLevel(HILINK_LOG_WARN);
+    HILINK_SetLogLevel(HILINK_LOG_EMERG);
     HILINK_EnableProcessDelErrCode(1);
     HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE); //HILINK_NETCONFIG_NONE
     enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
@@ -76,8 +78,8 @@ int main(void)
     hilink_handle_init();
 
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
-    for (int i = 0; i < 9; i++)
-        read_from_local(report_json[i]);
+    // for (int i = 0; i < 1; i++)
+    //     read_from_local(report_json[i]);
 
     while (1)
     {
