@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/ip.h> /* superset of previous */
 #include <arpa/inet.h>
-#include <pthread.h>
+
 #include <signal.h>
 #include <time.h>
 
@@ -30,8 +30,10 @@ void timer_thread(union sigval v)
 }
 void timer_signal_handler(int signal)
 {
+    
     printf("timer_signal_handler function! %s\n", heart);
     writeToHaryan(heart, protocol_data.socketfd, protocol_data.sendData, SENDTOLOCAL_SIZE);
+
 }
 
 timer_t start_timer()
@@ -62,7 +64,7 @@ timer_t start_timer()
     struct itimerspec it;
     it.it_interval.tv_sec = 60; // 回调函数执行频率为1s运行1次
     it.it_interval.tv_nsec = 0;
-    it.it_value.tv_sec = 5; // 倒计时3秒开始调用回调函数
+    it.it_value.tv_sec = 3; // 倒计时3秒开始调用回调函数
     it.it_value.tv_nsec = 0;
 
     if (timer_settime(timerid, 0, &it, NULL) == -1)
@@ -92,19 +94,19 @@ int net_client_srart()
 
 void *thread_hander(void *arg)
 {
-    int *fd = ((int *)arg);
+    protocol_data_t *pdata = ((protocol_data_t *)arg);
     int i;
-    while (1)
+    do
     {
-        *fd = net_client_srart();
-        int sockfd = *fd;
+        pdata->socketfd = net_client_srart();
         int readLen = 0;
         timer_t timerid = start_timer();
-        write_cmd("Add", NULL);
-        write_cmd("DevsInfo", NULL);
+
+        // write_cmd("Add", NULL,"120");
+        write_cmd("DevsInfo", NULL, NULL);
         while (1)
         {
-            readLen = Recv(sockfd, tcpBuf, RECVLEN, 0);
+            readLen = Recv(pdata->socketfd, tcpBuf, RECVLEN, 0);
             if (readLen == 0)
             {
                 log_debug("client close");
@@ -134,18 +136,22 @@ void *thread_hander(void *arg)
                 }
             }
         }
-        close(sockfd);
+
+        printf("thread_hander close\n");
+        Close(pdata->socketfd);
+        pdata->socketfd = 0;
+
         timer_delete(timerid);
-    }
+    } while (1);
     pthread_exit(0);
 }
 
-void net_client(int *sockfd)
+pthread_t net_client(void *arg)
 {
 
     pthread_t id;
     //clientMethod为此线程客户端，要执行的程序。
-    pthread_create(&id, NULL, (void *)thread_hander, (void *)sockfd);
+    pthread_create(&id, NULL, (void *)thread_hander, arg);
     //要将id分配出去。
     pthread_detach(id);
 
@@ -154,4 +160,6 @@ void net_client(int *sockfd)
     sigaddset(&set, SIGALRM);
     sigaddset(&set, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+    return id;
 }

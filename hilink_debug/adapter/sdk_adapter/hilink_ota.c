@@ -107,16 +107,21 @@ int HilinkOtaEndProcess(int status)
 
 int HilinkGetRebootFlag(void)
 {
-    /*    stHILINK_TIME_INFO hilink_time;
-    int ret = hilink_get_local_time_info(&hilink_time);
-    log_debug("HilinkGetRebootFlag time:%d %d %d %d %d", hilink_time.year, hilink_time.month, hilink_time.day, hilink_time.hour, hilink_time.min);
-    if (hilink_time.hour < 2 || hilink_time.hour > 4)
-    */
+    // stHILINK_TIME_INFO hilink_time;
+    // hilink_get_local_time_info(&hilink_time);
+    // log_debug("HilinkGetRebootFlag time:%d %d %d %d %d", hilink_time.year, hilink_time.month, hilink_time.day, hilink_time.hour, hilink_time.min);
+
+    // hilink_get_utc_time_info(&hilink_time);
+    // log_debug("HilinkGetRebootFlag time:%d %d %d %d %d", hilink_time.year, hilink_time.month, hilink_time.day, hilink_time.hour, hilink_time.min);
+    // if (hilink_time.hour < 19 || hilink_time.hour > 23)
+    //     return MODULE_CANNOT_REBOOT;
+    //--------------------------
     time_t tm = time(NULL);
     struct tm *localtm = localtime(&tm);
     log_debug("HilinkGetRebootFlag time:%s %d", asctime(localtm), localtm->tm_hour);
-    if (localtm->tm_hour < 2 || localtm->tm_hour > 4)
+    if (localtm->tm_hour < 1 || localtm->tm_hour > 5)
         return MODULE_CANNOT_REBOOT;
+    //--------------------------
     /* 厂商实现此接口 */
     return MODULE_CAN_REBOOT;
 }
@@ -208,7 +213,6 @@ int HILINK_StartSoftwareIntall(void)
     system("chmod 777 " UPDATE_PATH_ALL);
     //test
     system("cp -rf /userdata/nfs/upgrade.bin " UPDATE_PATH);
-
 
     cJSON *root = cJSON_CreateObject();
     cJSON_AddNumberToObject(root, "bootTime", 60);

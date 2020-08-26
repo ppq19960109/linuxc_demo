@@ -63,9 +63,9 @@ DevNameEn g_devNameEn = {
     MANUAFACTURER_NAME};
 
 /* 服务信息定义 */
-int gSvcNum = 2;
+int gSvcNum = 1;
 svc_info_t gSvcInfo[] = {
-    {"switch", "switch"}, {"ota", "update"}};
+    {"switch", "switch"}};
 
 /* AC信息 */
 unsigned char A_C[48] =
@@ -116,7 +116,7 @@ char *hilink_get_auto_bi_rsa_cipher(void)
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len)
 {
-    log_debug("svcId:%s payload:%s,len:%d", svcId, payload, len);
+    log_debug("hilink_put_char_state svcId:%s payload:%s,len:%d", svcId, payload, len);
 
     if (strcmp("switch", svcId) == 0)
     {
@@ -125,7 +125,15 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
             cJSON *root = cJSON_Parse(payload);
             cJSON *val = cJSON_GetObjectItem(root, "on");
             protocol_data.discoverMode = val->valueint;
-
+            if(val->valueint)
+            {
+                write_cmd("Add", NULL,"120");
+            }
+            else
+            {
+                write_cmd("Add", NULL,"0");
+            }
+            
             free(root);
         }
     }
@@ -144,7 +152,7 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen)
 {
-    log_debug("svcId:%s in:%s,len:%d", svcId, in, inLen);
+    log_debug("hilink_get_char_state svcId:%s in:%s,len:%d", svcId, in, inLen);
 
     if (svcId == NULL)
         return -1;
@@ -154,14 +162,14 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
     {
         cJSON_AddNumberToObject(root, "on", protocol_data.discoverMode);
     }
-    else if (strcmp(gSvcInfo[1].svc_id, svcId) == 0)
-    {
-        cJSON_AddNumberToObject(root, "action", 0);
-        // cJSON_AddStringToObject(root, "introduction", "");
-        cJSON_AddStringToObject(root, "version", "");
-        cJSON_AddNumberToObject(root, "bootTime", 60);
-        // cJSON_AddNumberToObject(root, "progress", 0);
-    }
+    // else if (strcmp(gSvcInfo[1].svc_id, svcId) == 0)
+    // {
+    //     cJSON_AddNumberToObject(root, "action", 0);
+    //     // cJSON_AddStringToObject(root, "introduction", "");
+    //     cJSON_AddStringToObject(root, "version", "");
+    //     cJSON_AddNumberToObject(root, "bootTime", 60);
+    //     // cJSON_AddNumberToObject(root, "progress", 0);
+    // }
     else
     {
         return -1;

@@ -6,10 +6,14 @@
 #define IPADDR "10.201.126"
 #define AP_NAME "p2p0"
 
+int get_hostapd_pid();
+int get_dnsmasq_pid();
+
+int splitToInt(char *str, char *out, unsigned char outlen);
 int getWiFiSsid(char *ssid, unsigned int *ssidLen);
 void reconnectWiFi(void);
 int connectWiFi(const char *ssid, const char *psk);
-int getWiFiBssid(char *bssid, unsigned char *bssidLen);
+int getWiFiBssid(char *bssid, unsigned char bssidLen);
 int getWiFiRssi(signed char *rssi, char *ssid);
 int getWiFiState(void);
 int getWiFiIp(char *ip, unsigned char len);

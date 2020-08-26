@@ -13,7 +13,7 @@ extern "C"
 
 #define POINTER_SIZE 4
 #define SENDTOLOCAL_SIZE 512
-
+#define GATEWAYID "0000000000000000"
     typedef struct
     {
         char GatewayId[16];
@@ -32,7 +32,7 @@ extern "C"
     {
         char DeviceId[18];
         char ModelId[16];
-        char Key[18];
+        char Key[24];
         char Value[16];
         void *private;
     };
@@ -49,9 +49,10 @@ extern "C"
     typedef struct
     {
         int socketfd;
-        int discoverMode;
-        struct list_head dev_list;
+        char discoverMode;
         char sendData[SENDTOLOCAL_SIZE];
+        pthread_t pid;
+        struct list_head dev_list;
     } protocol_data_t;
     //-----------------------------------------------
     extern protocol_data_t protocol_data;
@@ -68,7 +69,7 @@ extern "C"
     int str_search(const char *key, char **pstr, int num);
     int strn_search(const char *key, char **pstr, int num, int n);
     int writeToHaryan(const char *data, int socketfd, char *sendBuf, int bufLen);
-    int write_cmd(char *cmd, char *DeviceId);
+    int write_cmd(char *cmd, char *DeviceId,char* Value);
     void local_reFactory();
 
 #ifdef __cplusplus

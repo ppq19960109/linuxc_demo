@@ -32,8 +32,8 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
     brgDevInfo->protType = PROTOCOL_TYPE;
     strcpy(brgDevInfo->manu, MANUAFACTURER);
 
-    strcpy(brgDevInfo->prodId, "1011");
-    strcpy(brgDevInfo->sn, "12345678");
+    // strcpy(brgDevInfo->prodId, "1011");
+    // strcpy(brgDevInfo->sn, "12345678");
     strcpy(brgDevInfo->model, DEVICE_MODEL);
     strcpy(brgDevInfo->devType, DEVICE_TYPE);
     strcpy(brgDevInfo->mac, "123456789012");
@@ -161,7 +161,6 @@ int local_tohilink(dev_data_t *src, int index)
         //Switch
         for (i = 0; i < 2; ++i)
         {
-            // dev_sub->Switch[i] = 1;
             cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "on");
@@ -231,8 +230,12 @@ int local_tohilink(dev_data_t *src, int index)
         }
         devSvcArray = out->devSvc;
         dev_09223f_t *dev_sub = (dev_09223f_t *)src->private;
+
+        dev_sub->Switch=1;
+        dev_sub->ColorTemperature = 3523;
+        dev_sub->Luminance=80;
         //cct
-        dev_sub->ColorTemperature = 4500;
+        
         cJSON_AddNumberToObject(root, "colorTemperature", dev_sub->ColorTemperature);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "colorTemperature");
@@ -245,7 +248,7 @@ int local_tohilink(dev_data_t *src, int index)
         modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
         ++pos;
         //Switch
-
+        
         cJSON_AddNumberToObject(root, "on", dev_sub->Switch);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "on");
@@ -272,7 +275,7 @@ int local_tohilink(dev_data_t *src, int index)
         devSvcArray = out->devSvc;
 
         //Switch
-
+dev_sub->Switch = 1;
         cJSON_AddNumberToObject(root, "on", dev_sub->Switch);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "on");
@@ -310,7 +313,7 @@ int local_tohilink(dev_data_t *src, int index)
         //Switch
         for (i = 0; i < 2; ++i)
         {
-            dev_sub->Switch[i] = 1;
+      dev_sub->Switch[i] = 1;
             cJSON_AddNumberToObject(root, "on", dev_sub->Switch[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "on");
@@ -403,7 +406,7 @@ int local_tohilink(dev_data_t *src, int index)
         }
         devSvcArray = out->devSvc;
         dev_HY0093_t *dev_sub = (dev_HY0093_t *)src->private;
-
+        // dev_sub->ContactAlarm=0;
         //doorEvent
         cJSON_AddNumberToObject(root, "on", dev_sub->ContactAlarm);
         json = cJSON_PrintUnformatted(root);
@@ -481,13 +484,15 @@ int local_tohilink(dev_data_t *src, int index)
             switch (j)
             {
             case 0:
+            dev_sub->Switch[2]=1;
                 cJSON_AddNumberToObject(root, "on", dev_sub->Switch[2]);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "on");
                 modSvc(out_sub[j]->brgDevInfo.sn, out_sub[j]->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
                 pos++;
-
-                cJSON_AddNumberToObject(root, "current", 0);
+                dev_sub->CurrentTemperature_1=22;
+            dev_sub->TargetTemperature_3=30;
+                cJSON_AddNumberToObject(root, "current", dev_sub->CurrentTemperature_1);
                 cJSON_AddNumberToObject(root, "target", dev_sub->TargetTemperature_3);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "current");
@@ -495,12 +500,13 @@ int local_tohilink(dev_data_t *src, int index)
                 modSvc(out_sub[j]->brgDevInfo.sn, out_sub[j]->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
                 break;
             case 1:
+            dev_sub->Switch[0]=1;
                 cJSON_AddNumberToObject(root, "on", dev_sub->Switch[0]);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "on");
                 modSvc(out_sub[j]->brgDevInfo.sn, out_sub[j]->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
                 pos++;
-
+            dev_sub->TargetTemperature_1=26;
                 cJSON_AddNumberToObject(root, "current", dev_sub->CurrentTemperature_1);
                 cJSON_AddNumberToObject(root, "target", dev_sub->TargetTemperature_1);
                 json = cJSON_PrintUnformatted(root);
@@ -508,13 +514,13 @@ int local_tohilink(dev_data_t *src, int index)
                 cJSON_DeleteItemFromObject(root, "target");
                 modSvc(out_sub[j]->brgDevInfo.sn, out_sub[j]->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
                 pos++;
-
+            dev_sub->WorkMode_1=1;
                 cJSON_AddNumberToObject(root, "mode", dev_sub->WorkMode_1);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "mode");
                 modSvc(out_sub[j]->brgDevInfo.sn, out_sub[j]->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
                 pos++;
-
+            dev_sub->WindSpeed[0]=2;
                 cJSON_AddNumberToObject(root, "gear", dev_sub->WindSpeed[0]);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "gear");
@@ -522,12 +528,13 @@ int local_tohilink(dev_data_t *src, int index)
 
                 break;
             case 2:
+            dev_sub->Switch[1]=1;
                 cJSON_AddNumberToObject(root, "on", dev_sub->Switch[1]);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "on");
                 modSvc(out_sub[j]->brgDevInfo.sn, out_sub[j]->devSvc[pos].svcId, &devSvcArray[pos].svcVal, json);
                 pos++;
-
+            dev_sub->WindSpeed[1]=1;
                 cJSON_AddNumberToObject(root, "gear", dev_sub->WindSpeed[1]);
                 json = cJSON_PrintUnformatted(root);
                 cJSON_DeleteItemFromObject(root, "gear");
@@ -554,6 +561,7 @@ int local_tohilink(dev_data_t *src, int index)
         }
         devSvcArray = out->devSvc;
         pos = 0;
+        dev_sub->KeyFobValue=3;
         cJSON_AddNumberToObject(root, "num", dev_sub->KeyFobValue);
         json = cJSON_PrintUnformatted(root);
         cJSON_DeleteItemFromObject(root, "num");
@@ -562,7 +570,7 @@ int local_tohilink(dev_data_t *src, int index)
         for (i = 0; i < 6; ++i)
         {
             if (strlen(dev_sub->SceName[i]) == 0)
-                sprintf(dev_sub->SceName[i], "场景%d", i);
+                sprintf(dev_sub->SceName[i], "场景%d", i+1);
             cJSON_AddStringToObject(root, "name", dev_sub->SceName[i]);
             json = cJSON_PrintUnformatted(root);
             cJSON_DeleteItemFromObject(root, "name");
@@ -574,7 +582,7 @@ int local_tohilink(dev_data_t *src, int index)
     default:
         goto fail;
     }
-    list_print_all_hilink(&hilink_handle.node);
+    // list_print_all_hilink(&hilink_handle.node);
 
     free(root);
  

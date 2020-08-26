@@ -56,17 +56,19 @@ int HILINK_GetMacAddr(unsigned char *mac, unsigned char len)
 {
 
     int ret;
+    char str[20];
     enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
     if (net_mode == HILINK_NETCONFIG_WIFI)
     {
-        ret = getWiFiMac(mac, len);
+        ret = getWiFiMac(str, sizeof(str));
     }
     else
     {
-        ret = get_local_mac(ETH_NAME, mac, len);
+        ret = get_local_mac(ETH_NAME, str, sizeof(str));
     }
-    // strcpy(mac,"4c917");
-    // strcpy(mac,"00e09");
+
+    splitToInt(str, mac, len);
+    // mac[0]=11;
     log_info("HILINK_GetMacAddr mac:%s,len:%d", mac, len);
     return ret;
 }
@@ -83,12 +85,16 @@ int HILINK_GetWiFiSsid(char *ssid, unsigned int *ssidLen)
     // strcpy(ssid, wifi_ssid);
     // *ssidLen = strlen(wifi_ssid); //rk3308_net
     // return 0;
-    int ret = getWiFiSsid(ssid, ssidLen);
-    if (ret == 0)
+    if (getWiFiState() == 3)
     {
-        strcpy(wifi_ssid, ssid);
+        int ret = getWiFiSsid(ssid, ssidLen);
+        if (ret == 0)
+        {
+            strcpy(wifi_ssid, ssid);
+        }
+        return ret;
     }
-    return ret;
+    return 0;
 }
 
 /*
@@ -198,13 +204,17 @@ int HILINK_GetNetworkState(int *state)
  */
 int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
 {
-    log_info("HILINK_GetWiFiBssid");
-    // int ret = get_local_mac(ETH_NAME, bssid, -1);
-    // *bssidLen = strlen(bssid);
-    // strcpy(bssid,"00:9a:cd:12:34:56");
-    // *bssidLen = strlen("00:9a:cd:85:cb:8c")+1;
-    // return 0;
-    return getWiFiBssid(bssid, bssidLen);
+    log_info("HILINK_GetWiFiBssid %s,%d", bssid, *bssidLen);
+    if (getWiFiState() == 3)
+    {
+        char str[20];
+        int ret = getWiFiBssid(str, sizeof(str));
+        *bssidLen = splitToInt(str, bssid, 6);
+
+        return ret;
+    }
+    *bssidLen = 0;
+    return 0;
 }
 
 /*
@@ -223,8 +233,11 @@ int HILINK_GetWiFiRssi(signed char *rssi)
     // popen_cmd(cmd, "r", szBuf, sizeof(szBuf));
     // *rssi = atoi(szBuf);
     // log_info("HILINK_GetWiFiRssi:%s,%d\n", szBuf, *rssi);
-
-    return getWiFiRssi(rssi, wifi_ssid);
+    if (getWiFiState() == 3)
+    {
+        return getWiFiRssi(rssi, wifi_ssid);
+    }
+    return 0;
 }
 
 /*

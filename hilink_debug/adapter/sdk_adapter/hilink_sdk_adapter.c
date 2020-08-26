@@ -6,6 +6,7 @@
  */
 #include "hilink_sdk_adapter.h"
 #include "hilink_softap_adapter.h"
+#include "hilink.h"
 
 #include "protocol_cover.h"
 #include "hilink_cover.h"
@@ -34,7 +35,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_LONG_OFFLINE_REBOOT:
         log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
         /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
-        hilink_process_before_restart(1);
+        hilink_restore_factory_settings();
         break;
     case HILINK_UNINITIALIZED:
         log_info("HILINK_UNINITIALIZED\n");
@@ -47,6 +48,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_LINK_CONFIG_TIMEOUT:
         log_info("HILINK_LINK_CONFIG_TIMEOUT\n");
         /* 设备处于10分钟超时状态，请在此处添加实现 */
+        hilink_restore_factory_settings();
         break;
     case HILINK_LINK_CONNECTTING_WIFI:
         log_info("HILINK_LINK_CONNECTTING_WIFI\n");
@@ -71,7 +73,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_DEVICE_UNREGISTER:
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
-        write_cmd("ReFactory", NULL);
+        write_cmd("ReFactory", NULL,NULL);
         local_reFactory();
 
         break;
@@ -100,7 +102,7 @@ void hilink_notify_devstatus(int status)
 int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart");
-
+    write_cmd("Add", NULL,"0");
     hilink_handle_destory();
     protlcol_destory();
     HILINK_StopSoftAp();

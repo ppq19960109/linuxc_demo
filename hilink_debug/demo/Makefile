@@ -43,7 +43,7 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/rk3308/*.c)
 LIB_FILE_PATH := -L$(BASE_PATH)/lib
 
 #库文件
-LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota -Wl,-Bdynamic  -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lhilinkdevicesdk -lhilinkota -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
 #编译出的.o文件
 

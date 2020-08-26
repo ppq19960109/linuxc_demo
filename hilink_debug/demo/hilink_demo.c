@@ -24,7 +24,6 @@ void hilink_msleep(int);
 
 extern const char *report_json[];
 
-
 void signal_handler(int signal)
 {
     printf("signal is %d\n", signal);
@@ -54,15 +53,14 @@ int main(void)
 
     //----------------------------------------------------
 
-
     hilink_main();
     printf("Program is started.\r\n");
-    
+
     // HILINK_SdkAttr *SdkAttr = HILINK_GetSdkAttr();
     // log_debug("HILINK_SdkAttr monitorTaskStackSize:%d,deviceMainTaskStackSize:%d,bridgeMainTaskStackSize:%d",
     //           SdkAttr->monitorTaskStackSize, SdkAttr->deviceMainTaskStackSize, SdkAttr->bridgeMainTaskStackSize);
     // HiLinkSetGatewayMode(1);
-    HILINK_SetLogLevel(HILINK_LOG_EMERG);
+    HILINK_SetLogLevel(HILINK_LOG_ERR);
     HILINK_EnableProcessDelErrCode(1);
     HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE); //HILINK_NETCONFIG_NONE
     enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
@@ -76,11 +74,11 @@ int main(void)
     //-------------------------------------------------
     protlcol_init();
     hilink_handle_init();
-
+    // hilink_restore_factory_settings();
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
-    // for (int i = 0; i < 1; i++)
-    //     read_from_local(report_json[i]);
-
+    for (int i = 0; i < 6; i++)
+        read_from_local(report_json[i]);
+    
     while (1)
     {
         hilink_msleep(1000);

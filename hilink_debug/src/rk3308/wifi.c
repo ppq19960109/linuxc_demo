@@ -8,6 +8,42 @@
 #include "cJSON.h"
 #include "wifi.h"
 
+int get_pid(char *Name)
+{
+    char cmdresult[32] = {0};
+    char cmd[20] = {0};
+
+    int pid = 0;
+
+    sprintf(cmd, "pidof %s", Name);
+    FILE *pFile = popen(cmd, "r");
+    if (pFile != NULL)
+    {
+        while (fgets(cmdresult, sizeof(cmdresult), pFile))
+        {
+            pid = atoi(cmdresult);
+            printf("--- %s pid = %d ---\n", Name, pid);
+            break;
+        }
+    }
+    pclose(pFile);
+    return pid;
+}
+
+int get_dnsmasq_pid()
+{
+    int ret;
+    ret = get_pid("dnsmasq");
+    return ret;
+}
+
+int get_hostapd_pid()
+{
+    int ret;
+    ret = get_pid("hostapd");
+    return ret;
+}
+
 int _RK_wifi_state_callback(RK_WIFI_RUNNING_State_e state)
 {
     printf("_RK_wifi_state_callback state:%d\n", state);
@@ -50,14 +86,14 @@ int connectWiFi(const char *ssid, const char *psk)
     return RK_wifi_connect(ssid, psk);
 }
 
-int getWiFiBssid(char *bssid, unsigned char *bssidLen)
+int getWiFiBssid(char *bssid, unsigned char bssidLen)
 {
     RK_WIFI_INFO_Connection_s WIFI_INFO_Connection;
     int ret = RK_wifi_running_getConnectionInfo(&WIFI_INFO_Connection);
 
-    strcpy(bssid, WIFI_INFO_Connection.bssid);
-    *bssidLen = strlen(WIFI_INFO_Connection.bssid);
-    printf("bssidLen:%d,bssid:%s ret:%d\n", *bssidLen, bssid,ret);
+    strncpy(bssid, WIFI_INFO_Connection.bssid, bssidLen);
+    // *bssidLen = strlen(WIFI_INFO_Connection.bssid) + 1;
+    printf("bssidLen:%d,bssid:%s ret:%d\n", bssidLen, bssid, ret);
     return ret;
 }
 
@@ -114,14 +150,25 @@ void delete_char(char str[], char target)
     str[j] = '\0';
 }
 
+int splitToInt(char *str, char *out, unsigned char outlen)
+{
+    char *token = strtok(str, ":");
+    // char *ptr;
+    int i = 0;
+    for (i = 0; token != NULL && i < outlen; ++i)
+    {
+        out[i] = strtol(token, NULL, 16);
+        token = strtok(NULL, ":");
+    }
+
+    return i;
+}
+
 int getWiFiMac(char *mac, unsigned char len)
 {
-    char wifi_mac[20];
-    int ret = RK_wifi_get_mac(wifi_mac);
-    delete_char(wifi_mac, ':');
-    strncpy(mac, wifi_mac, len - 1);
-    mac[len - 1] = '\0';
-    printf("getWiFiMac:%s %s %d\n", wifi_mac, mac, ret);
+    int ret = RK_wifi_get_mac(mac);
+    // delete_char(wifi_mac, ':');
+    printf("getWiFiMac:%s %d\n", mac, ret);
     return ret;
 }
 

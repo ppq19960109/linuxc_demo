@@ -5,7 +5,7 @@
 #include "dev_private.h"
 #include "hilink_cover.h"
 
-char *dev_modeId[] = {"TS0001", "TS0002", "TS0003", "09223f", "HY0121", "HY0122", "HY0107", "HY0093", "HY0134"};
+char *dev_modeId[] = {"TS0001", "TS0002", "TS0003", "09223f", "HY0121", "HY0122", "HY0107", "HY0093", "HY0134", "HY0134", "HY0134", "HY0134"};
 
 char *attr_HY0095[] = {"Switch", "LedEnable", "PowerOffProtection"};
 char *attr_HY0096[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection"};
@@ -14,8 +14,8 @@ char *attr_HY0097[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOf
 char *attr_09223f[] = {"ColorTemperature", "Luminance", "Switch"};
 
 char *attr_HY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMode"};
-char *attr_HY0122[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection", "KeyMode"};
-char *attr_HY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection", "KeyMode"};
+char *attr_HY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
+char *attr_HY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 
 char *attr_HY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
 
@@ -313,6 +313,9 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
     }
     break;
     case 8: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 9:
+    case 10:
+    case 11:
     {
         if (dev_data->private == NULL)
         {

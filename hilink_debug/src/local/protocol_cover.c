@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <errno.h>
 
 #include "socket.h"
 #include "protocol_cover.h"
@@ -26,24 +28,25 @@ char *TYPE_Report[] = {
     "ChildrenInfo",
     "SetSig",
     "GetSig",
+    "Ack",
 };
 
 // char *TYPE_Dispatch[] = {"Ctrl", "Add", "Delete", "Attribute", "DevAttri", "DevList", "NeighborInfo", "ChildrenInfo", "ReFactory", "RepeatReport", "SetSig", "GetSig", "SubName"};
 
 const char *report_json[] = {
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"1234567876543670\",\
-              \"ModelId\":\"HY0097\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"1234567876543670\",\
+    //           \"ModelId\":\"HY0097\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
     "{\
        \"Command\":\"Report\",\
        \"FrameNumber\":\"00\",\
@@ -96,32 +99,32 @@ const char *report_json[] = {
       }\
     ]\
     }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"4574567876543675\",\
-              \"ModelId\":\"HY0095\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"5234567876543432\",\
-              \"ModelId\":\"HY0096\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }@",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"4574567876543675\",\
+    //           \"ModelId\":\"HY0095\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"5234567876543432\",\
+    //           \"ModelId\":\"HY0096\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }@",
     "{\
        \"Command\":\"Report\",\
        \"FrameNumber\":\"00\",\
@@ -226,12 +229,19 @@ void protlcol_init()
 {
     protocol_data.discoverMode = 0;
     INIT_LIST_HEAD(&protocol_data.dev_list);
-    net_client(&protocol_data.socketfd);
+    protocol_data.pid = net_client(&protocol_data);
 }
 
 void protlcol_destory()
 {
-    Close(protocol_data.socketfd);
+    pthread_cancel(protocol_data.pid);
+    protocol_data.pid = 0;
+
+    if (protocol_data.socketfd != 0)
+    {
+        Close(protocol_data.socketfd);
+        protocol_data.socketfd = 0;
+    }
     list_del_all(&protocol_data.dev_list);
 }
 
@@ -252,10 +262,18 @@ int read_from_local(const char *json)
         log_error("Command is NULL\n");
         goto fail;
     }
-    if (strcmp("Report", Command->valuestring) != 0)
+    if (strcmp("Report", Command->valuestring) == 0)
     {
-        log_error("Command is value invaild\n");
-        goto fail;
+        log_debug("Command is Report\n");
+    }
+    else if (strcmp("BeatHeartResponse", Command->valuestring) == 0)
+    {
+        log_debug("Command is BeatHeartResponse\n");
+        goto heart;
+    }
+    else
+    {
+        log_error("Command is value invaild:%s\n", Command->valuestring);
     }
 
     //Type字段
@@ -327,6 +345,10 @@ int read_from_local(const char *json)
             list_del_dev(dev_buf);
             // list_del(&dev_buf->node);
         }
+        else
+        {
+            log_error("UnRegister device not exist");
+        }
     }
     break;
     case 2: //设备在线状态上报, “OnOff”
@@ -357,7 +379,21 @@ int read_from_local(const char *json)
         }
         else
         {
-            log_error("device not exist");
+            if (strcmp(GATEWAYID, dev_data.DeviceId) == 0)
+            {
+                cJSON *Key = cJSON_GetObjectItem(array_sub, "Key");
+                if (Key != NULL && strcmp(Key->valuestring, "PermitJoining") == 0)
+                {
+                    char_copy_from_json(array_sub, "Value", &protocol_data.discoverMode);
+
+                    cJSON *root = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(root, "on", protocol_data.discoverMode);
+                    char *json = cJSON_PrintUnformatted(root);
+                    hilink_upload_char_state("switch", json, strlen(json) + 1);
+                    free(root);
+                }
+            }
+            log_error("sub device not exist");
         }
     }
     break;
@@ -368,28 +404,28 @@ int read_from_local(const char *json)
     case 5: //设备列表上报：”DevList”
     {
         int array_size = cJSON_GetArraySize(Data);
-        dev_data_t *dev_add;
+        // dev_data_t *dev_add;
         for (int cnt = 0; cnt < array_size; cnt++)
         {
             array_sub = cJSON_GetArrayItem(Data, cnt);
             dev_buf = list_get_by_id(cJSON_GetObjectItem(array_sub, "DeviceId")->valuestring, &protocol_data.dev_list);
             if (dev_buf == NULL)
             {
-                dev_add = (dev_data_t *)malloc(sizeof(dev_data_t));
-                memset(dev_add, 0, sizeof(dev_data_t));
+                dev_buf = (dev_data_t *)malloc(sizeof(dev_data_t));
+                memset(dev_buf, 0, sizeof(dev_data_t));
                 str_copy_from_json(root, "GatewayId", dev_buf->GatewayId);
-                str_copy_from_json(array_sub, "DeviceId", dev_add->DeviceId);
-                str_copy_from_json(array_sub, "ModelId", dev_add->ModelId);
-                str_copy_from_json(array_sub, "Version", dev_add->Version);
-                str_copy_from_json(array_sub, "Online", &dev_add->Online);
-                char_copy_from_json(array_sub, "RegisterStatus", &dev_add->RegisterStatus);
+                str_copy_from_json(array_sub, "DeviceId", dev_buf->DeviceId);
+                str_copy_from_json(array_sub, "ModelId", dev_buf->ModelId);
+                str_copy_from_json(array_sub, "Version", dev_buf->Version);
+                str_copy_from_json(array_sub, "Online", &dev_buf->Online);
+                char_copy_from_json(array_sub, "RegisterStatus", &dev_buf->RegisterStatus);
 
-                if (dev_private_attribute(dev_add, NULL) != 0)
+                if (dev_private_attribute(dev_buf, NULL) != 0)
                 {
-                    free(dev_add);
+                    free(dev_buf);
                     continue;
                 }
-                list_add(&dev_add->node, &protocol_data.dev_list);
+                list_add(&dev_buf->node, &protocol_data.dev_list);
             }
             else
             {
@@ -492,18 +528,17 @@ int read_from_local(const char *json)
     {
     }
     break;
+    case 14: //Ack
+    {
+        log_debug("type:Ack");
+    }
+    break;
     default:
 
         break;
     }
-
-    // int array_size = cJSON_GetArraySize(Data);
-    // for (int cnt = 0; cnt < array_size; cnt++)
-    // {
-    //     cJSON *array_sub = cJSON_GetArrayItem(Data, cnt);
-    // }
-    //     free(dev_data);
-    // add:
+    
+heart:
     free(root);
     // list_print_all(&protocol_data.dev_list);
     return 0;
@@ -517,13 +552,13 @@ fail:
 void local_reFactory()
 {
     list_del_all(&protocol_data.dev_list);
-    list_del_all_hilink(&hilink_handle.node);
+    hilink_handle_destory();
     hilink_restore_factory_settings();
 }
 
 char *hanyar_cmd[] = {"Add", "DevsInfo", "DevAttri", "ReFactory"};
 
-int write_cmd(char *cmd, char *DeviceId)
+int write_cmd(char *cmd, char *DeviceId, char *Value)
 {
     local_dev_t local_cmd = {0};
     int index_cmd = str_search(cmd, hanyar_cmd, POINTER_SIZE);
@@ -533,16 +568,16 @@ int write_cmd(char *cmd, char *DeviceId)
     {
         local_cmd.FrameNumber = 0;
         strcpy(local_cmd.Type, "Add");
-        strcpy(local_cmd.Data.DeviceId, "0000000000000000");
+        strcpy(local_cmd.Data.DeviceId, GATEWAYID);
         strcpy(local_cmd.Data.Key, "Time");
-        strcpy(local_cmd.Data.Value, "255");
+        strcpy(local_cmd.Data.Value, Value);
     }
     break;
     case 1:
     {
         local_cmd.FrameNumber = 0;
         strcpy(local_cmd.Type, "DevsInfo");
-        strcpy(local_cmd.Data.DeviceId, "0000000000000000");
+        strcpy(local_cmd.Data.DeviceId, GATEWAYID);
         strcpy(local_cmd.Data.Key, "DevsInfo");
     }
     break;
@@ -579,6 +614,11 @@ int write_cmd(char *cmd, char *DeviceId)
 
 int writeToHaryan(const char *data, int socketfd, char *sendBuf, int bufLen)
 {
+    if (socketfd == 0)
+    {
+        log_error("socketfd not exist");
+        return -1;
+    }
     int datalen = strlen(data);
     if (datalen + 3 <= bufLen)
     {
@@ -634,7 +674,7 @@ int write_to_local(void *ptr)
     int ret = writeToHaryan(json, protocol_data.socketfd, protocol_data.sendData, SENDTOLOCAL_SIZE);
     if (ret < 0)
     {
-        log_error("writeToHaryan error");
+        log_error("writeToHaryan error ret:%d,%s", ret, strerror(errno));
     }
     free(json);
 

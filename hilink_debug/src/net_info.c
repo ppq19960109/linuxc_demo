@@ -74,7 +74,7 @@ int get_local_mac(const char *eth_inf, char *mac, unsigned char len)
     }
     if (len == -1)
     {
-        sprintf(mac, "%02x%02x%02x%02x%02x%02x",
+        sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
                 (unsigned char)ifr.ifr_hwaddr.sa_data[0],
                 (unsigned char)ifr.ifr_hwaddr.sa_data[1],
                 (unsigned char)ifr.ifr_hwaddr.sa_data[2],
@@ -84,7 +84,7 @@ int get_local_mac(const char *eth_inf, char *mac, unsigned char len)
     }
     else
     {
-        snprintf(mac, len, "%02x%02x%02x%02x%02x%02x",
+        snprintf(mac, len, "%02x:%02x:%02x:%02x:%02x:%02x",
                  (unsigned char)ifr.ifr_hwaddr.sa_data[0],
                  (unsigned char)ifr.ifr_hwaddr.sa_data[1],
                  (unsigned char)ifr.ifr_hwaddr.sa_data[2],

@@ -48,9 +48,7 @@ int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 
     create_hostapd_file(AP_NAME, ssid, "1234567890");
 
-    system("killall hostapd");
-    system("killall dnsmasq");
-    system("iptables -t nat -F");
+    HILINK_StopSoftAp();
     system("echo \"1\" > /proc/sys/net/ipv4/ip_forward");
 
     sprintf(cmdline, "ifconfig %s %s.1 netmask 255.255.255.0", AP_NAME, IPADDR);
@@ -81,8 +79,10 @@ int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 int HILINK_StopSoftAp(void)
 {
     log_info("HILINK_StopSoftAp");
-    system("killall hostapd");
-    system("killall dnsmasq");
+    if (get_hostapd_pid())
+        system("killall hostapd");
+    if (get_dnsmasq_pid())
+        system("killall dnsmasq");
     system("iptables -t nat -F");
     return 0;
 }
