@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "list_tool.h"
+#include "local_list.h"
 
 dev_data_t *list_get_by_id(const char *id, struct list_head *head)
 {

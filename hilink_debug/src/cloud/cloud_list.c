@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "list_hilink.h"
+#include "cloud_list.h"
 
 dev_hilink_t *list_get_by_id_hilink(const char *id, struct list_head *head)
 {

@@ -1,12 +1,12 @@
-#ifndef _LIST_TOOL_H
-#define _LIST_TOOL_H
+#ifndef _LOCAL_LIST_H_
+#define _LOCAL_LIST_H_
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "protocol_cover.h"
+#include "local_receive.h"
 
 void list_del_dev(dev_data_t *ptr);
 int list_del_by_id(const char *id, struct list_head *head);

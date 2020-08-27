@@ -14,7 +14,8 @@
 #include "hilink.h"
 #include "hilink_sdk_adapter.h"
 
-#include "protocol_cover.h"
+#include "local_receive.h"
+#include "cJSON.h"
 
 #define UPDATE_PATH "/userdata/update/"
 #define UPDATE_FILE "upgrade.bin"

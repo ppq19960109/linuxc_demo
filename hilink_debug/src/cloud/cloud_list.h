@@ -1,12 +1,12 @@
-#ifndef _LIST_HILINK_H
-#define _LIST_HILINK_H
+#ifndef _CLOUD_LIST_H_
+#define _CLOUD_LIST_H_
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "hilink_cover.h"
+#include "cloud_send.h"
 
     void list_del_dev_hilink(dev_hilink_t *ptr);
     int list_del_by_id_hilink(const char *id, struct list_head *head);

@@ -1,12 +1,18 @@
-#ifndef _DEV_PRIVATE_H
-#define _DEV_PRIVATE_H
+#ifndef _LOCAL_DEVICE_H_
+#define _LOCAL_DEVICE_H_
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#include "protocol_cover.h"
+#include "local_receive.h"
+
+    typedef struct
+    {
+        char *const *attr;
+        char attrLen;
+    } SAttrInfo;
 
     typedef struct
     {
@@ -15,6 +21,7 @@ extern "C"
         char PowerOffProtection;
         int countdown;
     } dev_HY0095_t; //U2/天际系列：单键智能开关（HY0095）
+
     typedef struct
     {
         char Switch[2];
@@ -87,18 +94,10 @@ extern "C"
         char TargetTemperature_3;
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
 
-    extern char *dev_modeId[];
-    extern char *attr_HY0095[];
-    extern char *attr_HY0096[];
-    extern char *attr_HY0097[];
-    extern char *attr_09223f[];
-    extern char *attr_HY0121[];
-    extern char *attr_HY0122[];
-    extern char *attr_HY0107[];
-    extern char *attr_HY0093[];
-    extern char *attr_HY0134[];
+    extern SAttrInfo g_SLocalModel;
+    extern SAttrInfo g_SLocalAttr[];
 
-    int dev_private_attribute(dev_data_t *dev, cJSON *Data);
+    int local_attribute_update(dev_data_t *dev, cJSON *Data);
 
 #ifdef __cplusplus
 }

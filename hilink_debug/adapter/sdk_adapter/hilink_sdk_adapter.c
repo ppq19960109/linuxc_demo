@@ -4,12 +4,11 @@
  * Create: 2019-04-20
  * Notes: 该文件中的接口需要对外提供给第三方厂商使用，为了前向兼容，部分老接口暂不按最新编码规范整改.
  */
+
 #include "hilink_sdk_adapter.h"
-#include "hilink_softap_adapter.h"
 #include "hilink.h"
 
-#include "protocol_cover.h"
-#include "hilink_cover.h"
+#include "local_send.h"
 
 /*
  * 通知设备的状态
@@ -73,8 +72,8 @@ void hilink_notify_devstatus(int status)
     case HILINK_DEVICE_UNREGISTER:
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
-        write_cmd("ReFactory", NULL,NULL);
-        local_reFactory();
+
+        local_restart_reFactory(true);
 
         break;
     case HILINK_REVOKE_FLAG_SET:
@@ -102,10 +101,8 @@ void hilink_notify_devstatus(int status)
 int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart");
-    write_cmd("Add", NULL,"0");
-    hilink_handle_destory();
-    protlcol_destory();
-    HILINK_StopSoftAp();
+
+    local_restart_reFactory(false);
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {

@@ -11,8 +11,10 @@
 #include "hilink_profile_adapter.h"
 #include "hilink.h"
 
-#include "protocol_cover.h"
-#include "list_tool.h"
+#include "cloud_send.h"
+#include "local_send.h"
+#include "local_list.h"
+#include "cJSON.h"
 /* 设备类型定义 */
 typedef struct
 {
@@ -123,17 +125,17 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
         if (payload != NULL)
         {
             cJSON *root = cJSON_Parse(payload);
-            cJSON *val = cJSON_GetObjectItem(root, "on");
-            protocol_data.discoverMode = val->valueint;
-            if(val->valueint)
+            cJSON *val = cJSON_GetObjectItem(root, STR_ON);
+            g_SLocalControl.discoverMode = val->valueint;
+            if (val->valueint)
             {
-                write_cmd("Add", NULL,"120");
+                write_hanyar_cmd(ADD, NULL, "120");
             }
             else
             {
-                write_cmd("Add", NULL,"0");
+                write_hanyar_cmd(ADD, NULL, "0");
             }
-            
+
             free(root);
         }
     }
@@ -160,7 +162,7 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
     cJSON *root = cJSON_CreateObject();
     if (strcmp(gSvcInfo[0].svc_id, svcId) == 0)
     {
-        cJSON_AddNumberToObject(root, "on", protocol_data.discoverMode);
+        cJSON_AddNumberToObject(root, STR_ON, g_SLocalControl.discoverMode);
     }
     // else if (strcmp(gSvcInfo[1].svc_id, svcId) == 0)
     // {

@@ -63,7 +63,8 @@
 			"ifaddrs.h": "c",
 			"if.h": "c",
 			"string_view": "c",
-			"cerrno": "c"
+			"cerrno": "c",
+			"cloud_send.h": "c"
 		}
 	}
 }

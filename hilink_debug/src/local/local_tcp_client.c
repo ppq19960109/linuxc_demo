@@ -3,20 +3,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <netinet/ip.h> /* superset of previous */
+#include <netinet/ip.h>
 #include <arpa/inet.h>
 
 #include <signal.h>
 #include <time.h>
 
-#include "client.h"
-#include "protocol_cover.h"
+#include "local_tcp_client.h"
+#include "local_receive.h"
+#include "local_send.h"
 #include "socket.h"
 
 #define SERVER_PORT 7000 //7000
-
-#define RECVLEN 4096
-char tcpBuf[RECVLEN + 1];
 
 const char *heart =
     {"{ \
@@ -24,16 +22,40 @@ const char *heart =
     \"Period\":\"60\" \
     }"};
 
+void main_thread_signal_handler(int signal)
+{
+    printf("signal is %d\n", signal);
+    if (signal == SIGINT || signal == SIGQUIT || signal == SIGKILL || signal == SIGTERM)
+    {
+        local_restart_reFactory(false);
+        printf(" exit(0)\n");
+        exit(0);
+    }
+}
+void main_thread_set_signal()
+{
+    signal(SIGQUIT, main_thread_signal_handler);
+    signal(SIGKILL, main_thread_signal_handler);
+    signal(SIGTERM, main_thread_signal_handler);
+
+    struct sigaction act, oldact;
+    act.sa_handler = main_thread_signal_handler;
+    sigemptyset(&act.sa_mask);
+    // sigaddset(&act.sa_mask, SIGQUIT); //见注(1)
+    act.sa_flags = SA_RESETHAND | SA_NODEFER; //见注(2)
+    // act.sa_flags = 0; //见注(3)
+
+    sigaction(SIGINT, &act, &oldact);
+}
+
 void timer_thread(union sigval v)
 {
     printf("timer_thread function! %s\n", heart);
 }
 void timer_signal_handler(int signal)
 {
-    
     printf("timer_signal_handler function! %s\n", heart);
-    writeToHaryan(heart, protocol_data.socketfd, protocol_data.sendData, SENDTOLOCAL_SIZE);
-
+    write_haryan(heart, g_SLocalControl.socketfd, g_SLocalControl.sendData, SENDTOLOCAL_SIZE);
 }
 
 timer_t start_timer()
@@ -94,7 +116,8 @@ int net_client_srart()
 
 void *thread_hander(void *arg)
 {
-    protocol_data_t *pdata = ((protocol_data_t *)arg);
+    LocalControl_t *pdata = ((LocalControl_t *)arg);
+    char *tcpBuf = pdata->tcpBuf;
     int i;
     do
     {
@@ -102,18 +125,18 @@ void *thread_hander(void *arg)
         int readLen = 0;
         timer_t timerid = start_timer();
 
-        // write_cmd("Add", NULL,"120");
-        write_cmd("DevsInfo", NULL, NULL);
+        write_hanyar_cmd(DEVSINFO, NULL, NULL);
         while (1)
         {
             readLen = Recv(pdata->socketfd, tcpBuf, RECVLEN, 0);
             if (readLen == 0)
             {
-                log_debug("client close");
+                log_error("client close");
                 break;
             }
             else if (readLen < 0)
             {
+                log_error("Recv error:%d", readLen);
                 break;
             }
             else
@@ -125,14 +148,14 @@ void *thread_hander(void *arg)
                     for (i = 0; i < readLen; ++i)
                     {
                         if (tcpBuf[i] == 2)
-                            read_from_local(&tcpBuf[i + 1]);
+                            read_from_local(&tcpBuf[i + 1], &pdata->head);
                     }
                 }
                 else
                 {
                     tcpBuf[readLen] = '\0';
                     log_debug("%s", tcpBuf);
-                    read_from_local(tcpBuf);
+                    read_from_local(tcpBuf, &pdata->head);
                 }
             }
         }

@@ -12,10 +12,9 @@
 #include "hilink_profile_bridge.h"
 #include "hilink_profile_adapter.h"
 
-#include "hilink_cover.h"
-#include "list_hilink.h"
-#include "protocol_cover.h"
-#include "list_tool.h"
+#include "cloud_receive.h"
+#include "cloud_list.h"
+#include "local_list.h"
 
 #ifndef NULL
 #define NULL 0
@@ -38,7 +37,7 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
     {
         return -1;
     }
-    dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
+    dev_hilink_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
     if (dev == NULL)
     {
         return -1;
@@ -67,7 +66,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         return -1;
     }
 
-    dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
+    dev_hilink_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
     if (dev == NULL)
     {
         log_debug("HilinkGetBrgSvcInfo err");
@@ -103,7 +102,7 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
         return -1;
     }
 
-    return hilink_tolocal(sn, svcId, payload);
+    return cloud_tolocal(sn, svcId, payload);
 }
 
 /*
@@ -126,7 +125,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
         return -1;
     }
 
-    dev_hilink_t *dev = list_get_by_id_hilink(sn, &hilink_handle.node);
+    dev_hilink_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
     if (dev == NULL)
     {
         return -1;
@@ -169,9 +168,9 @@ int HILINK_GetBrgSubDevRoomInfo(const char *sn, char *roomId, unsigned int *room
     {
         return -1;
     }
-    char* name="1";
-    strcpy(roomId,name);
-    *roomIdLen=strlen(name)+1;
+    char *name = "1";
+    strcpy(roomId, name);
+    *roomIdLen = strlen(name) + 1;
     return 0;
 }
 
@@ -189,11 +188,10 @@ int HilinkDelBrgDev(const char *sn)
         return -1;
     }
     HilinkSyncBrgDevStatus(sn, DEV_RESTORE);
-    list_del_by_id_hilink(sn, &hilink_handle.node);
-    list_del_by_id(sn, &protocol_data.dev_list);
-    list_print_all_hilink(&hilink_handle.node);
-    list_print_all(&protocol_data.dev_list);
-    return hilink_delete(sn);
+    list_del_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+    list_del_by_id(sn, local_get_list_head(&g_SLocalControl));
+
+    return cloud_delete_device(sn);
 }
 
 /*

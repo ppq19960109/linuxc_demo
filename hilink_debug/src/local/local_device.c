@@ -1,39 +1,65 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "dev_private.h"
-#include "hilink_cover.h"
+#include "local_device.h"
+#include "cloud_send.h"
 
-char *dev_modeId[] = {"TS0001", "TS0002", "TS0003", "09223f", "HY0121", "HY0122", "HY0107", "HY0093", "HY0134", "HY0134", "HY0134", "HY0134"};
+static char *g_sLocalModel[] = {"TS0001", "TS0002", "TS0003", "09223f", "HY0121", "HY0122", "HY0107", "HY0093", "HY0134", "HY0134", "HY0134", "HY0134"};
+SAttrInfo g_SLocalModel = {
+    .attr = g_sLocalModel,
+    .attrLen = sizeof(g_sLocalModel) / sizeof(g_sLocalModel[0])};
 
-char *attr_HY0095[] = {"Switch", "LedEnable", "PowerOffProtection"};
-char *attr_HY0096[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection"};
-char *attr_HY0097[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection"};
+static char *g_sHY0095[] = {"Switch", "LedEnable", "PowerOffProtection"};
+static char *g_sHY0096[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection"};
+static char *g_sHY0097[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection"};
+static char *g_s09223f[] = {"ColorTemperature", "Luminance", "Switch"};
+static char *g_sHY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMode"};
+static char *g_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
+static char *g_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
+static char *g_sHY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
+static char *g_sHY0134[] = {"KeyFobValue", "SceName_", "Enable_", "Switch_", "WindSpeed_", "CurrentTemperature_1", "TargetTemperature_1", "WorkMode_1", "TargetTemperature_3"};
+static char *g_sHY0134_0[] = {"Switch_3", "TargetTemperature_3"};
+static char *g_sHY0134_1[] = {"Switch_1", "TargetTemperature_1", "WorkMode_1", "WindSpeed_1"};
+static char *g_sHY0134_2[] = {"Switch_2", "WindSpeed_2"};
+SAttrInfo g_SLocalAttr[] = {
+    {.attr = g_sHY0095,
+     .attrLen = sizeof(g_sHY0095) / sizeof(g_sHY0095[0])},
+    {.attr = g_sHY0096,
+     .attrLen = sizeof(g_sHY0096) / sizeof(g_sHY0096[0])},
+    {.attr = g_sHY0097,
+     .attrLen = sizeof(g_sHY0097) / sizeof(g_sHY0097[0])},
+    {.attr = g_s09223f,
+     .attrLen = sizeof(g_s09223f) / sizeof(g_s09223f[0])},
+    {.attr = g_sHY0121,
+     .attrLen = sizeof(g_sHY0121) / sizeof(g_sHY0121[0])},
+    {.attr = g_sHY0122,
+     .attrLen = sizeof(g_sHY0122) / sizeof(g_sHY0122[0])},
+    {.attr = g_sHY0107,
+     .attrLen = sizeof(g_sHY0107) / sizeof(g_sHY0107[0])},
+    {.attr = g_sHY0093,
+     .attrLen = sizeof(g_sHY0093) / sizeof(g_sHY0093[0])},
+    {.attr = g_sHY0134,
+     .attrLen = sizeof(g_sHY0134) / sizeof(g_sHY0134[0])},
+    {.attr = g_sHY0134_0,
+     .attrLen = sizeof(g_sHY0134_0) / sizeof(g_sHY0134_0[0])},
+    {.attr = g_sHY0134_1,
+     .attrLen = sizeof(g_sHY0134_1) / sizeof(g_sHY0134_1[0])},
+    {.attr = g_sHY0134_2,
+     .attrLen = sizeof(g_sHY0134_2) / sizeof(g_sHY0134_2[0])},
+};
 
-char *attr_09223f[] = {"ColorTemperature", "Luminance", "Switch"};
-
-char *attr_HY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMode"};
-char *attr_HY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
-char *attr_HY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
-
-char *attr_HY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
-
-char *attr_HY0134[] = {"KeyFobValue", "SceName_", "Enable_", "WindSpeed_", "CurrentTemperature_1", "TargetTemperature_1", "WorkMode_1", "TargetTemperature_3"};
-
-int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
+int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
 {
-    log_debug("dev_private_attribute\n");
-    int index, index_sub;
+    log_debug("local_attribute_update\n");
 
     cJSON *Key, *array_sub;
     char *out;
+    int array_size, cnt, index_sub;
 
-    int array_size, cnt;
     if (Data != NULL)
         array_size = cJSON_GetArraySize(Data);
 
-    index = str_search(dev_data->ModelId, dev_modeId, sizeof(dev_modeId) / sizeof(dev_modeId[0]));
+    int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
     switch (index)
     {
     case 0: //U2/天际系列：单键智能开关（HY0095）
@@ -50,9 +76,9 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             array_sub = cJSON_GetArrayItem(Data, cnt);
-            Key = cJSON_GetObjectItem(array_sub, "Key");
-            //---------------------------------------
-            index_sub = str_search(Key->valuestring, attr_HY0095, sizeof(attr_HY0095) / sizeof(attr_HY0095[0]));
+            Key = cJSON_GetObjectItem(array_sub, STR_KEY);
+
+            index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
 
             switch (index_sub)
             {
@@ -66,7 +92,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->PowerOffProtection;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -84,9 +110,9 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             array_sub = cJSON_GetArrayItem(Data, cnt);
-            Key = cJSON_GetObjectItem(array_sub, "Key");
-            //---------------------------------------
-            index_sub = str_search(Key->valuestring, attr_HY0096, sizeof(attr_HY0096) / POINTER_SIZE);
+            Key = cJSON_GetObjectItem(array_sub, STR_KEY);
+
+            index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
 
             switch (index_sub)
             {
@@ -103,7 +129,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->PowerOffProtection;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -121,9 +147,9 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             array_sub = cJSON_GetArrayItem(Data, cnt);
-            Key = cJSON_GetObjectItem(array_sub, "Key");
-            //---------------------------------------
-            index_sub = str_search(Key->valuestring, attr_HY0097, sizeof(attr_HY0097) / POINTER_SIZE);
+            Key = cJSON_GetObjectItem(array_sub, STR_KEY);
+
+            index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
 
             switch (index_sub)
             {
@@ -143,7 +169,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->PowerOffProtection;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -157,19 +183,19 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (Data == NULL)
             break;
         dev_09223f_t *dev = (dev_09223f_t *)dev_data->private;
-        index_sub = str_search(Key->valuestring, attr_09223f, sizeof(attr_09223f) / POINTER_SIZE);
+        index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             switch (index_sub)
             {
             case 0:
-                int_copy_from_json(array_sub, "Value", &dev->ColorTemperature);
+                int_copy_from_json(array_sub, STR_VALUE, &dev->ColorTemperature);
                 break;
             case 1:
-                char_copy_from_json(array_sub, "Value", &dev->Switch);
+                char_copy_from_json(array_sub, STR_VALUE, &dev->Switch);
                 break;
             case 2:
-                char_copy_from_json(array_sub, "Value", &dev->Luminance);
+                char_copy_from_json(array_sub, STR_VALUE, &dev->Luminance);
                 break;
             }
         }
@@ -185,7 +211,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (Data == NULL)
             break;
         dev_HY0121_t *dev = (dev_HY0121_t *)dev_data->private;
-        index_sub = str_search(Key->valuestring, attr_HY0121, sizeof(attr_HY0121) / POINTER_SIZE);
+        index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             switch (index_sub)
@@ -203,7 +229,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->KeyMode;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -217,7 +243,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (Data == NULL)
             break;
         dev_HY0122_t *dev = (dev_HY0122_t *)dev_data->private;
-        index_sub = str_search(Key->valuestring, attr_HY0122, sizeof(attr_HY0122) / POINTER_SIZE);
+        index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             switch (index_sub)
@@ -238,7 +264,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->KeyMode;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -252,7 +278,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (Data == NULL)
             break;
         dev_HY0107_t *dev = (dev_HY0107_t *)dev_data->private;
-        int index_sub = str_search(Key->valuestring, attr_HY0107, sizeof(attr_HY0107) / POINTER_SIZE);
+        int index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             switch (index_sub)
@@ -276,7 +302,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->KeyMode;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -290,7 +316,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
         if (Data == NULL)
             break;
         dev_HY0093_t *dev = (dev_HY0093_t *)dev_data->private;
-        index_sub = str_search(Key->valuestring, attr_HY0093, sizeof(attr_HY0093) / POINTER_SIZE);
+        index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             switch (index_sub)
@@ -308,7 +334,7 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->TamperAlarm;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
@@ -322,10 +348,16 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
             dev_data->private = malloc(sizeof(dev_HY0134_t));
             memset(dev_data->private, 0, sizeof(dev_HY0134_t));
         }
+
+        dev_HY0134_t *dev = (dev_HY0134_t *)dev_data->private;
+        dev->Switch[0] = 1;
+        dev->CurrentTemperature_1 = 14;
+        dev->TargetTemperature_1 = 28;
+        dev->WorkMode_1 = 2;
+        dev->WindSpeed[0] = 1;
         if (Data == NULL)
             break;
-        dev_HY0134_t *dev = (dev_HY0134_t *)dev_data->private;
-        index_sub = strn_search(Key->valuestring, attr_HY0134, sizeof(attr_HY0134) / POINTER_SIZE, 7);
+        index_sub = strn_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen, 7);
         for (cnt = 0; cnt < array_size; ++cnt)
         {
             switch (index_sub)
@@ -334,38 +366,39 @@ int dev_private_attribute(dev_data_t *dev_data, cJSON *Data)
                 out = &dev->KeyFobValue;
                 break;
             case 1:
-                out = dev->SceName[atoi(&Key->valuestring[8] - 1)];
-                str_copy_from_json(array_sub, "Value", out);
+                out = dev->SceName[atoi(&Key->valuestring[8]) - 1];
+                str_copy_from_json(array_sub, STR_VALUE, out);
                 break;
             case 2:
-                out = &dev->Enable[atoi(&Key->valuestring[7] - 1)];
+                out = &dev->Enable[atoi(&Key->valuestring[7]) - 1];
                 break;
             case 3:
-                out = &dev->Switch[atoi(&Key->valuestring[10] - 1)];
+                out = &dev->Switch[atoi(&Key->valuestring[7]) - 1];
                 break;
             case 4:
-                out = &dev->CurrentTemperature_1;
+                out = &dev->WindSpeed[atoi(&Key->valuestring[10]) - 1];
                 break;
             case 5:
-                out = &dev->TargetTemperature_1;
+                out = &dev->CurrentTemperature_1;
                 break;
             case 6:
-                out = &dev->WorkMode_1;
+                out = &dev->TargetTemperature_1;
                 break;
             case 7:
+                out = &dev->WorkMode_1;
+                break;
+            case 8:
                 out = &dev->TargetTemperature_3;
                 break;
             }
-            char_copy_from_json(array_sub, "Value", out);
+            char_copy_from_json(array_sub, STR_VALUE, out);
         }
     }
     break;
     default:
-    {
         log_error("hanyar modelId not exist");
-    }
         return -1;
     }
 
-    return local_tohilink(dev_data, index);
+    return local_tohilink(dev_data, index, cloud_get_list_head(&g_SCloudControl));
 }

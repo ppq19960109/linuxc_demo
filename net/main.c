@@ -1,6 +1,6 @@
 #include "log.h"
 #include "server.h"
-#include "client.h"
+#include "local_tcp_client.h"
 
 #include <math.h>
 
