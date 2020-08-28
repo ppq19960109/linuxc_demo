@@ -40,10 +40,10 @@ extern "C"
 
     typedef struct
     {
-        char GatewayId[16];
+        char GatewayId[20];
         char DeviceType[16];
-        char DeviceId[18];
-        char ModelId[16];
+        char DeviceId[20];
+        char ModelId[24];
         char Version[16];
         char Secret[40];
         char Online;
@@ -54,7 +54,7 @@ extern "C"
 
     struct local_data_t
     {
-        char DeviceId[18];
+        char DeviceId[20];
         char ModelId[16];
         char Key[24];
         char Value[16];
@@ -72,12 +72,19 @@ extern "C"
     //-----------------------------------------------
     typedef struct
     {
-        char discoverMode;
+        char PermitJoining;
+        char FirmwareVersion[8];
+        char SoftVersion[8];
+    } DevGateway_t;
+
+    typedef struct
+    {
         char sendData[SENDTOLOCAL_SIZE];
         char tcpBuf[RECVLEN + 1];
         int socketfd;
         pthread_t pid;
         struct list_head head;
+        DevGateway_t devGateway;
     } LocalControl_t;
 
     extern LocalControl_t g_SLocalControl;

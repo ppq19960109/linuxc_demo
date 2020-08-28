@@ -44,7 +44,7 @@ int main(void)
     cloud_control_init(&g_SCloudControl);
     main_thread_set_signal();
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 3; i++)
         read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
 
     while (1)

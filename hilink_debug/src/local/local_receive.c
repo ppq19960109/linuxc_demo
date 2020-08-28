@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include "local_send.h"
 #include "local_receive.h"
 #include "local_list.h"
 #include "local_tcp_client.h"
@@ -18,9 +19,9 @@ static char *s_typeReport[] = {
     "OnOff",
     "Attribute",
     "DevAttri",
+    "Event",
     "DevList",
     "DevsInfo",
-    "Event",
     "ReFactory",
     "CooInfo",
     "NeighborInfo",
@@ -61,19 +62,19 @@ const char *report_json[] = {
       }\
     ]\
     }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"3234567876543673\",\
-              \"ModelId\":\"HY0107\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"3234567876543673\",\
+    //           \"ModelId\":\"HY0107\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
     "{\
        \"Command\":\"Report\",\
        \"FrameNumber\":\"00\",\
@@ -126,39 +127,38 @@ const char *report_json[] = {
     //   }\
     // ]\
     // }@",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"5234564376543432\",\
-              \"ModelId\":\"HY0121\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }4",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"523455676543432\",\
-              \"ModelId\":\"HY0122\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }12",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"5234564376543432\",\
+    //           \"ModelId\":\"HY0121\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }4",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"523455676543432\",\
+    //           \"ModelId\":\"HY0122\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }12",
 };
 
 LocalControl_t g_SLocalControl;
 
 void local_control_init(LocalControl_t *localControl)
 {
-    localControl->discoverMode = 0;
     INIT_LIST_HEAD(&localControl->head);
     localControl->pid = net_client(localControl);
 }
@@ -227,7 +227,7 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
             if (strcmp(cJSON_GetObjectItem(array_sub, STR_MODELID)->valuestring, dev_buf->ModelId))
             {
                 log_error("DeviceId identical,but ModelId inequality");
-                break;
+                continue;
             }
             str_copy_from_json(array_sub, STR_VERSION, dev_buf->Version);
             str_copy_from_json(array_sub, STR_ONLINE, &dev_buf->Online);
@@ -238,6 +238,27 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
             HilinkSyncBrgDevStatus(dev_buf->DeviceId, dev_buf->Online);
         }
     }
+}
+
+int set_hostGateway(const char *DeviceId, cJSON *Data)
+{
+    cJSON *Key, *array_sub;
+    if (strcmp(STR_HOST_GATEWAYID, DeviceId))
+        return -1;
+    int array_size = cJSON_GetArraySize(Data);
+    for (int cnt = 0; cnt < array_size; ++cnt)
+    {
+        array_sub = cJSON_GetArrayItem(Data, cnt);
+        Key = cJSON_GetObjectItem(array_sub, STR_KEY);
+        if (Key == NULL)
+            continue;
+        if (strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
+        {
+            char_copy_from_json(array_sub, STR_VALUE, &g_SLocalControl.devGateway.PermitJoining);
+            local_hilink_upload_int("switch", STR_ON, g_SLocalControl.devGateway.PermitJoining);
+        }
+    }
+    return 0;
 }
 
 int read_from_local(const char *json, struct list_head *localNode)
@@ -313,6 +334,7 @@ int read_from_local(const char *json, struct list_head *localNode)
 
             if (local_attribute_update(dev_buf, NULL) != 0)
             {
+                log_error("local_attribute_update error");
                 free(dev_buf);
                 break;
             }
@@ -348,6 +370,8 @@ int read_from_local(const char *json, struct list_head *localNode)
     }
     break;
     case 3: //设备属性上报：”Attribute”；
+    case 4: //设备全部属性上报：”DevAttri”;
+    case 5: //设备事件上报：”Event”；恢复出厂设置上报：”
     {
         // log_debug("设备属性上报：”Attribute”；");
 
@@ -364,48 +388,24 @@ int read_from_local(const char *json, struct list_head *localNode)
         }
         else
         {
-            if (strcmp(STR_HOST_GATEWAYID, dev_data.DeviceId) == 0)
-            {
-                cJSON *Key = cJSON_GetObjectItem(array_sub, STR_KEY);
-                if (Key != NULL && strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
-                {
-                    char_copy_from_json(array_sub, STR_VALUE, &g_SLocalControl.discoverMode);
-
-                    local_hilink_upload_int("switch", STR_ON, g_SLocalControl.discoverMode);
-                }
-            }
-            log_error("sub device not exist");
+            if (set_hostGateway(dev_data.DeviceId, Data) < 0)
+                log_error("sub device not exist");
         }
     }
     break;
-    case 4: //设备全部属性上报：”DevAttri”;
-    {
-    }
-    break;
-    case 5: //设备列表上报：”DevList”
+    case 6: //设备列表上报：”DevList”
     {
         local_load_device_info(root, Data, STR_PARAMS, NULL);
     }
     break;
-    case 6: //获取设备列表详细信息(网关指令)DevsInfo
+    case 7: //获取设备列表详细信息(网关指令)DevsInfo
     {
         local_load_device_info(root, Data, STR_PARAMS, localNode);
     }
     break;
-    case 7: //设备事件上报：”Event”；恢复出厂设置上报：”
-    {
-        dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
-        if (dev_buf != NULL)
-        {
-            local_attribute_update(dev_buf, Data);
-        }
-    }
-    break;
     case 8: //恢复出厂设置上报：”ReFactory”；
     {
-        list_del_all(localNode);
-        list_del_all_hilink(cloud_get_list_head(&g_SCloudControl));
-        hilink_restore_factory_settings();
+        local_restart_reFactory(INT_REFACTORY);
     }
     break;
     case 9: //COO网络信息上报：”CooInfo”；

@@ -126,14 +126,14 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
         {
             cJSON *root = cJSON_Parse(payload);
             cJSON *val = cJSON_GetObjectItem(root, STR_ON);
-            g_SLocalControl.discoverMode = val->valueint;
+            // g_SLocalControl.discoverMode = val->valueint;
             if (val->valueint)
             {
-                write_hanyar_cmd(ADD, NULL, "120");
+                write_hanyar_cmd(STR_ADD, NULL, STR_NET_OPEN);
             }
             else
             {
-                write_hanyar_cmd(ADD, NULL, "0");
+                write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
             }
 
             free(root);
@@ -162,7 +162,7 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
     cJSON *root = cJSON_CreateObject();
     if (strcmp(gSvcInfo[0].svc_id, svcId) == 0)
     {
-        cJSON_AddNumberToObject(root, STR_ON, g_SLocalControl.discoverMode);
+        cJSON_AddNumberToObject(root, STR_ON, g_SLocalControl.devGateway.PermitJoining);
     }
     // else if (strcmp(gSvcInfo[1].svc_id, svcId) == 0)
     // {

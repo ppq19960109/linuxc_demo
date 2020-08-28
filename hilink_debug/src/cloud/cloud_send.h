@@ -38,12 +38,12 @@ typedef struct
 
 extern CloudControl_t g_SCloudControl;
 
-extern SAttrInfo g_SCloudAttr[];
+extern const SAttrInfo g_SCloudAttr[];
 
 void cloud_control_init(CloudControl_t *cloudControl);
 void cloud_control_destory(CloudControl_t *cloudControl);
 struct list_head *cloud_get_list_head(CloudControl_t *cloudControl);
 
-int local_tohilink(dev_data_t *src,const int index, struct list_head *cloudNode);
+int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode);
 
 #endif

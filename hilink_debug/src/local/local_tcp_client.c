@@ -16,11 +16,7 @@
 
 #define SERVER_PORT 7000 //7000
 
-const char *heart =
-    {"{ \
-    \"Command\":\"TcpBeatHeart\", \
-    \"Period\":\"60\" \
-    }"};
+const char *heart ={"{\"Command\":\"TcpBeatHeart\",\"Period\":\"60\"}"};
 
 void main_thread_signal_handler(int signal)
 {
@@ -125,7 +121,7 @@ void *thread_hander(void *arg)
         int readLen = 0;
         timer_t timerid = start_timer();
 
-        write_hanyar_cmd(DEVSINFO, NULL, NULL);
+        write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
         while (1)
         {
             readLen = Recv(pdata->socketfd, tcpBuf, RECVLEN, 0);

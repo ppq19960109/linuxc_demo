@@ -8,10 +8,16 @@ extern "C"
 #include <stdbool.h>
 #include "local_receive.h"
 
-#define ADD "Add"
-#define DEVSINFO "DevsInfo"
-#define DEVATTRI "DevAttri"
-#define REFACTORY "ReFactory"
+#define STR_ADD "Add"
+#define STR_DEVSINFO "DevsInfo"
+#define STR_DEVATTRI "DevAttri"
+#define STR_REFACTORY "ReFactory"
+
+#define STR_NET_OPEN "120"
+#define STR_NET_CLOSE "0"
+
+#define INT_REFACTORY 1
+#define INT_RESTART 0
 
     int write_haryan(const char *data, int socketfd, char *sendBuf, int bufLen);
     int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value);

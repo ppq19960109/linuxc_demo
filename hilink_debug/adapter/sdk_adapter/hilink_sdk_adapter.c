@@ -73,7 +73,7 @@ void hilink_notify_devstatus(int status)
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
 
-        local_restart_reFactory(true);
+        local_restart_reFactory(INT_REFACTORY);
 
         break;
     case HILINK_REVOKE_FLAG_SET:
@@ -102,7 +102,7 @@ int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart");
 
-    local_restart_reFactory(false);
+    local_restart_reFactory(INT_RESTART);
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {

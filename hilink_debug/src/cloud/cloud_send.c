@@ -12,20 +12,16 @@
 static char *s_cloudHY0095[] = {"switch1", "indicator"};
 static char *s_cloudHY0096[] = {"switch1", "switch2", "indicator"};
 static char *s_cloudHY0097[] = {"switch1", "switch2", "switch3", "indicator"};
-
 static char *s_cloud09223f[] = {"cct", STR_BRIGHTNESS, "switch"};
-
 static char *s_cloudHY0121[] = {"switch", "indicator"};
 static char *s_cloudHY0122[] = {"switch1", "switch2", "indicator", "switch"};
 static char *s_cloudHY0107[] = {"switch1", "switch2", "switch3", "indicator", "switch"}; //, "relaystatus", "switchtype"
-
 static char *s_cloudHY0093[] = {"doorEvent", STR_STATUS};
-
 static char *s_cloudHY0134[] = {"scene", "button1", "button2", "button3", "button4", "button5", "button6"}; //场景面板2ANF
 static char *s_cloudHY0134_0[] = {"switch", "temperature"};                                                 //地暖 2ANK
 static char *s_cloudHY0134_1[] = {"switch", "temperature", STR_MODE, "fan"};                                //空调2ANJ
 static char *s_cloudHY0134_2[] = {"switch", "fan"};                                                         //新风 2ANI
-SAttrInfo g_SCloudAttr[] = {
+const SAttrInfo g_SCloudAttr[] = {
     {.attr = s_cloudHY0095,
      .attrLen = sizeof(s_cloudHY0095) / sizeof(s_cloudHY0095[0])},
     {.attr = s_cloudHY0096,
@@ -59,12 +55,11 @@ static char *s_cloud2AOZ[] = {"2AOZ", "IHC1238HW", "064"};
 static char *s_cloud2AOY[] = {"2AOY", "IHC1239HW", "064"};
 static char *s_cloud2ANO[] = {"2ANO", "IHC1240HW", "064"};
 static char *s_cloud2AN8[] = {"2AN8", "IHG5201HW", "018"};
-
 static char *s_cloud2ANF[] = {"2ANF", "U2-86QMP-Z02(HW)", "075"};
 static char *s_cloud2ANK[] = {"2ANK", "U2-86QMP-Z02(HW)", "012"};
 static char *s_cloud2ANJ[] = {"2ANJ", "U2-86QMP-Z02(HW)", "012"};
 static char *s_cloud2ANI[] = {"2ANI", "U2-86QMP-Z02(HW)", "030"};
-static SAttrInfo g_SCloudProdId[] = {
+static const SAttrInfo g_SCloudProdId[] = {
     {.attr = s_cloud2AP1},
     {.attr = s_cloud2AP0},
     {.attr = s_cloud2AN9},
@@ -98,7 +93,7 @@ struct list_head *cloud_get_list_head(CloudControl_t *cloudControl)
 
 void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
 {
-    strcpy(brgDevInfo->prodId, PRODUCT_ID);
+    // strcpy(brgDevInfo->prodId, PRODUCT_ID);
     strcpy(brgDevInfo->hiv, "1.0.0");
     strcpy(brgDevInfo->fwv, "1.0.0");
     strcpy(brgDevInfo->hwv, "1.0.0");
@@ -106,11 +101,10 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
     brgDevInfo->protType = PROTOCOL_TYPE;
     strcpy(brgDevInfo->manu, MANUAFACTURER);
 
-    // strcpy(brgDevInfo->prodId, "1011");
     // strcpy(brgDevInfo->sn, "12345678");
-    strcpy(brgDevInfo->model, DEVICE_MODEL);
-    strcpy(brgDevInfo->devType, DEVICE_TYPE);
-    strcpy(brgDevInfo->mac, "123456789012");
+    // strcpy(brgDevInfo->model, DEVICE_MODEL);
+    // strcpy(brgDevInfo->devType, DEVICE_TYPE);
+    strcpy(brgDevInfo->mac, "000000000000");
 }
 
 int modSvc(const char *sn, const char *svcId, char **svcVal, char *json)

@@ -94,8 +94,8 @@ extern "C"
         char TargetTemperature_3;
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
 
-    extern SAttrInfo g_SLocalModel;
-    extern SAttrInfo g_SLocalAttr[];
+    extern const SAttrInfo g_SLocalModel;
+    extern const SAttrInfo g_SLocalAttr[];
 
     int local_attribute_update(dev_data_t *dev, cJSON *Data);
 

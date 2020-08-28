@@ -14,8 +14,8 @@
 #include "hilink.h"
 #include "hilink_softap_adapter.h"
 
-static char *s_hanyarCmd[] = {"Add", "DevsInfo", "DevAttri", "ReFactory"};
-SAttrInfo g_SHamyarCmd = {
+static char *s_hanyarCmd[] = {STR_ADD, STR_DEVSINFO, STR_DEVATTRI, STR_REFACTORY};
+const SAttrInfo g_SHamyarCmd = {
     .attr = s_hanyarCmd,
     .attrLen = sizeof(s_hanyarCmd) / sizeof(s_hanyarCmd[0])};
 
@@ -28,7 +28,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
     case 0:
     {
         local_cmd.FrameNumber = 0;
-        strcpy(local_cmd.Type, ADD);
+        strcpy(local_cmd.Type, STR_ADD);
         strcpy(local_cmd.Data.DeviceId, STR_HOST_GATEWAYID);
         strcpy(local_cmd.Data.Key, "Time");
         strcpy(local_cmd.Data.Value, Value);
@@ -37,15 +37,15 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
     case 1:
     {
         local_cmd.FrameNumber = 0;
-        strcpy(local_cmd.Type, DEVSINFO);
+        strcpy(local_cmd.Type, STR_DEVSINFO);
         strcpy(local_cmd.Data.DeviceId, STR_HOST_GATEWAYID);
-        strcpy(local_cmd.Data.Key, DEVSINFO);
+        strcpy(local_cmd.Data.Key, STR_DEVSINFO);
     }
     break;
     case 2:
     {
         local_cmd.FrameNumber = 0;
-        strcpy(local_cmd.Type, DEVATTRI);
+        strcpy(local_cmd.Type, STR_DEVATTRI);
         strcpy(local_cmd.Data.DeviceId, DeviceId);
         strcpy(local_cmd.Data.Key, "All");
     }
@@ -53,7 +53,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
     case 3:
     {
         local_cmd.FrameNumber = 0;
-        strcpy(local_cmd.Type, REFACTORY);
+        strcpy(local_cmd.Type, STR_REFACTORY);
     }
     break;
     default:
@@ -85,6 +85,11 @@ int write_haryan(const char *data, int socketfd, char *sendBuf, int bufLen)
         if (socketfd != 0)
         {
             int ret = Write(socketfd, sendBuf, datalen + 3);
+            for (int i = 0; i < datalen + 3; ++i)
+            {
+                printf("%x ", sendBuf[i]);
+            }
+            printf("\n");
             if (ret < 0)
             {
                 log_error("write_haryan error ret:%d,%s", ret, strerror(errno));
@@ -141,16 +146,16 @@ fail:
 
 void local_restart_reFactory(int index)
 {
-    write_hanyar_cmd(ADD, NULL, "0");
+    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
     if (index)
     {
+        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
         list_del_all(local_get_list_head(&g_SLocalControl));
         cloud_control_destory(&g_SCloudControl);
         hilink_restore_factory_settings();
     }
     else
     {
-        write_hanyar_cmd(REFACTORY, NULL, NULL);
         cloud_control_destory(&g_SCloudControl);
         local_control_destory(&g_SLocalControl);
         HILINK_StopSoftAp();
