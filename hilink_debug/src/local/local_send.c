@@ -7,12 +7,12 @@
 #include "local_device.h"
 #include "cloud_send.h"
 #include "local_list.h"
+#include "local_receive.h"
 
 #include "socket.h"
 #include "tool.h"
 
-#include "hilink.h"
-#include "hilink_softap_adapter.h"
+#include "uv_main.h"
 
 static char *s_hanyarCmd[] = {STR_ADD, STR_DEVSINFO, STR_DEVATTRI, STR_REFACTORY};
 const SAttrInfo g_SHamyarCmd = {
@@ -63,39 +63,39 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
     int ret = write_to_local(&local_cmd, &g_SLocalControl);
     if (ret < 0)
     {
-        log_error("write_net_access error");
+        log_error("write_net_access error\n");
     }
     return ret;
 }
 
-int write_haryan(const char *data, int socketfd, char *sendBuf, int bufLen)
+int write_haryan(const char *data, int dataLen)
 {
-    if (socketfd == 0)
-    {
-        log_error("socketfd not exist");
-        return -1;
-    }
-    int datalen = strlen(data);
-    if (datalen + 3 <= bufLen)
+    int ret;
+    char *sendBuf = g_SLocalControl.sendData;
+    if (dataLen + 3 <= SENDTOLOCAL_SIZE)
     {
         sendBuf[0] = 0x02;
         strcpy(&sendBuf[1], data);
-        sendBuf[datalen + 1] = 0x03;
-        sendBuf[datalen + 2] = 0x00;
-        if (socketfd != 0)
+        sendBuf[dataLen + 1] = 0x03;
+        sendBuf[dataLen + 2] = 0x00;
+
+#ifndef USE_LIBUV
+        if (g_SLocalControl.socketfd == 0)
         {
-            int ret = Write(socketfd, sendBuf, datalen + 3);
-            for (int i = 0; i < datalen + 3; ++i)
-            {
-                printf("%x ", sendBuf[i]);
-            }
-            printf("\n");
-            if (ret < 0)
-            {
-                log_error("write_haryan error ret:%d,%s", ret, strerror(errno));
-            }
-            return ret;
+            log_error("socketfd is null\n");
+            return -1;
         }
+        ret = Write(g_SLocalControl.socketfd, sendBuf, dataLen + 3);
+#else
+        ret = client_write(sendBuf, dataLen + 3);
+#endif
+        // for (int i = 0; i < dataLen + 3; ++i)
+        // {
+        //     printf("%x ", sendBuf[i]);
+        // }
+        // printf("\n");
+        // log_info("write ret:%d\n", ret);
+        return ret;
     }
     return -1;
 }
@@ -132,9 +132,9 @@ int write_to_local(void *ptr, LocalControl_t *localControl)
     cJSON_AddItemToArray(DataArray, arrayItem);
 
     char *json = cJSON_PrintUnformatted(root);
-    log_info("send json:%s", json);
+    log_info("send json:%s\n", json);
 
-    int ret = write_haryan(json, localControl->socketfd, localControl->sendData, SENDTOLOCAL_SIZE);
+    int ret = write_haryan(json, strlen(json));
 
     free(json);
     free(root);
@@ -142,22 +142,4 @@ int write_to_local(void *ptr, LocalControl_t *localControl)
 fail:
     free(root);
     return -1;
-}
-
-void local_restart_reFactory(int index)
-{
-    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-    if (index)
-    {
-        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
-        list_del_all(local_get_list_head(&g_SLocalControl));
-        cloud_control_destory(&g_SCloudControl);
-        hilink_restore_factory_settings();
-    }
-    else
-    {
-        cloud_control_destory(&g_SCloudControl);
-        local_control_destory(&g_SLocalControl);
-        HILINK_StopSoftAp();
-    }
 }

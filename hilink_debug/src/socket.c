@@ -61,7 +61,7 @@ int Connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     if (connect(sockfd, addr, addrlen) < 0)
     {
-        perr_exit("connect error");
+        perr_exit("connect error\n");
         return -1;
     }
 
@@ -79,7 +79,7 @@ again:
         if (errno == EINTR || errno == ECONNABORTED)
             goto again;
         else
-            perr_exit("accept error");
+            perr_exit("accept error\n");
     }
     return ret;
 }
@@ -91,7 +91,7 @@ int Close(int fd)
     }
     int n;
     if ((n = close(fd)) == -1)
-        perr_exit("close error");
+        perr_exit("close error\n");
 
     return n;
 }
@@ -204,14 +204,14 @@ int setNonBlock(int sockfd)
     opt = fcntl(sockfd, F_GETFL);
     if (opt < 0)
     {
-        printf("fcntl(sock,GETFL) failed");
+        printf("fcntl(sock,GETFL) failed\n");
         return -1;
     }
 
     opt = opt | O_NONBLOCK;
     if (fcntl(sockfd, F_SETFL, opt) < 0)
     {
-        printf("fcntl(sock,SETFL,opts) failed");
+        printf("fcntl(sock,SETFL,opts) failed\n");
         return -1;
     }
 

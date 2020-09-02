@@ -39,7 +39,7 @@ int HilinkGetMcuVersion(char *version, unsigned int inLen, unsigned int *outLen)
 
     strncpy(version, OTA_VERSION, inLen);
     *outLen = strlen(OTA_VERSION) + 1;
-    log_debug("HilinkGetMcuVersion %s ,%d", version, *outLen);
+    log_debug("HilinkGetMcuVersion %s ,%d\n", version, *outLen);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }
@@ -63,11 +63,11 @@ int HilinkOtaStartProcess(int type)
 
     if (type == UPDATE_TYPE_MANUAL)
     {
-        log_debug("HilinkOtaStartProcess UPDATE_TYPE_MANUAL %d", type);
+        log_debug("HilinkOtaStartProcess UPDATE_TYPE_MANUAL %d\n", type);
     }
     else
     {
-        log_debug("HilinkOtaStartProcess UPDATE_TYPE_AUTO %d", type);
+        log_debug("HilinkOtaStartProcess UPDATE_TYPE_AUTO %d\n", type);
     }
 
     /* 厂商实现此接口 */
@@ -89,7 +89,7 @@ int HilinkOtaStartProcess(int type)
  */
 int HilinkOtaEndProcess(int status)
 {
-    log_debug("HilinkOtaEndProcess status:%d", status);
+    log_debug("HilinkOtaEndProcess status:%d\n", status);
     /* 厂商实现此接口 */
     if (status != 100)
         return -1;
@@ -119,7 +119,7 @@ int HilinkGetRebootFlag(void)
     //--------------------------
     time_t tm = time(NULL);
     struct tm *localtm = localtime(&tm);
-    log_debug("HilinkGetRebootFlag time:%s %d", asctime(localtm), localtm->tm_hour);
+    log_debug("HilinkGetRebootFlag time:%s %d\n", asctime(localtm), localtm->tm_hour);
     if (localtm->tm_hour < 1 || localtm->tm_hour > 5)
         return MODULE_CANNOT_REBOOT;
     //--------------------------
@@ -146,7 +146,7 @@ int HilinkGetRebootFlag(void)
  */
 int HilinkNotifyOtaStatus(int flag, unsigned int len, unsigned int type)
 {
-    log_debug("HilinkNotifyOtaStatus flag:%d len:%d type:%d", flag, len, type);
+    log_debug("HilinkNotifyOtaStatus flag:%d len:%d type:%d\n", flag, len, type);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }
@@ -162,7 +162,7 @@ int HilinkNotifyOtaStatus(int flag, unsigned int len, unsigned int type)
  */
 int HilinkNotifyOtaData(const unsigned char *data, unsigned int len, unsigned int offset)
 {
-    log_debug("HilinkNotifyOtaData len:%d", len);
+    log_debug("HilinkNotifyOtaData len:%d\n", len);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }
@@ -182,7 +182,7 @@ int HILINK_GetUpdateFilePath(char *filePath, unsigned int len)
 {
 
     strcpy(filePath, UPDATE_PATH_ALL);
-    log_debug("HILINK_GetUpdateFilePath:%s len:%d", filePath, len);
+    log_debug("HILINK_GetUpdateFilePath:%s len:%d\n", filePath, len);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }
@@ -194,7 +194,7 @@ int HILINK_GetUpdateFilePath(char *filePath, unsigned int len)
  */
 unsigned int HILINK_GetMaxUpdateFileSize(void)
 {
-    log_debug("HILINK_GetMaxUpdateFileSize");
+    log_debug("HILINK_GetMaxUpdateFileSize\n");
     /* 厂商实现此接口 */
     return 5 * 1024 * 1024;
 }
@@ -210,18 +210,10 @@ unsigned int HILINK_GetMaxUpdateFileSize(void)
  */
 int HILINK_StartSoftwareIntall(void)
 {
-    log_debug("HILINK_StartSoftwareIntall");
+    log_debug("HILINK_StartSoftwareIntall\n");
     system("chmod 777 " UPDATE_PATH_ALL);
     //test
     system("cp -rf /userdata/nfs/upgrade.bin " UPDATE_PATH);
-
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, "bootTime", 60);
-    cJSON_AddNumberToObject(root, "progress", 100);
-    char *json = cJSON_PrintUnformatted(root);
-    hilink_report_char_state("update", json, strlen(json + 1), pthread_self());
-    free(json);
-    free(root);
 
     hilink_process_before_restart(1);
     system("cd " UPDATE_PATH ";./" UPDATE_FILE " &");
@@ -237,7 +229,7 @@ int HILINK_StartSoftwareIntall(void)
 int HILINK_GetBrgSubDevVersion(const char *proId, unsigned int proIdLen,
                                char *version, unsigned int versionLen)
 {
-    log_debug("HILINK_GetBrgSubDevVersion proId:%s,version:%s", proId, version);
+    log_debug("HILINK_GetBrgSubDevVersion proId:%s,version:%s\n", proId, version);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }
@@ -252,7 +244,7 @@ int HILINK_GetBrgSubDevVersion(const char *proId, unsigned int proIdLen,
 int HILINK_NotifyBrgSubDevOtaData(const char *proId, unsigned int proIdLen,
                                   const unsigned char *data, unsigned int len, unsigned int offset)
 {
-    log_debug("HILINK_NotifyBrgSubDevOtaData proId:%s,data len:%d", proId, len);
+    log_debug("HILINK_NotifyBrgSubDevOtaData proId:%s,data len:%d\n", proId, len);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }
@@ -277,7 +269,7 @@ int HILINK_NotifyBrgSubDevOtaData(const char *proId, unsigned int proIdLen,
 int HILINK_NotifyBrgSubDevOtaStatus(const char *proId, unsigned int proIdLen, int flag,
                                     unsigned int len, unsigned int type)
 {
-    log_debug("HILINK_NotifyBrgSubDevOtaStatus proId:%s,data len:%d", proId, len);
+    log_debug("HILINK_NotifyBrgSubDevOtaStatus proId:%s,data len:%d\n", proId, len);
     /* 厂商实现此接口 */
     return RETURN_OK;
 }

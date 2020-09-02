@@ -70,7 +70,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
     int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
     if (index < 0)
     {
-        log_error("local ModelId not exist:%s",dev_data->ModelId);
+        log_error("local ModelId not exist:%s\n",dev_data->ModelId);
         return -1;
     }
     if (dev_data->private == NULL)
@@ -309,7 +309,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         break;
         default:
             free(dev_data->private);
-            log_error("hanyar modelId not exist");
+            log_error("hanyar modelId not exist\n");
             return -1;
         }
         char_copy_from_json(array_sub, STR_VALUE, out);

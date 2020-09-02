@@ -76,30 +76,30 @@ void net_server_input()
             {
                 memset(buf, 0, sizeof(buf));
 
-                scanf("%s", buf);
-                if(tcp_is_connected(clientfd)==0)
-                    break;
-                readLen = strlen(buf);
-                
-                readLen =write(clientfd, buf, readLen);
-                printf("Write:%s len:%d\n", buf, readLen);
-
-                
-
-                // readLen = read(clientfd, buf, sizeof(buf));
-                // printf("Read:%s len:%d\n", buf, readLen);
-                // if (readLen == 0)
-                // {
-                //     printf("client close");
+                // scanf("%s", buf);
+                // if(tcp_is_connected(clientfd)==0)
                 //     break;
-                // }
-                // else if (readLen < 0)
-                // {
-                // }
-                // else
-                // {
-                //     write(clientfd, buf, readLen);
-                // }
+                // readLen = strlen(buf);
+                
+                // readLen =write(clientfd, buf, readLen);
+                // printf("Write:%s len:%d\n", buf, readLen);
+
+                
+
+                readLen = read(clientfd, buf, sizeof(buf));
+                printf("Read:%s len:%d\n", buf, readLen);
+                if (readLen == 0)
+                {
+                    printf("client close");
+                    break;
+                }
+                else if (readLen < 0)
+                {
+                }
+                else
+                {
+                    write(clientfd, buf, readLen);
+                }
             }
         }
         else

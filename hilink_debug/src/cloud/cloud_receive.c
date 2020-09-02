@@ -6,9 +6,13 @@
 #include "cloud_send.h"
 #include "cloud_receive.h"
 #include "local_send.h"
+#include "local_list.h"
 #include "local_device.h"
 
 #include "tool.h"
+
+#include "hilink.h"
+#include "hilink_softap_adapter.h"
 
 static char *g_sCloudModel[] = {"2AP1", "2AP0", "2AN9", "2AN7", "2AOZ", "2AOY", "2ANO", "2AN8", "2ANF", "2ANK", "2ANJ", "2ANI"};
 //单键智能开关 双键智能开关 三键智能开关 DLT液晶调光器 1路智能开关模块 2路智能开关模块 3路智能开关模块 门磁传感器  智镜:场景面板 地暖 空调 新风
@@ -214,4 +218,22 @@ int cloud_delete_device(const char *sn)
     strcpy(out.Data.DeviceId, sn);
 
     return write_to_local(&out, &g_SLocalControl);
+}
+
+void cloud_restart_reFactory(int index)
+{
+    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
+    if (index)
+    {
+        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
+        list_del_all(local_get_list_head(&g_SLocalControl));
+        cloud_control_destory(&g_SCloudControl);
+        hilink_restore_factory_settings();
+    }
+    else
+    {
+        cloud_control_destory(&g_SCloudControl);
+        local_control_destory(&g_SLocalControl);
+        HILINK_StopSoftAp();
+    }
 }

@@ -1,0 +1,12 @@
+prefix=/home/ppq/tmp/libuv-v1.39.0/_install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libuv
+Version: 1.39.0
+Description: multi-platform support library with a focus on asynchronous I/O.
+URL: http://libuv.org/
+
+Libs: -L${libdir} -luv -ldl  
+Cflags: -I${includedir}

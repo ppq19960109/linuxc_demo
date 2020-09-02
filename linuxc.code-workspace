@@ -64,7 +64,8 @@
 			"if.h": "c",
 			"string_view": "c",
 			"cerrno": "c",
-			"cloud_send.h": "c"
+			"cloud_send.h": "c",
+			"ratio": "c"
 		}
 	}
 }

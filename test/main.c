@@ -14,6 +14,8 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 
+#include <stdarg.h>
+
 static int CalCrc(int crc, const char *buf, int len)
 {
     unsigned int byte;
@@ -346,12 +348,30 @@ int read_file()
     close(fd);
     return 0;
 }
+#define NONE "\e[0m"
+#define YELLOW "\e[1;33m"
+#define BLUE "\e[0;34m"
+#define log_color(color, fmt, ...)                                    \
+    log_printf(color "%s-[%s-%d]: " fmt NONE, __FUNCTION__, __FILE__, \
+               __LINE__, ##__VA_ARGS__)
 
+#define log_debug(fmt, ...) log_color(BLUE, fmt, ##__VA_ARGS__)
+#define log_warn(fmt, ...) log_color(YELLOW, fmt, ##__VA_ARGS__)
+void log_printf(char* format, ...) {
+    va_list args;
+
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+}
 int main(int agrc, char *agrv[])
 {
     printf("main start \n");
     // udp_broadcast_client();
     // udp_broadcast_client_eth("wlan0");
-    uart_test();
+    // uart_test();
+    log_debug("abcd:%d",5);
+    log_warn("abcd:%d\n",5);
+    log_debug("abcd:%d\n",5);
     return 0;
 }

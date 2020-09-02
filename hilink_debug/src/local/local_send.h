@@ -16,14 +16,9 @@ extern "C"
 #define STR_NET_OPEN "120"
 #define STR_NET_CLOSE "0"
 
-#define INT_REFACTORY 1
-#define INT_RESTART 0
-
-    int write_haryan(const char *data, int socketfd, char *sendBuf, int bufLen);
+    int write_haryan(const char *data,int dataLen);
     int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value);
     int write_to_local(void *ptr, LocalControl_t *localControl);
-
-    void local_restart_reFactory(int index);
 #ifdef __cplusplus
 }
 #endif

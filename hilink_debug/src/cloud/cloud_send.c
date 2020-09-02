@@ -7,6 +7,7 @@
 
 #include "tool.h"
 
+#include "hilink.h"
 #include "hilink_profile_adapter.h"
 
 static char *s_cloudHY0095[] = {"switch1", "indicator"};
@@ -187,7 +188,7 @@ void cloud_update_device_str(cJSON *root, char *key, char *value, dev_hilink_t *
 
 int local_tohilink(dev_data_t *src,const int index, struct list_head *cloudNode)
 {
-    log_info("local_tohilink index:%d", index);
+    log_info("local_tohilink index:%d\n", index);
     int pos = 0, i;
 
     dev_hilink_t *out = list_get_by_id_hilink(src->DeviceId, cloudNode);
@@ -389,4 +390,14 @@ fail:
     }
     free(root);
     return -1;
+}
+
+void cloud_hilink_upload_int(const char *svcId, const char *key, int value)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddNumberToObject(root, key, value);
+    char *json = cJSON_PrintUnformatted(root);
+    hilink_upload_char_state(svcId, json, strlen(json) + 1);
+    free(json);
+    free(root);
 }

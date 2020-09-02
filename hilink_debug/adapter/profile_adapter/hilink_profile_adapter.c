@@ -98,14 +98,14 @@ char *bi_rsacipher = "";
 /* 获取加密 AC 参数  */
 unsigned char *hilink_get_auto_ac(void)
 {
-    log_debug("hilink_get_auto_ac");
+    log_debug("hilink_get_auto_ac\n");
     return A_C;
 }
 
 /* 获取加密 BI 参数 */
 char *hilink_get_auto_bi_rsa_cipher(void)
 {
-    log_debug("hilink_get_auto_bi_rsa_cipher %s", bi_rsacipher);
+    log_debug("hilink_get_auto_bi_rsa_cipher %s\n", bi_rsacipher);
     return bi_rsacipher;
 }
 
@@ -118,7 +118,7 @@ char *hilink_get_auto_bi_rsa_cipher(void)
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len)
 {
-    log_debug("hilink_put_char_state svcId:%s payload:%s,len:%d", svcId, payload, len);
+    log_debug("hilink_put_char_state svcId:%s payload:%s,len:%d\n", svcId, payload, len);
 
     if (strcmp("switch", svcId) == 0)
     {
@@ -154,7 +154,7 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen)
 {
-    log_debug("hilink_get_char_state svcId:%s in:%s,len:%d", svcId, in, inLen);
+    log_debug("hilink_get_char_state svcId:%s in:%s,len:%d\n", svcId, in, inLen);
 
     if (svcId == NULL)
         return -1;
@@ -164,20 +164,12 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
     {
         cJSON_AddNumberToObject(root, STR_ON, g_SLocalControl.devGateway.PermitJoining);
     }
-    // else if (strcmp(gSvcInfo[1].svc_id, svcId) == 0)
-    // {
-    //     cJSON_AddNumberToObject(root, "action", 0);
-    //     // cJSON_AddStringToObject(root, "introduction", "");
-    //     cJSON_AddStringToObject(root, "version", "");
-    //     cJSON_AddNumberToObject(root, "bootTime", 60);
-    //     // cJSON_AddNumberToObject(root, "progress", 0);
-    // }
     else
     {
         return -1;
     }
     char *json = cJSON_PrintUnformatted(root);
-    log_info("hilink_get_char_state %s", json);
+    log_info("hilink_get_char_state %s\n", json);
     if (json == NULL)
     {
         free(root);
@@ -199,7 +191,7 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
 void HilinkGetDeviceSn(unsigned int len, char *sn)
 {
     /* 在此处添加实现代码, 将sn赋值给*sn回传 */
-    log_debug("HilinkGetDeviceSn:%d", len);
+    log_debug("HilinkGetDeviceSn:%d\n", len);
     strcpy(sn, "346339313700");
     return;
 }

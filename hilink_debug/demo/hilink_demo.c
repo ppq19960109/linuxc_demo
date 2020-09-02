@@ -14,16 +14,146 @@
 #include "hilink_network_adapter.h"
 #include "hilink_softap_adapter.h"
 
-#include "local_send.h"
-#include "local_tcp_client.h"
+#include "cloud_receive.h"
 #include "cloud_send.h"
+#include "uv_main.h"
+
+const char *report_json[] = {
+    //单键智能开关
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"4574567876543675\",\
+    //           \"ModelId\":\"HY0095\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
+    //双键智能开关
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"5234567876543432\",\
+    //           \"ModelId\":\"HY0096\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }@",
+    //三键智能开关
+    // "{\        
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"1234567876543670\",\
+    //           \"ModelId\":\"HY0097\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
+    //DLT液晶调光器
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"2234567876543671\",\
+              \"ModelId\":\"09223f\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    //1路智能开关模块
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"5234564376543432\",\
+    //           \"ModelId\":\"HY0121\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }4",
+    //2路智能开关模块
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"523455676543432\",\
+    //           \"ModelId\":\"HY0122\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }12",
+    //3路智能开关模块
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"3234567876543673\",\
+    //           \"ModelId\":\"HY0107\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
+    //门磁传感器
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"4234567876543674\",\
+              \"ModelId\":\"HY0093\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+    "{\
+       \"Command\":\"Report\",\
+       \"FrameNumber\":\"00\",\
+       \"GatewayId\" :\"0006D12345678909\",\
+       \"Type\":\"Register\",\
+       \"Data\":[\
+         {\
+              \"DeviceId\":\"5234567876543675\",\
+              \"ModelId\":\"HY0134\",\
+              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+      }\
+    ]\
+    }",
+
+};
 
 void hilink_msleep(int);
 
-extern const char *report_json[];
-
 int main(void)
 {
+    local_control_init(&g_SLocalControl);
+    cloud_control_init(&g_SCloudControl);
+    //-----------------------------------
     hilink_main();
     printf("Program is started.\r\n");
 
@@ -32,26 +162,26 @@ int main(void)
     HILINK_EnableProcessDelErrCode(1);
     HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE); //HILINK_NETCONFIG_NONE
     enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
-    log_debug("HILINK_NetConfigMode:%d", net_mode);
+    log_debug("HILINK_NetConfigMode:%d\n", net_mode);
     int devstatus = hilink_get_devstatus();
-    log_debug("hilink_get_devstatus:%d", devstatus);
+    log_debug("hilink_get_devstatus:%d\n", devstatus);
 
     // HILINK_SetWiFiInfo("HUAWEI-WDNJ4L", 1, "1234567890", 1);
     // HILINK_StartSoftAp("rk_net", 0);
     // HILINK_DisconnectStation("10.201.126.157");
     //-------------------------------------------------
-    local_control_init(&g_SLocalControl);
-    cloud_control_init(&g_SCloudControl);
-    main_thread_set_signal();
     /* hilink main需要运行，sleep 1s保证进程不会退出 */
-    for (int i = 0; i < 3; i++)
-        read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
+    // for (int i = 0; i < sizeof(report_json) / sizeof(report_json[0]); i++)
+    //     read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
 
+#ifndef USE_LIBUV
     while (1)
     {
         hilink_msleep(1000);
     }
-    local_restart_reFactory(false);
-
+    cloud_restart_reFactory(INT_RESTART);
+#else
+    main_open();
+#endif
     return 0;
 }

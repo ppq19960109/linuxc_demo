@@ -5,10 +5,12 @@
 extern "C"
 {
 #endif
+#define INT_REFACTORY 1
+#define INT_RESTART 0
 
 int cloud_tolocal(const char *sn, const char *svcId, const char *payload);
 int cloud_delete_device(const char *sn);
-
+void cloud_restart_reFactory(int index);
 #ifdef __cplusplus
 }
 #endif

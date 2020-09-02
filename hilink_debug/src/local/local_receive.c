@@ -7,11 +7,12 @@
 #include "local_receive.h"
 #include "local_list.h"
 #include "local_tcp_client.h"
+
 #include "cloud_list.h"
+#include "cloud_send.h"
+#include "cloud_receive.h"
 
 #include "socket.h"
-
-#include "hilink.h"
 
 static char *s_typeReport[] = {
     "Register",
@@ -35,144 +36,31 @@ static const SAttrInfo s_StypeReport = {
     .attr = s_typeReport,
     .attrLen = sizeof(s_typeReport) / sizeof(s_typeReport[0])};
 
-const char *report_json[] = {
-    // "{\
-    //    \"Command\":\"Report\",\
-    //    \"FrameNumber\":\"00\",\
-    //    \"GatewayId\" :\"0006D12345678909\",\
-    //    \"Type\":\"Register\",\
-    //    \"Data\":[\
-    //      {\
-    //           \"DeviceId\":\"1234567876543670\",\
-    //           \"ModelId\":\"HY0097\",\
-    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-    //   }\
-    // ]\
-    // }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"2234567876543671\",\
-              \"ModelId\":\"09223f\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
-    // "{\
-    //    \"Command\":\"Report\",\
-    //    \"FrameNumber\":\"00\",\
-    //    \"GatewayId\" :\"0006D12345678909\",\
-    //    \"Type\":\"Register\",\
-    //    \"Data\":[\
-    //      {\
-    //           \"DeviceId\":\"3234567876543673\",\
-    //           \"ModelId\":\"HY0107\",\
-    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-    //   }\
-    // ]\
-    // }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"4234567876543674\",\
-              \"ModelId\":\"HY0093\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"5234567876543675\",\
-              \"ModelId\":\"HY0134\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
-    // "{\
-    //    \"Command\":\"Report\",\
-    //    \"FrameNumber\":\"00\",\
-    //    \"GatewayId\" :\"0006D12345678909\",\
-    //    \"Type\":\"Register\",\
-    //    \"Data\":[\
-    //      {\
-    //           \"DeviceId\":\"4574567876543675\",\
-    //           \"ModelId\":\"HY0095\",\
-    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-    //   }\
-    // ]\
-    // }",
-    // "{\
-    //    \"Command\":\"Report\",\
-    //    \"FrameNumber\":\"00\",\
-    //    \"GatewayId\" :\"0006D12345678909\",\
-    //    \"Type\":\"Register\",\
-    //    \"Data\":[\
-    //      {\
-    //           \"DeviceId\":\"5234567876543432\",\
-    //           \"ModelId\":\"HY0096\",\
-    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-    //   }\
-    // ]\
-    // }@",
-    // "{\
-    //    \"Command\":\"Report\",\
-    //    \"FrameNumber\":\"00\",\
-    //    \"GatewayId\" :\"0006D12345678909\",\
-    //    \"Type\":\"Register\",\
-    //    \"Data\":[\
-    //      {\
-    //           \"DeviceId\":\"5234564376543432\",\
-    //           \"ModelId\":\"HY0121\",\
-    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-    //   }\
-    // ]\
-    // }4",
-    // "{\
-    //    \"Command\":\"Report\",\
-    //    \"FrameNumber\":\"00\",\
-    //    \"GatewayId\" :\"0006D12345678909\",\
-    //    \"Type\":\"Register\",\
-    //    \"Data\":[\
-    //      {\
-    //           \"DeviceId\":\"523455676543432\",\
-    //           \"ModelId\":\"HY0122\",\
-    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-    //   }\
-    // ]\
-    // }12",
-};
-
 LocalControl_t g_SLocalControl;
 
 void local_control_init(LocalControl_t *localControl)
 {
     INIT_LIST_HEAD(&localControl->head);
+#ifndef USE_LIBUV
+    main_thread_set_signal();
     localControl->pid = net_client(localControl);
+#endif
 }
 
 void local_control_destory(LocalControl_t *localControl)
 {
-    pthread_cancel(localControl->pid);
-    localControl->pid = 0;
-
+#ifndef USE_LIBUV
+    if (localControl->pid != 0)
+    {
+        pthread_cancel(localControl->pid);
+        localControl->pid = 0;
+    }
     if (localControl->socketfd != 0)
     {
         Close(localControl->socketfd);
         localControl->socketfd = 0;
     }
+#endif
     //------------------------------
     list_del_all(&localControl->head);
 }
@@ -180,16 +68,6 @@ void local_control_destory(LocalControl_t *localControl)
 struct list_head *local_get_list_head(LocalControl_t *localControl)
 {
     return &localControl->head;
-}
-
-void local_hilink_upload_int(const char *svcId, const char *key, int value)
-{
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddNumberToObject(root, key, value);
-    char *json = cJSON_PrintUnformatted(root);
-    hilink_upload_char_state(svcId, json, strlen(json) + 1);
-    free(json);
-    free(root);
 }
 
 void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct list_head *localNode)
@@ -226,7 +104,7 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
         {
             if (strcmp(cJSON_GetObjectItem(array_sub, STR_MODELID)->valuestring, dev_buf->ModelId))
             {
-                log_error("DeviceId identical,but ModelId inequality");
+                log_error("DeviceId identical,but ModelId inequality\n");
                 continue;
             }
             str_copy_from_json(array_sub, STR_VERSION, dev_buf->Version);
@@ -255,12 +133,29 @@ int set_hostGateway(const char *DeviceId, cJSON *Data)
         if (strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
         {
             char_copy_from_json(array_sub, STR_VALUE, &g_SLocalControl.devGateway.PermitJoining);
-            local_hilink_upload_int("switch", STR_ON, g_SLocalControl.devGateway.PermitJoining);
+            cloud_hilink_upload_int("switch", STR_ON, g_SLocalControl.devGateway.PermitJoining);
         }
     }
     return 0;
 }
 
+void recv_toLocal(char *data, int len)
+{
+    if (data[0] == 0x02)
+    {
+        log_debug("%d,%s\n", len, &data[1]);
+        for (int i = 0; i < len; ++i)
+        {
+            if (data[i] == 2)
+                read_from_local(&data[i + 1], local_get_list_head(&g_SLocalControl));
+        }
+    }
+    else
+    {
+        log_debug("%s\n", data);
+        read_from_local(data, local_get_list_head(&g_SLocalControl));
+    }
+}
 int read_from_local(const char *json, struct list_head *localNode)
 {
     cJSON *root = cJSON_Parse(json);
@@ -334,7 +229,7 @@ int read_from_local(const char *json, struct list_head *localNode)
 
             if (local_attribute_update(dev_buf, NULL) != 0)
             {
-                log_error("local_attribute_update error");
+                log_error("local_attribute_update error\n");
                 free(dev_buf);
                 break;
             }
@@ -354,7 +249,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         }
         else
         {
-            log_error("UnRegister device not exist");
+            log_error("UnRegister device not exist\n");
         }
     }
     break;
@@ -389,7 +284,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         else
         {
             if (set_hostGateway(dev_data.DeviceId, Data) < 0)
-                log_error("sub device not exist");
+                log_error("sub device not exist\n");
         }
     }
     break;
@@ -405,7 +300,7 @@ int read_from_local(const char *json, struct list_head *localNode)
     break;
     case 8: //恢复出厂设置上报：”ReFactory”；
     {
-        local_restart_reFactory(INT_REFACTORY);
+        cloud_restart_reFactory(INT_REFACTORY);
     }
     break;
     case 9: //COO网络信息上报：”CooInfo”；
@@ -430,7 +325,7 @@ int read_from_local(const char *json, struct list_head *localNode)
     break;
     case 14: //Ack
     {
-        log_debug("type:Ack");
+        log_debug("type:Ack\n");
     }
     break;
     default:

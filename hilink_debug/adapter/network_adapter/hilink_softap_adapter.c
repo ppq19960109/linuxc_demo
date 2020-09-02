@@ -20,7 +20,7 @@
  */
 int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 {
-    log_info("HILINK_GetBroadcastIp");
+    log_info("HILINK_GetBroadcastIp\n");
     int ret;
     enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
     if (net_mode == HILINK_NETCONFIG_WIFI)
@@ -43,7 +43,7 @@ int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 
 int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 {
-    log_info("HILINK_StartSoftAp ssid:%s", ssid);
+    log_info("HILINK_StartSoftAp ssid:%s\n", ssid);
     char cmdline[128] = {0};
 
     create_hostapd_file(AP_NAME, ssid, "1234567890");
@@ -78,7 +78,7 @@ int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
  */
 int HILINK_StopSoftAp(void)
 {
-    log_info("HILINK_StopSoftAp");
+    log_info("HILINK_StopSoftAp\n");
     if (get_hostapd_pid())
         system("killall hostapd");
     if (get_dnsmasq_pid())

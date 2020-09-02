@@ -8,8 +8,8 @@
 #include "hilink_sdk_adapter.h"
 #include "hilink.h"
 
-#include "local_send.h"
-
+#include "cloud_receive.h"
+#include "tool.h"
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -73,8 +73,7 @@ void hilink_notify_devstatus(int status)
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
 
-        local_restart_reFactory(INT_REFACTORY);
-
+        cloud_restart_reFactory(INT_REFACTORY);
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");
@@ -100,9 +99,9 @@ void hilink_notify_devstatus(int status)
  */
 int hilink_process_before_restart(int flag)
 {
-    log_info("hilink_process_before_restart");
+    log_info("hilink_process_before_restart\n");
 
-    local_restart_reFactory(INT_RESTART);
+    cloud_restart_reFactory(INT_RESTART);
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
@@ -130,7 +129,7 @@ int hilink_process_before_restart(int flag)
 int get_faultDetection_state(int *status, int *code)
 {
     /* 由设备厂商实现，将服务faultDetection属性当前值赋予出参 */
-    log_info("get_faultDetection_state status:%d,code:%d", *status, *code);
+    log_info("get_faultDetection_state status:%d,code:%d\n", *status, *code);
     *status = 1;
     return 0;
 }

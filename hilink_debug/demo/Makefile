@@ -25,6 +25,7 @@ INCLUDE_PATH += -I$(BASE_PATH)/src/md5
 INCLUDE_PATH += -I$(BASE_PATH)/src/rk3308
 INCLUDE_PATH += -I$(BASE_PATH)/lib/curl/include/curl
 
+INCLUDE_PATH += -I$(PWD)$(PWD)/$(PWD)$(PWD)/libuv/libuv/include
 #适配源文件
 SOURCE_FILES := $(wildcard $(BASE_PATH)/adapter/network_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/config_adapter/*.c)
@@ -42,8 +43,9 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/rk3308/*.c)
 #库文件路径
 LIB_FILE_PATH := -L$(BASE_PATH)/lib
 
+LIB_FILE_PATH +=  -L$(PWD)$(PWD)/$(PWD)$(PWD)/libuv/libuv/lib
 #库文件
-LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lhilinkdevicesdk -lhilinkota -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota  -luv -Wl,-Bdynamic -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
 #编译出的.o文件
 

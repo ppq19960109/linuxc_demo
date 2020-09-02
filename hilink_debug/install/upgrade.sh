@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 TOPDIR=`dirname $0`
 cd $TOPDIR
-echo $0
+echo $0","$TOPDIR
+
 PKG_TAR_FILENAME=upgrade.tar
-echo $PKG_TAR_FILENAME
 
 # sed -n -e '1,/^exit 0$/!p' $0|sed -n -e '1!p'>$PKG_TAR_FILENAME
 lines=`sed -n -e '1,/^exit 0$/p' $0| wc -l | awk '{printf $1}'`
@@ -26,30 +26,16 @@ if [ $ENCRY1 != $ENCRY2 ]; then
     exit 1
 fi
 #---------------------------------------------------------------
+UPDATE_PATH="pkg"
+rm -rf $UPDATE_PATH
+
 tar -xvf $PKG_TAR_FILENAME
 sync
+rm -rf $PKG_TAR_FILENAME
 #------------------------------------------
-echo start install
-UPDATE_PATH=pkg
-#target path
-APP_PATH=/app
-HILINK_CONFIG_PATH=/userdata/hilink
-#app name
-APP_NAME=hilinkapp
-HILINK_CONFIG_FILE=hilink.cfg
-HILINK_BAK_CONFIG_FILE=hilink_bak.cfg
+UPGRADE_SCRIPT_FILE="install.sh"
 
-cp -rf $UPDATE_PATH/$APP_NAME $APP_PATH/
-cp -rf $UPDATE_PATH/$HILINK_CONFIG_FILE $HILINK_CONFIG_PATH/
-cp -rf $UPDATE_PATH/$HILINK_BAK_CONFIG_FILE $HILINK_CONFIG_PATH/
+cd $UPDATE_PATH
+source $UPGRADE_SCRIPT_FILE
 
-chmod -R 777 $APP_PATH/
-sleep 1
-rm -rf $PKG_TAR_FILENAME $UPDATE_PATH/
-sync
-echo Successfully installed
-echo App reboot.......
-killall $APP_NAME
-$APP_PATH/$APP_NAME &
-# reboot
 exit 0

@@ -15,7 +15,6 @@
 #include <linux/sockios.h>
 #include <linux/ethtool.h>
 
-#include "log.h"
 #include "cJSON.h"
 
 #define MAC_SIZE 18
@@ -190,7 +189,7 @@ int get_netlink_status(const char *if_name)
 
     if (ioctl(skfd, SIOCETHTOOL, &ifr) == -1)
     {
-        fprintf(stderr, "%s: ioctl SIOCETHTOOL error [%d] %s\r\n", if_name, errno, strerror(errno));
+        fprintf(stderr, "%s: ioctl SIOCETHTOOL error [%d] %s\n", if_name, errno, strerror(errno));
         close(skfd);
         return -1;
     }
@@ -216,7 +215,7 @@ int get_link_status(const char *if_name)
     ifr.ifr_name[IFNAMSIZ - 1] = 0;
     if (ioctl(sd, SIOCGIFFLAGS, (char *)&ifr) < 0)
     {
-        fprintf(stderr, "%s: ioctl SIOCGIFFLAGS error [%d] %s\r\n", if_name, errno, strerror(errno));
+        fprintf(stderr, "%s: ioctl SIOCGIFFLAGS error [%d] %s\n", if_name, errno, strerror(errno));
         close(sd);
         return -1;
     }
@@ -224,18 +223,18 @@ int get_link_status(const char *if_name)
     if (!(ifr.ifr_flags & IFF_UP))
     {
         close(sd);
-        fprintf(stderr, "DEVICE_DOWN\r\n");
+        fprintf(stderr, "DEVICE_DOWN\n");
         return 1;
     }
 
     if (!(ifr.ifr_flags & IFF_RUNNING))
     {
         close(sd);
-        fprintf(stderr, "DEVICE_UNPLUGGED\r\n");
+        fprintf(stderr, "DEVICE_UNPLUGGED\n");
         return 2;
     }
 
-    fprintf(stderr, "DEVICE_LINKED\r\n");
+    fprintf(stderr, "DEVICE_LINKED\n");
 
     close(sd);
     return 0;

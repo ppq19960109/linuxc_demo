@@ -1,9 +1,11 @@
 #ifndef _LOCAL_TCP_CLIENT_H_
 #define _LOCAL_TCP_CLIENT_H_
 
+#include "local_receive.h"
+#ifndef USE_LIBUV
 #include <pthread.h>
 
-int net_client_srart();
 pthread_t net_client(void *arg);
 void main_thread_set_signal();
-#endif 
+#endif
+#endif
