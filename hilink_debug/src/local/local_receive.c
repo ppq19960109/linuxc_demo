@@ -143,16 +143,18 @@ void recv_toLocal(char *data, int len)
 {
     if (data[0] == 0x02)
     {
-        log_debug("%d,%s\n", len, &data[1]);
         for (int i = 0; i < len; ++i)
         {
-            if (data[i] == 2)
+            if (data[i] == 0x02)
+            {
+                log_debug("recv_toLocal:%d,%s\n", len, &data[1]);
                 read_from_local(&data[i + 1], local_get_list_head(&g_SLocalControl));
+            }
         }
     }
     else
     {
-        log_debug("%s\n", data);
+        log_debug("recv_toLocal:%s\n", data);
         read_from_local(data, local_get_list_head(&g_SLocalControl));
     }
 }

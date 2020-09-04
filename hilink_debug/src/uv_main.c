@@ -14,7 +14,8 @@ static uv_write_t writereq;
 static uv_timer_t timer_client;
 static uv_signal_t g_signal;
 static uv_timer_t timer_req;
-static int s_isConnect = 0;
+static volatile int s_isConnect = 0;
+static uv_buf_t w_buf;
 
 static void client_timer();
 
@@ -34,7 +35,7 @@ static void client_write_cb(uv_write_t *req, int status)
         uv_close((uv_handle_t *)req->handle, client_close);
         return;
     }
-    // printf("client write succeed!:%p\n", req->handle);
+    printf("client write succeed!\n");
 }
 
 int client_write(char *data, unsigned int len)
@@ -44,16 +45,19 @@ int client_write(char *data, unsigned int len)
         fprintf(stderr, "client not connect\n");
         return -1;
     }
-    uv_buf_t w_buf = uv_buf_init(data, len);
-    return uv_write(&writereq, (uv_stream_t *)tcp_client, &w_buf, 1, client_write_cb);
-    //  writereq.error;
+    w_buf = uv_buf_init(data, len);
+
+    printf("w_buf:%p,%d\n", data, len);
+    uv_write(&writereq, (uv_stream_t *)tcp_client, &w_buf, 1, client_write_cb);
+    return writereq.error;
 }
 
 static void client_alloc_buf(uv_handle_t *handle,
                              size_t suggested_size,
                              uv_buf_t *buf)
 {
-    *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
+    // *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
+    *buf = uv_buf_init(g_SLocalControl.tcpBuf, RECVLEN);
 }
 
 static void client_read(uv_stream_t *stream,
@@ -69,8 +73,8 @@ static void client_read(uv_stream_t *stream,
         uv_read_stop(stream);
         uv_close((uv_handle_t *)stream, client_close);
 
-        if (buf->base)
-            free(buf->base);
+        // if (buf->base)
+        //     free(buf->base);
         return;
     }
 
@@ -79,8 +83,8 @@ static void client_read(uv_stream_t *stream,
     // printf("recv %d\n", nread);
     // printf("%s\n", buf->base);
     recv_toLocal(buf->base, nread);
-    if (buf->base)
-        free(buf->base);
+    // if (buf->base)
+    //     free(buf->base);
 }
 
 static void on_connect(uv_connect_t *req, int status)
@@ -131,6 +135,7 @@ static void client_timer()
 }
 int net_client_open()
 {
+    
     tcp_client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
 
     g_connect = (uv_connect_t *)malloc(sizeof(uv_connect_t));
@@ -161,14 +166,14 @@ void net_client_close()
 
 void timer_callback(uv_timer_t *timer)
 {
-    // printf("timer_callback\n");
+    printf("HY_HEART timer_callback\n");
     client_write(HY_HEART, strlen(HY_HEART));
 }
 
 int timer_open()
 {
     uv_timer_init(uv_default_loop(), &timer_req);
-    uv_timer_start(&timer_req, timer_callback, 500, 60000);
+    uv_timer_start(&timer_req, timer_callback, 5000, 60000);
     return 0;
 }
 void timer_close()
@@ -216,15 +221,16 @@ void uv_idle_task(uv_idle_t *handle)
 }
 int main_open()
 {
+
     signal_open();
     net_client_open();
     timer_open();
 
-    uv_idle_t idler;
-    uv_idle_init(uv_default_loop(), &idler);
-    uv_idle_start(&idler, uv_idle_task);
+    // uv_idle_t idler;
+    // uv_idle_init(uv_default_loop(), &idler);
+    // uv_idle_start(&idler, uv_idle_task);
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-    uv_idle_stop(&idler);
+    // uv_idle_stop(&idler);
     main_close();
     return 0;
 }

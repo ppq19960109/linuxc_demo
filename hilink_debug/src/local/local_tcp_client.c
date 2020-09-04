@@ -133,6 +133,7 @@ static void *thread_hander(void *arg)
             }
             else
             {
+                pdata->tcpBuf[readLen] = '\0';
                 recv_toLocal(pdata->tcpBuf, readLen);
             }
         }

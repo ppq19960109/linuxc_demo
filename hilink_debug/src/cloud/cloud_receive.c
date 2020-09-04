@@ -155,6 +155,21 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         {
             val = cJSON_GetObjectItem(root, STR_ON);
         }
+        else if (cJSON_HasObjectItem(root, STR_MODE))
+        {
+            val = cJSON_GetObjectItem(root, STR_MODE);
+            if (val->valueint == 3)
+            {
+                val->valueint = 4;
+            }
+            else if (val->valueint == 4)
+            {
+                val->valueint = 3;
+            }
+            else
+            {
+            }
+        }
         else if (cJSON_HasObjectItem(root, STR_TARGET))
         {
             val = cJSON_GetObjectItem(root, STR_TARGET);
@@ -162,10 +177,7 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         else if (cJSON_HasObjectItem(root, STR_GEAR))
         {
             val = cJSON_GetObjectItem(root, STR_GEAR);
-        }
-        else if (cJSON_HasObjectItem(root, STR_GEAR))
-        {
-            val = cJSON_GetObjectItem(root, STR_GEAR);
+            val->valueint += 2;
         }
         else
         {
@@ -187,6 +199,7 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         {
             strcpy(out.Data.Key, "WindSpeed_2");
             val = cJSON_GetObjectItem(root, STR_GEAR);
+            val->valueint += 2;
         }
         else
         {
@@ -205,7 +218,7 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
     return 0;
 fail:
     free(root);
-    log_error("cloud_tolocal");
+    log_error("cloud_tolocal fail\n");
     return -1;
 }
 

@@ -256,35 +256,74 @@ int hy_conversion2_updown(char *modelId, char *dir, char *in, int inLen, char *i
 
     PyObject *pArgs = NULL;
     PyObject *pRetVal = NULL;
+    PyObject *PyList = NULL;
     if (strcmp("up", dir) == 0)
     {
-        pArgs = PyTuple_New(2);
+        PyList = PyList_New(inLen);
+        for (int i = 0; i < inLen; i++)
+            PyList_SetItem(PyList, i, PyLong_FromLong(in[i]));
 
-        PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", in));
-        PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", inLen));
+        pArgs = PyTuple_New(1);
+
+        PyTuple_SetItem(pArgs, 0, PyList);
+
         //调用函数
         pRetVal = PyObject_CallObject(pfunc, pArgs);
         if (!pRetVal)
         {
             printf("PyObject_CallObject error\n");
+
             goto fail_pRetVal;
         }
 
-        char *outbuf1, *outbuf2;
-        // PyArg_Parse
-        PyArg_ParseTuple(pRetVal, "sisi", &outbuf1, inoutLen, &outbuf2, outLen);
-        // printf("function RetVal:%s,%d\n", out, *strLen);
-        strcpy(inout, outbuf1);
-        strcpy(out, outbuf2);
+        if (PyTuple_Check(pRetVal))
+        {                                           //检查是否为List对象
+            int SizeOfList = PyTuple_Size(pRetVal); //List对象的大小，这里SizeOfList = 2
+            printf("返回的结果result：\n");
+            for (int i = 0; i < SizeOfList; i++)
+            {
+                PyObject *ListItem = PyTuple_GetItem(pRetVal, i); //获取List对象中的每一个元素
+                int NumOfItems = PyList_Size(ListItem);           //List对象子元素的大小，这里NumOfItems = 3
+                char *pyout;
+                if (i == 0)
+                {
+                    *inoutLen = NumOfItems;
+                    pyout = inout;
+                }
+                else
+                {
+                    *outLen = NumOfItems;
+                    pyout = out;
+                }
+
+                for (int j = 0; j < NumOfItems; j++)
+                {
+                    PyObject *Item = PyList_GetItem(ListItem, j); //遍历List对象中子元素中的每个元素
+                    int result;
+                    PyArg_Parse(Item, "i", &result); //i表示转换成int型变量
+                    printf("%x ", result);
+                    pyout[j] = result;
+                    // Py_DECREF(Item); //释放空间
+                }
+                Py_DECREF(ListItem); //释放空间
+            }
+            printf("\n");
+        }
     }
     else if (strcmp("down", dir) == 0)
     {
-        pArgs = PyTuple_New(4);
+        PyList = PyList_New(inLen);
+        for (int i = 0; i < inLen; i++)
+            PyList_SetItem(PyList, i, PyLong_FromLong(in[i]));
 
-        PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", in));
-        PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", inLen));
-        PyTuple_SetItem(pArgs, 2, Py_BuildValue("s", inout));
-        PyTuple_SetItem(pArgs, 3, Py_BuildValue("i", *inoutLen));
+        PyObject *PyList2 = PyList_New(inLen);
+        for (int i = 0; i < *inoutLen; i++)
+            PyList_SetItem(PyList2, i, PyLong_FromLong(inout[i]));
+        pArgs = PyTuple_New(2);
+
+        PyTuple_SetItem(pArgs, 0, PyList);
+        PyTuple_SetItem(pArgs, 1, PyList2);
+
         //调用函数
         pRetVal = PyObject_CallObject(pfunc, pArgs);
         if (!pRetVal)
@@ -293,11 +332,31 @@ int hy_conversion2_updown(char *modelId, char *dir, char *in, int inLen, char *i
             goto fail_pRetVal;
         }
 
-        char *outbuf;
-        // PyArg_Parse
-        PyArg_ParseTuple(pRetVal, "si",&outbuf, outLen);
-        // printf("function RetVal:%s,%d\n", out, *strLen);
-        strcpy(out, outbuf);
+        if (PyTuple_Check(pRetVal))
+        {                                           //检查是否为List对象
+            int SizeOfList = PyTuple_Size(pRetVal); //List对象的大小，这里SizeOfList = 2
+            printf("返回的结果result：\n");
+
+            PyObject *ListItem = PyTuple_GetItem(pRetVal, 0); //获取List对象中的每一个元素
+            int NumOfItems = PyList_Size(ListItem);           //List对象子元素的大小，这里NumOfItems = 3
+            char *pyout;
+
+            *outLen = NumOfItems;
+            pyout = out;
+
+            for (int j = 0; j < NumOfItems; j++)
+            {
+                PyObject *Item = PyList_GetItem(ListItem, j); //遍历List对象中子元素中的每个元素
+                int result;
+                PyArg_Parse(Item, "i", &result); //i表示转换成int型变量
+                printf("%x ", result);
+                pyout[j] = result;
+                // Py_DECREF(Item); //释放空间
+            }
+            Py_DECREF(ListItem); //释放空间
+
+            printf("\n");
+        }
     }
     else
     {
@@ -323,11 +382,10 @@ fail_pmodule:
     return -1;
 }
 
-int hy_conversion3_updown(char *modelId, char *key, char *dir, char *str, int strLen, char *num, int *numLen)
+int hy_conversion3_updown(char *modelId, char *key, char *dir, char *str, int strLen, char *strOut, int *strOutLen)
 {
     Py_Initialize(); //开始Python解释器
 
-    // PyRun_SimpleString("print('hy_conversion Python3 start')");
     PyRun_SimpleString("import sys");
     PyRun_SimpleString("sys.path.append('./')");
 
@@ -368,11 +426,11 @@ int hy_conversion3_updown(char *modelId, char *key, char *dir, char *str, int st
         goto fail_pRetVal;
     }
 
-    char *out;
+    char *pRsp;
     // PyArg_Parse
-    PyArg_ParseTuple(pRetVal, "si", &out, numLen);
-    // printf("function RetVal:%s,%d\n", out, *strLen);
-    strcpy(num, out);
+    PyArg_ParseTuple(pRetVal, "si", &pRsp, strOutLen);
+    // printf("function RetVal:%s,%d\n", pRsp[5], *strOutLen);
+    strcpy(strOut, pRsp);
 
     Py_DECREF(pRetVal);
     Py_DECREF(pArgs);
@@ -397,22 +455,25 @@ int main(int argc, char **argv)
 {
     printf("main start\n");
 
-    char str[16] = {1, 2, 3, 4};
-    int len = 3;
-    char num[4] = {0};
+    char str[9] = {1, 3, 0, 222};
+    int len = 4;
+    char num[9] = {0};
     int numlen = 1;
 
-    // char out1[4] = {0};
-    // int out1len = 0;
-    // char out2[4] = {0};
-    // int out2len = 0;
+    char out1[9] = {4, 0, 5, 0};
+    int out1len = 4;
+    char out2[9] = {0};
+    int out2len = 0;
     // hy_conversion("HY123", "name", "up", str, len, out, &outlen);
     if (1)
     {
+        hy_conversion2_updown("TS0002", "up", str, len, out1, &out1len, out2, &out2len);
+        printf("%x,%d,%d,%d\n", (unsigned char)out1[2], out1len, out2[2], out2len);
         // hy_conversion2_updown("TS0002", "down", str, len, out1, &out1len, out2, &out2len);
-        // printf("%s,%d,%s,%d\n", out1, out1len, out2, out2len);
-        hy_conversion3_updown("pytest", "hy_", "down", str, len, num, &numlen);
-        printf("%d,%d,%d,%d,len:%d\n", num[0], num[1], num[2], num[3], numlen);
+        // printf("%d,%d\n", out2[2], out2len);
+
+        // hy_conversion3_updown("pytest", "hy_", "down", str, len, num, &numlen);
+        // printf("%d,%d,%d,%d,len:%d\n", num[0], num[1], num[2], num[3], numlen);
     }
     else
     {

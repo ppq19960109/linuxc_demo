@@ -63,7 +63,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
     int ret = write_to_local(&local_cmd, &g_SLocalControl);
     if (ret < 0)
     {
-        log_error("write_net_access error\n");
+        log_error("write_hanyar_cmd error\n");
     }
     return ret;
 }
@@ -94,7 +94,7 @@ int write_haryan(const char *data, int dataLen)
         //     printf("%x ", sendBuf[i]);
         // }
         // printf("\n");
-        // log_info("write ret:%d\n", ret);
+        log_info("write ret:%d\n", ret);
         return ret;
     }
     return -1;
@@ -135,7 +135,7 @@ int write_to_local(void *ptr, LocalControl_t *localControl)
     log_info("send json:%s\n", json);
 
     int ret = write_haryan(json, strlen(json));
-
+  
     free(json);
     free(root);
     return ret;

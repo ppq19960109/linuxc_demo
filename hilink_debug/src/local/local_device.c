@@ -4,7 +4,9 @@
 #include "local_device.h"
 #include "cloud_send.h"
 
-static char *g_sLocalModel[] = {"TS0001", "TS0002", "TS0003", "09223f", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "HY0093", "HY0134", "HY0134", "HY0134", "HY0134"};
+#define HY0134_INDEX 8
+#define HY0134 "_TZE200_twuagcv5"
+static char *g_sLocalModel[] = {"_TZ3000_ajo229r5", "_TZ3000_oh4ygxmc", "TS0003", "09223f", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "HY0093", HY0134, HY0134, HY0134, HY0134};
 const SAttrInfo g_SLocalModel = {
     .attr = g_sLocalModel,
     .attrLen = sizeof(g_sLocalModel) / sizeof(g_sLocalModel[0])};
@@ -17,7 +19,7 @@ static char *g_sHY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMod
 static char *g_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 static char *g_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 static char *g_sHY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
-static char *g_sHY0134[] = {"KeyFobValue", "SceName_", "Enable_", "Switch_", "WindSpeed_", "CurrentTemperature_1", "TargetTemperature_1", "WorkMode_1", "TargetTemperature_3"};
+static char *g_sHY0134[] = {"KeyFobValue", "SceName_", "Enable_", "Switch_", "WindSpeed_", "CurrentTemperature_1", "TargetTemperature_", "WorkMode_1", "ScePhoto_"};
 static char *g_sHY0134_0[] = {"Switch_3", "TargetTemperature_3"};
 static char *g_sHY0134_1[] = {"Switch_1", "TargetTemperature_1", "WorkMode_1", "WindSpeed_1"};
 static char *g_sHY0134_2[] = {"Switch_2", "WindSpeed_2"};
@@ -65,14 +67,15 @@ static const SAttrInfo g_SLocalAttrSize[] = {
 
 int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
 {
-    log_debug("local_attribute_update\n");
 
     int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
     if (index < 0)
     {
-        log_error("local ModelId not exist:%s\n",dev_data->ModelId);
+        log_error("local ModelId not exist:%s\n", dev_data->ModelId);
         return -1;
     }
+
+    log_debug("local_attribute_update:%d\n", index);
     if (dev_data->private == NULL)
     {
         dev_data->private = malloc(g_SLocalAttrSize[index].attrLen);
@@ -89,8 +92,21 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
     {
         array_sub = cJSON_GetArrayItem(Data, cnt);
         Key = cJSON_GetObjectItem(array_sub, STR_KEY);
-
-        index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
+        if (index == HY0134_INDEX)
+        {
+            index_sub = strn_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen, 7);
+        }
+        else
+        {
+            index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
+        }
+        out == NULL;
+        if (index_sub < 0)
+        {
+            log_error("local Attr not exist:%s\n", Key->valuestring);
+            continue;
+        }
+        log_debug("local_attribute_update index_sub:%d\n", index_sub);
         switch (index)
         {
         case 0: //U2/天际系列：单键智能开关（HY0095）
@@ -273,36 +289,51 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         case 11:
         {
             dev_HY0134_t *dev = (dev_HY0134_t *)dev_data->private;
-
+            int pos;
+            int num_pos = strlen(g_SLocalAttr[index].attr[index_sub]);
             switch (index_sub)
             {
             case 0:
                 out = &dev->KeyFobValue;
                 break;
-            case 1:
-                out = dev->SceName[atoi(&Key->valuestring[8]) - 1];
-                str_copy_from_json(array_sub, STR_VALUE, out);
+            case 1: //SceName_
+                pos = atoi(&Key->valuestring[num_pos]) - 1;
+                if (pos <= sizeof(dev->SceName) / sizeof(dev->SceName[0]))
+                {
+                    out = dev->SceName[pos];
+                    str_copy_from_json(array_sub, STR_VALUE, out);
+                }
                 continue;
-            case 2:
-                out = &dev->Enable[atoi(&Key->valuestring[7]) - 1];
+            case 2: //Enable_
+                pos = atoi(&Key->valuestring[num_pos]) - 1;
+                if (pos <= sizeof(dev->Enable))
+                    out = &dev->Enable[pos];
                 break;
-            case 3:
-                out = &dev->Switch[atoi(&Key->valuestring[7]) - 1];
+            case 3: //Switch_
+                pos = atoi(&Key->valuestring[num_pos]) - 1;
+                if (pos <= sizeof(dev->Switch))
+                    out = &dev->Switch[pos];
                 break;
-            case 4:
-                out = &dev->WindSpeed[atoi(&Key->valuestring[10]) - 1];
+            case 4: //WindSpeed_
+                pos = atoi(&Key->valuestring[num_pos]) - 1;
+                if (pos <= sizeof(dev->WindSpeed))
+                    out = &dev->WindSpeed[pos];
                 break;
             case 5:
                 out = &dev->CurrentTemperature_1;
                 break;
-            case 6:
-                out = &dev->TargetTemperature_1;
+            case 6: //TargetTemperature_
+                pos = atoi(&Key->valuestring[num_pos]) - 1;
+                if (pos <= sizeof(dev->TargetTemperature))
+                    out = &dev->TargetTemperature[pos];
                 break;
             case 7:
                 out = &dev->WorkMode_1;
                 break;
-            case 8:
-                out = &dev->TargetTemperature_3;
+            case 8: //ScePhoto_
+                pos = atoi(&Key->valuestring[num_pos]) - 1;
+                if (pos <= sizeof(dev->ScePhoto))
+                    out = &dev->ScePhoto[pos];
                 break;
             }
         }
@@ -312,7 +343,8 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
             log_error("hanyar modelId not exist\n");
             return -1;
         }
-        char_copy_from_json(array_sub, STR_VALUE, out);
+        if (out)
+            char_copy_from_json(array_sub, STR_VALUE, out);
     }
 cloud:
     return local_tohilink(dev_data, index, cloud_get_list_head(&g_SCloudControl));

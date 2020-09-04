@@ -85,13 +85,13 @@ extern "C"
     {
         char KeyFobValue;
         char SceName[12][18];
+        char ScePhoto[12];
         char Enable[3];
         char Switch[3];
         char CurrentTemperature_1;
-        char TargetTemperature_1;
+        char TargetTemperature[3];
         char WorkMode_1;
         char WindSpeed[2];
-        char TargetTemperature_3;
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
 
     extern const SAttrInfo g_SLocalModel;

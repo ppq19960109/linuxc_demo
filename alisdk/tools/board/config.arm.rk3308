@@ -1,0 +1,10 @@
+CONFIG_ENV_CFLAGS = \
+    -D_PLATFORM_IS_LINUX_ \
+    -Wall
+
+CONFIG_ENV_LDFLAGS = \
+    -lpthread -lrt \
+
+CROSS_PREFIX := arm-rockchip-linux-gnueabihf-
+
+#CONFIG_wrappers :=

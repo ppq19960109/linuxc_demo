@@ -131,19 +131,19 @@ const char *report_json[] = {
       }\
     ]\
     }",
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"5234567876543675\",\
-              \"ModelId\":\"HY0134\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"5234567876543675\",\
+    //           \"ModelId\":\"_TZE200_twuagcv5\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
 
 };
 
@@ -151,37 +151,36 @@ void hilink_msleep(int);
 
 int main(void)
 {
-    local_control_init(&g_SLocalControl);
-    cloud_control_init(&g_SCloudControl);
-    //-----------------------------------
-    hilink_main();
-    printf("Program is started.\r\n");
+  hilink_main();
+  printf("Program is started.\r\n");
 
-    // HiLinkSetGatewayMode(1);
-    HILINK_SetLogLevel(HILINK_LOG_ERR);
-    HILINK_EnableProcessDelErrCode(1);
-    HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE); //HILINK_NETCONFIG_NONE
-    enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
-    log_debug("HILINK_NetConfigMode:%d\n", net_mode);
-    int devstatus = hilink_get_devstatus();
-    log_debug("hilink_get_devstatus:%d\n", devstatus);
+  // HiLinkSetGatewayMode(1);
+  HILINK_SetLogLevel(HILINK_LOG_ERR);
+  HILINK_EnableProcessDelErrCode(1);
+  HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE); //HILINK_NETCONFIG_NONE
+  enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
+  log_debug("HILINK_NetConfigMode:%d\n", net_mode);
+  int devstatus = hilink_get_devstatus();
+  log_debug("hilink_get_devstatus:%d\n", devstatus);
 
-    // HILINK_SetWiFiInfo("HUAWEI-WDNJ4L", 1, "1234567890", 1);
-    // HILINK_StartSoftAp("rk_net", 0);
-    // HILINK_DisconnectStation("10.201.126.157");
-    //-------------------------------------------------
-    /* hilink main需要运行，sleep 1s保证进程不会退出 */
-    // for (int i = 0; i < sizeof(report_json) / sizeof(report_json[0]); i++)
-    //     read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
+  // HILINK_SetWiFiInfo("HUAWEI-WDNJ4L", 1, "1234567890", 1);
+  // HILINK_StartSoftAp("rk_net", 0);
+  // HILINK_DisconnectStation("10.201.126.157");
+  //-------------------------------------------------
+  /* hilink main需要运行，sleep 1s保证进程不会退出 */
+  local_control_init(&g_SLocalControl);
+  cloud_control_init(&g_SCloudControl);
+  // for (int i = 0; i < sizeof(report_json) / sizeof(report_json[0]); i++)
+  //   read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
 
 #ifndef USE_LIBUV
-    while (1)
-    {
-        hilink_msleep(1000);
-    }
-    cloud_restart_reFactory(INT_RESTART);
+  while (1)
+  {
+    hilink_msleep(1000);
+  }
+  cloud_restart_reFactory(INT_RESTART);
 #else
-    main_open();
+  main_open();
 #endif
-    return 0;
+  return 0;
 }

@@ -153,7 +153,7 @@ void cloud_add_device(const int index, dev_hilink_t **out, const char *sn, struc
     cloud_init_device_attr(index, brgDevInfo);
     cloud_add_device_attr(index, *out, brgDevInfo->sn);
 }
-void cloud_update_device_int(cJSON *root, char *key, char value, dev_hilink_t *out, int pos)
+void cloud_update_device_int(cJSON *root, char *key, int value, dev_hilink_t *out, int pos)
 {
     cJSON_AddNumberToObject(root, key, value);
     char *json = cJSON_PrintUnformatted(root);
@@ -186,7 +186,7 @@ void cloud_update_device_str(cJSON *root, char *key, char *value, dev_hilink_t *
     modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &out->devSvc[pos].svcVal, json);
 }
 
-int local_tohilink(dev_data_t *src,const int index, struct list_head *cloudNode)
+int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode)
 {
     log_info("local_tohilink index:%d\n", index);
     int pos = 0, i;
@@ -335,7 +335,7 @@ int local_tohilink(dev_data_t *src,const int index, struct list_head *cloudNode)
                 cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out_sub[j], pos++);
 
                 char *key[] = {STR_CURRENT, STR_TARGET};
-                char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature_3};
+                char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature[2]};
                 cloud_update_device_int_array(root, key, value, sizeof(value), out_sub[j], pos++);
             }
             break;
@@ -344,18 +344,31 @@ int local_tohilink(dev_data_t *src,const int index, struct list_head *cloudNode)
                 cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out_sub[j], pos++);
 
                 char *key[] = {STR_CURRENT, STR_TARGET};
-                char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature_1};
+                char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature[0]};
                 cloud_update_device_int_array(root, key, value, sizeof(value), out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_MODE, dev_sub->WorkMode_1, out_sub[j], pos++);
+                char bufVal;
+                if (dev_sub->WorkMode_1 == 3)
+                {
+                    bufVal = 4;
+                }
+                else if (dev_sub->WorkMode_1 == 4)
+                {
+                    bufVal = 3;
+                }
+                else
+                {
+                    bufVal = dev_sub->WorkMode_1;
+                }
+                cloud_update_device_int(root, STR_MODE, bufVal, out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0], out_sub[j], pos++);
+                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0] - 2, out_sub[j], pos++);
             }
             break;
             case 2:
                 cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1], out_sub[j], pos++);
+                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1] - 2, out_sub[j], pos++);
                 break;
             default:
                 break;

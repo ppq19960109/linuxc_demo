@@ -9,8 +9,8 @@ extern "C"
 #include "list.h"
 #include "tool.h"
 
-#define USE_LIBUV //enable libuv
-#define SERVER_PORT 7001 //7000
+// #define USE_LIBUV        //enable libuv
+#define SERVER_PORT 7000 //7000
 #define HY_HEART "{\"Command\":\"TcpBeatHeart\",\"Period\":\"60\"}"
 
 #define STR_KEY "Key"
@@ -39,9 +39,6 @@ extern "C"
 #define STR_HOST_GATEWAYID "0000000000000000"
 #define STR_PERMITJOINING "PermitJoining"
 
-#define SENDTOLOCAL_SIZE 512
-#define RECVLEN 4096
-
     typedef struct
     {
         char GatewayId[20];
@@ -59,7 +56,7 @@ extern "C"
     struct local_data_t
     {
         char DeviceId[20];
-        char ModelId[16];
+        char ModelId[20];
         char Key[24];
         char Value[16];
         void *private;
@@ -83,15 +80,17 @@ extern "C"
 
     typedef struct
     {
+#define SENDTOLOCAL_SIZE 1024
         char sendData[SENDTOLOCAL_SIZE];
-#ifndef USE_LIBUV
+#define RECVLEN 16384
         char tcpBuf[RECVLEN + 1];
+#ifndef USE_LIBUV
         int socketfd;
         pthread_t pid;
 #endif
-        struct list_head head;
         DevGateway_t devGateway;
-    } LocalControl_t;
+        struct list_head head;
+    }LocalControl_t;
 
     extern LocalControl_t g_SLocalControl;
 
