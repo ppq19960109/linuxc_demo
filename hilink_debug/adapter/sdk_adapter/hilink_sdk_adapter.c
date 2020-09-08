@@ -73,7 +73,7 @@ void hilink_notify_devstatus(int status)
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
 
-        cloud_restart_reFactory(INT_REFACTORY);
+        // cloud_restart_reFactory(INT_REFACTORY);
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");
