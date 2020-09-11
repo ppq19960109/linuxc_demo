@@ -13,15 +13,18 @@
 static char *s_cloudHY0095[] = {"switch1", "indicator"};
 static char *s_cloudHY0096[] = {"switch1", "switch2", "indicator"};
 static char *s_cloudHY0097[] = {"switch1", "switch2", "switch3", "indicator"};
-static char *s_cloud09223f[] = {"cct", STR_BRIGHTNESS, "switch"};
+static char *s_cloud09223f[] = {"cct", "brightness", "switch"};
 static char *s_cloudHY0121[] = {"switch", "indicator"};
 static char *s_cloudHY0122[] = {"switch1", "switch2", "indicator", "switch"};
 static char *s_cloudHY0107[] = {"switch1", "switch2", "switch3", "indicator", "switch"}; //, "relaystatus", "switchtype"
-static char *s_cloudHY0093[] = {"doorEvent", STR_STATUS};
+static char *s_cloudHY0093[] = {"doorEvent", "status"};
 static char *s_cloudHY0134[] = {"scene", "button1", "button2", "button3", "button4", "button5", "button6"}; //场景面板2ANF
 static char *s_cloudHY0134_0[] = {"switch", "temperature"};                                                 //地暖 2ANK
-static char *s_cloudHY0134_1[] = {"switch", "temperature", STR_MODE, "fan"};                                //空调2ANJ
+static char *s_cloudHY0134_1[] = {"switch", "temperature", "mode", "fan"};                                  //空调2ANJ
 static char *s_cloudHY0134_2[] = {"switch", "fan"};                                                         //新风 2ANI
+
+static char *s_sCloudHY0134Temperature[] = {STR_CURRENT, STR_TARGET};
+
 const SAttrInfo g_SCloudAttr[] = {
     {.attr = s_cloudHY0095,
      .attrLen = sizeof(s_cloudHY0095) / sizeof(s_cloudHY0095[0])},
@@ -210,7 +213,7 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
     {
         dev_HY0095_t *dev_sub = (dev_HY0095_t *)src->private;
         //Switch
-        cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, pos++);
+        cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out, pos++);
 
         //indicator
         cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
@@ -334,41 +337,26 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
             {
                 cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out_sub[j], pos++);
 
-                char *key[] = {STR_CURRENT, STR_TARGET};
                 char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature[2]};
-                cloud_update_device_int_array(root, key, value, sizeof(value), out_sub[j], pos++);
+                cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
             }
             break;
             case 1:
             {
                 cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out_sub[j], pos++);
 
-                char *key[] = {STR_CURRENT, STR_TARGET};
                 char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature[0]};
-                cloud_update_device_int_array(root, key, value, sizeof(value), out_sub[j], pos++);
+                cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
 
-                char bufVal;
-                if (dev_sub->WorkMode_1 == 3)
-                {
-                    bufVal = 4;
-                }
-                else if (dev_sub->WorkMode_1 == 4)
-                {
-                    bufVal = 3;
-                }
-                else
-                {
-                    bufVal = dev_sub->WorkMode_1;
-                }
-                cloud_update_device_int(root, STR_MODE, bufVal, out_sub[j], pos++);
+                cloud_update_device_int(root, STR_MODE, dev_sub->WorkMode_1, out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0] - 2, out_sub[j], pos++);
+                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0], out_sub[j], pos++);
             }
             break;
             case 2:
                 cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1] - 2, out_sub[j], pos++);
+                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1], out_sub[j], pos++);
                 break;
             default:
                 break;
@@ -378,10 +366,11 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
         pos = 0;
 
         cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
-
+        // const char name[] = {0xe5, 0x9b, 0x9e, 0xe5, 0xae, 0xb6, 0x00};
         for (i = 0; i < 6; ++i)
         {
             if (strlen(dev_sub->SceName[i]) == 0)
+                // strcpy(dev_sub->SceName[i], name);
                 sprintf(dev_sub->SceName[i], "场景%d", i + 1);
             cloud_update_device_str(root, STR_NAME, dev_sub->SceName[i], out, pos++);
         }

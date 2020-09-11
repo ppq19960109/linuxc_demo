@@ -17,6 +17,7 @@
 #include "cloud_receive.h"
 #include "cloud_send.h"
 #include "uv_main.h"
+#include "event_main.h"
 
 const char *report_json[] = {
     //单键智能开关
@@ -62,19 +63,19 @@ const char *report_json[] = {
     // ]\
     // }",
     //DLT液晶调光器
-    "{\
-       \"Command\":\"Report\",\
-       \"FrameNumber\":\"00\",\
-       \"GatewayId\" :\"0006D12345678909\",\
-       \"Type\":\"Register\",\
-       \"Data\":[\
-         {\
-              \"DeviceId\":\"2234567876543671\",\
-              \"ModelId\":\"09223f\",\
-              \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
-      }\
-    ]\
-    }",
+    // "{\
+    //    \"Command\":\"Report\",\
+    //    \"FrameNumber\":\"00\",\
+    //    \"GatewayId\" :\"0006D12345678909\",\
+    //    \"Type\":\"Register\",\
+    //    \"Data\":[\
+    //      {\
+    //           \"DeviceId\":\"2234567876543671\",\
+    //           \"ModelId\":\"09223f\",\
+    //           \"Secret\":\"kYulH7PhgrI44IcsesSJqkLbufGbUPjkNF2sImWm\"\
+    //   }\
+    // ]\
+    // }",
     //1路智能开关模块
     // "{\
     //    \"Command\":\"Report\",\
@@ -152,16 +153,16 @@ void hilink_msleep(int);
 int main(void)
 {
   hilink_main();
-  printf("Program is started.\r\n");
+  printf("Program is started.\n");
 
   // HiLinkSetGatewayMode(1);
   HILINK_SetLogLevel(HILINK_LOG_ERR);
   HILINK_EnableProcessDelErrCode(1);
   HILINK_SetNetConfigMode(HILINK_NETCONFIG_NONE); //HILINK_NETCONFIG_NONE
-  enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
-  log_debug("HILINK_NetConfigMode:%d\n", net_mode);
-  int devstatus = hilink_get_devstatus();
-  log_debug("hilink_get_devstatus:%d\n", devstatus);
+  // enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
+  // log_debug("HILINK_NetConfigMode:%d\n", net_mode);
+  // int devstatus = hilink_get_devstatus();
+  // log_debug("hilink_get_devstatus:%d\n", devstatus);
 
   // HILINK_SetWiFiInfo("HUAWEI-WDNJ4L", 1, "1234567890", 1);
   // HILINK_StartSoftAp("rk_net", 0);
@@ -170,17 +171,21 @@ int main(void)
   /* hilink main需要运行，sleep 1s保证进程不会退出 */
   local_control_init(&g_SLocalControl);
   cloud_control_init(&g_SCloudControl);
-  // for (int i = 0; i < sizeof(report_json) / sizeof(report_json[0]); i++)
-  //   read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
-
-#ifndef USE_LIBUV
+  for (int i = 0; i < sizeof(report_json) / sizeof(report_json[0]); i++)
+    read_from_local(report_json[i], local_get_list_head(&g_SLocalControl));
+    
+#if USE_LIBEVENT
+  printf("libevent is start.\n");
+  event_main();
+#elif USE_LIBUV
+  printf("libuv is start.\n");
+  main_open();
+#else
   while (1)
   {
     hilink_msleep(1000);
   }
   cloud_restart_reFactory(INT_RESTART);
-#else
-  main_open();
 #endif
   return 0;
 }

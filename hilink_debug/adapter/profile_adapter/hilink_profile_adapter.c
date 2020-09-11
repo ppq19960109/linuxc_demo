@@ -140,7 +140,7 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
         }
     }
 
-    return 0;
+    return -111;
 }
 
 /*
@@ -192,7 +192,7 @@ void HilinkGetDeviceSn(unsigned int len, char *sn)
 {
     /* 在此处添加实现代码, 将sn赋值给*sn回传 */
     log_debug("HilinkGetDeviceSn:%d\n", len);
-    strcpy(sn, "346339313700");
+    // strcpy(sn, "346339313700");
     return;
 }
 

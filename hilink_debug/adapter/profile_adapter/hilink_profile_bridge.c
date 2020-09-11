@@ -75,9 +75,10 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
     {
         strcpy(svcInfo->st[i], dev->devSvc[i].svcId);
         strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
+        log_debug("HilinkGetBrgSvcInfo svcInfo:%s\n", svcInfo->st[i]);
     }
     *svcNum = dev->devSvcNum;
-    log_debug("HilinkGetBrgSvcInfo svcInfo:%s\n", svcInfo->st[0]);
+
     return 0;
 }
 
@@ -101,7 +102,8 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
         return -1;
     }
 
-    return cloud_tolocal(sn, svcId, payload);
+    cloud_tolocal(sn, svcId, payload);
+    return -111;
 }
 
 /*

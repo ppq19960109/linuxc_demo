@@ -16,7 +16,7 @@ extern "C"
 
     typedef struct
     {
-        char Switch;
+        char Switch[1];
         char LedEnable;
         char PowerOffProtection;
         int countdown;

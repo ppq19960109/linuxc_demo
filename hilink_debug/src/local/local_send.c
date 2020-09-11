@@ -13,6 +13,7 @@
 #include "tool.h"
 
 #include "uv_main.h"
+#include "event_main.h"
 
 static char *s_hanyarCmd[] = {STR_ADD, STR_DEVSINFO, STR_DEVATTRI, STR_REFACTORY};
 const SAttrInfo g_SHamyarCmd = {
@@ -70,7 +71,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
 
 int write_haryan(const char *data, int dataLen)
 {
-    int ret;
+    int ret=0;
     char *sendBuf = g_SLocalControl.sendData;
     if (dataLen + 3 <= SENDTOLOCAL_SIZE)
     {
@@ -79,16 +80,19 @@ int write_haryan(const char *data, int dataLen)
         sendBuf[dataLen + 1] = 0x03;
         sendBuf[dataLen + 2] = 0x00;
 
-#ifndef USE_LIBUV
+#if USE_LIBEVENT
+        ret =event_client_write(sendBuf, dataLen + 3);
+#elif USE_LIBUV
+        ret = client_write(sendBuf, dataLen + 3);
+#else
         if (g_SLocalControl.socketfd == 0)
         {
             log_error("socketfd is null\n");
             return -1;
         }
         ret = Write(g_SLocalControl.socketfd, sendBuf, dataLen + 3);
-#else
-        ret = client_write(sendBuf, dataLen + 3);
 #endif
+
         // for (int i = 0; i < dataLen + 3; ++i)
         // {
         //     printf("%x ", sendBuf[i]);
@@ -135,7 +139,7 @@ int write_to_local(void *ptr, LocalControl_t *localControl)
     log_info("send json:%s\n", json);
 
     int ret = write_haryan(json, strlen(json));
-  
+
     free(json);
     free(root);
     return ret;

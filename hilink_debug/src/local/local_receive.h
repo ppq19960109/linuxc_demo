@@ -9,7 +9,7 @@ extern "C"
 #include "list.h"
 #include "tool.h"
 
-// #define USE_LIBUV        //enable libuv
+#define USE_LIBUV 0        //enable libuv
 #define SERVER_PORT 7000 //7000
 #define HY_HEART "{\"Command\":\"TcpBeatHeart\",\"Period\":\"60\"}"
 
@@ -84,7 +84,7 @@ extern "C"
         char sendData[SENDTOLOCAL_SIZE];
 #define RECVLEN 16384
         char tcpBuf[RECVLEN + 1];
-#ifndef USE_LIBUV
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
         int socketfd;
         pthread_t pid;
 #endif

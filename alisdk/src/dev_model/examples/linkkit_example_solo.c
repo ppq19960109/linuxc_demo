@@ -7,36 +7,34 @@
 #include <string.h>
 #include <stdlib.h>
 #ifdef __UBUNTU_SDK_DEMO__
-    #include <unistd.h>
+#include <unistd.h>
 #endif
 
 #include "infra_types.h"
 #include "infra_defs.h"
 #include "infra_compat.h"
 #ifdef INFRA_MEM_STATS
-    #include "infra_mem_stats.h"
+#include "infra_mem_stats.h"
 #endif
 #include "dev_model_api.h"
 #include "wrappers.h"
 #include "cJSON.h"
 #ifdef ATM_ENABLED
-    #include "at_api.h"
+#include "at_api.h"
 #endif
 
-char g_product_key[IOTX_PRODUCT_KEY_LEN + 1]       = "a1uRs9hBYcn";
+char g_product_key[IOTX_PRODUCT_KEY_LEN + 1] = "a1uRs9hBYcn";
 char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "akO617Wsq2v9ARg2";
-char g_device_name[IOTX_DEVICE_NAME_LEN + 1]       = "demo123456";
-char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = "d1726ffab64ee42e447a822462c08e3f";
-// char g_product_key[IOTX_PRODUCT_KEY_LEN + 1]       = "a1JMVlrPO7C";
-// char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "Z0WFc42P5acrzgu1";
-// char g_device_name[IOTX_DEVICE_NAME_LEN + 1]       = "test123";
-// char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = "e3183297a7ba6e5e806d4ab7798981d7";
+char g_device_name[IOTX_DEVICE_NAME_LEN + 1] = "demo123456";
+char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "d1726ffab64ee42e447a822462c08e3f";
 
-#define EXAMPLE_TRACE(...)                                          \
-    do {                                                            \
-        HAL_Printf("\033[1;32;40m%s.%d: ", __func__, __LINE__);     \
-        HAL_Printf(__VA_ARGS__);                                    \
-        HAL_Printf("\033[0m\r\n");                                  \
+
+#define EXAMPLE_TRACE(...)                                      \
+    do                                                          \
+    {                                                           \
+        HAL_Printf("\033[1;32;40m%s.%d: ", __func__, __LINE__); \
+        HAL_Printf(__VA_ARGS__);                                \
+        HAL_Printf("\033[0m\r\n");                              \
     } while (0)
 
 void run_ubuntu_wifi_provision_example()
@@ -63,17 +61,17 @@ void run_ubuntu_wifi_provision_example()
 #endif
 }
 
-#define EXAMPLE_MASTER_DEVID            (0)
-#define EXAMPLE_YIELD_TIMEOUT_MS        (200)
+#define EXAMPLE_MASTER_DEVID (0)
+#define EXAMPLE_YIELD_TIMEOUT_MS (200)
 
-typedef struct {
+typedef struct
+{
     int master_devid;
     int cloud_connected;
     int master_initialized;
 } user_example_ctx_t;
 
 static user_example_ctx_t g_user_example_ctx;
-
 
 /** cloud connected event callback */
 static int user_connected_event_handler(void)
@@ -96,7 +94,7 @@ static int user_disconnected_event_handler(void)
 /* device initialized event callback */
 static int user_initialized(const int devid)
 {
-    EXAMPLE_TRACE("Device Initialized");
+    EXAMPLE_TRACE("Device Initialized:%d", devid);
     g_user_example_ctx.master_initialized = 1;
 
     return 0;
@@ -104,7 +102,7 @@ static int user_initialized(const int devid)
 
 /** recv property post response message from cloud **/
 static int user_report_reply_event_handler(const int devid, const int msgid, const int code, const char *reply,
-        const int reply_len)
+                                           const int reply_len)
 {
     EXAMPLE_TRACE("Message Post Reply Received, Message ID: %d, Code: %d, Reply: %.*s", msgid, code,
                   reply_len,
@@ -114,7 +112,7 @@ static int user_report_reply_event_handler(const int devid, const int msgid, con
 
 /** recv event post response message from cloud **/
 static int user_trigger_event_reply_event_handler(const int devid, const int msgid, const int code, const char *eventid,
-        const int eventid_len, const char *message, const int message_len)
+                                                  const int eventid_len, const char *message, const int message_len)
 {
     EXAMPLE_TRACE("Trigger Event Reply Received, Message ID: %d, Code: %d, EventID: %.*s, Message: %.*s",
                   msgid, code,
@@ -128,7 +126,7 @@ static int user_trigger_event_reply_event_handler(const int devid, const int msg
 static int user_property_set_event_handler(const int devid, const char *request, const int request_len)
 {
     int res = 0;
-    EXAMPLE_TRACE("Property Set Received, Request: %s", request);
+    EXAMPLE_TRACE("Property Set Received, %d,Request: %s", devid, request);
 
     res = IOT_Linkkit_Report(EXAMPLE_MASTER_DEVID, ITM_MSG_POST_PROPERTY,
                              (unsigned char *)request, request_len);
@@ -137,10 +135,9 @@ static int user_property_set_event_handler(const int devid, const char *request,
     return 0;
 }
 
-
 static int user_service_request_event_handler(const int devid, const char *serviceid, const int serviceid_len,
-        const char *request, const int request_len,
-        char **response, int *response_len)
+                                              const char *request, const int request_len,
+                                              char **response, int *response_len)
 {
     int add_result = 0;
     cJSON *root = NULL, *item_number_a = NULL, *item_number_b = NULL;
@@ -150,15 +147,18 @@ static int user_service_request_event_handler(const int devid, const char *servi
 
     /* Parse Root */
     root = cJSON_Parse(request);
-    if (root == NULL || !cJSON_IsObject(root)) {
+    if (root == NULL || !cJSON_IsObject(root))
+    {
         EXAMPLE_TRACE("JSON Parse Error");
         return -1;
     }
 
-    if (strlen("Operation_Service") == serviceid_len && memcmp("Operation_Service", serviceid, serviceid_len) == 0) {
+    if (strlen("Operation_Service") == serviceid_len && memcmp("Operation_Service", serviceid, serviceid_len) == 0)
+    {
         /* Parse NumberA */
         item_number_a = cJSON_GetObjectItem(root, "NumberA");
-        if (item_number_a == NULL || !cJSON_IsNumber(item_number_a)) {
+        if (item_number_a == NULL || !cJSON_IsNumber(item_number_a))
+        {
             cJSON_Delete(root);
             return -1;
         }
@@ -166,7 +166,8 @@ static int user_service_request_event_handler(const int devid, const char *servi
 
         /* Parse NumberB */
         item_number_b = cJSON_GetObjectItem(root, "NumberB");
-        if (item_number_b == NULL || !cJSON_IsNumber(item_number_b)) {
+        if (item_number_b == NULL || !cJSON_IsNumber(item_number_b))
+        {
             cJSON_Delete(root);
             return -1;
         }
@@ -177,7 +178,8 @@ static int user_service_request_event_handler(const int devid, const char *servi
         /* Send Service Response To Cloud */
         *response_len = strlen(response_fmt) + 10 + 1;
         *response = (char *)HAL_Malloc(*response_len);
-        if (*response == NULL) {
+        if (*response == NULL)
+        {
             EXAMPLE_TRACE("Memory Not Enough");
             return -1;
         }
@@ -204,7 +206,8 @@ static int user_fota_event_handler(int type, const char *version)
     int buffer_length = 1024;
 
     /* 0 - new firmware exist, query the new firmware */
-    if (type == 0) {
+    if (type == 0)
+    {
         EXAMPLE_TRACE("New Firmware Version: %s", version);
 
         IOT_Linkkit_Query(EXAMPLE_MASTER_DEVID, ITM_MSG_QUERY_FOTA_DATA, (unsigned char *)buffer, buffer_length);
@@ -219,7 +222,8 @@ static int user_fota_module_event_handler(int type, const char *version, const c
     int buffer_length = 1024;
 
     /* 0 - new firmware exist, query the new firmware */
-    if (type == 0) {
+    if (type == 0)
+    {
         EXAMPLE_TRACE("New Firmware Version: %s, module: %s", version, module);
 
         IOT_Linkkit_Query(EXAMPLE_MASTER_DEVID, ITM_MSG_QUERY_FOTA_DATA, (unsigned char *)buffer, buffer_length);
@@ -236,7 +240,8 @@ static int user_cota_event_handler(int type, const char *config_id, int config_s
     int buffer_length = 128;
 
     /* type = 0, new config exist, query the new config */
-    if (type == 0) {
+    if (type == 0)
+    {
         EXAMPLE_TRACE("New Config ID: %s", config_id);
         EXAMPLE_TRACE("New Config Size: %d", config_size);
         EXAMPLE_TRACE("New Config Type: %s", get_type);
@@ -259,6 +264,7 @@ static int user_dev_bind_handler(const char *detail)
 #endif
 void user_post_property(void)
 {
+    EXAMPLE_TRACE("user_post_property");
     static int cnt = 0;
     int res = 0;
 
@@ -275,7 +281,7 @@ void user_post_event(void)
 {
     int res = 0;
     char *event_id = "HardwareError";
-    char *event_payload = "{\"ErrorCode\": 0}";
+    char *event_payload = "{\"ErrorCode\": 1}";
 
     res = IOT_Linkkit_TriggerEvent(EXAMPLE_MASTER_DEVID, event_id, strlen(event_id),
                                    event_payload, strlen(event_payload));
@@ -329,14 +335,15 @@ int main(int argc, char **argv)
     int domain_type = 0, dynamic_register = 0, post_reply_need = 0, fota_timeout = 30;
 
 #ifdef ATM_ENABLED
-    if (IOT_ATM_Init() < 0) {
+    if (IOT_ATM_Init() < 0)
+    {
         EXAMPLE_TRACE("IOT ATM init failed!\n");
         return -1;
     }
 #endif
 
-
-    if (argc >= 2 && !strcmp("auto_quit", argv[1])) {
+    if (argc >= 2 && !strcmp("auto_quit", argv[1]))
+    {
         auto_quit = 1;
         cnt = 0;
     }
@@ -399,41 +406,49 @@ int main(int argc, char **argv)
 
     IOT_Ioctl(IOTX_IOCTL_FOTA_TIMEOUT_MS, (void *)&fota_timeout);
 
-    do {
+    do
+    {
         g_user_example_ctx.master_devid = IOT_Linkkit_Open(IOTX_LINKKIT_DEV_TYPE_MASTER, &master_meta_info);
-        if (g_user_example_ctx.master_devid >= 0) {
+        if (g_user_example_ctx.master_devid >= 0)
+        {
             break;
         }
         EXAMPLE_TRACE("IOT_Linkkit_Open failed! retry after %d ms\n", 2000);
         HAL_SleepMs(2000);
     } while (1);
-
+    EXAMPLE_TRACE("g_user_example_ctx.master_devid %d\n", g_user_example_ctx.master_devid);
     /* run_ubuntu_wifi_provision_example(); */
 
-    do {
+    do
+    {
         res = IOT_Linkkit_Connect(g_user_example_ctx.master_devid);
-        if (res >= 0) {
+        if (res >= 0)
+        {
             break;
         }
         EXAMPLE_TRACE("IOT_Linkkit_Connect failed! retry after %d ms\n", 5000);
         HAL_SleepMs(5000);
     } while (1);
 
-    while (1) {
+    while (1)
+    {
         IOT_Linkkit_Yield(EXAMPLE_YIELD_TIMEOUT_MS);
 
         /* Post Proprety Example */
-        if ((cnt % 2) == 0) {
-            /* user_post_property(); */
+        if ((cnt % 30) == 0)
+        {
+            /**/ user_post_property(); 
         }
 
         /* Post Event Example */
-        if ((cnt % 10) == 0) {
-            /* user_post_event(); */
+        if ((cnt % 60) == 0)
+        {
+            /* */user_post_event(); 
         }
         cnt++;
 
-        if (auto_quit == 1 && cnt > 3600) {
+        if (auto_quit == 1 && cnt > 3600)
+        {
             break;
         }
     }
@@ -445,5 +460,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-
-

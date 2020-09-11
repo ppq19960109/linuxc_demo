@@ -1,5 +1,5 @@
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
 #include "local_tcp_client.h"
-#ifndef USE_LIBUV
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,7 +116,7 @@ static void *thread_hander(void *arg)
         pdata->socketfd = net_client_srart();
         int readLen = 0;
         timer_t timerid = start_timer();
-
+        write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
         write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
         while (1)
         {

@@ -1,6 +1,9 @@
-
+# -*- coding: utf-8 -*-
 import struct
 
+import sys
+# reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 def add(a, b):
     print("agr1 %d agr2 %s" % (a, b))
@@ -44,5 +47,17 @@ def hy_down(strVal, strLen):
     print("----------------end")
     return out1, out1
 
+def hy_toUTF16(strVal):
+    ret=strVal.encode('utf-16LE')
+    print(type(ret),ret)
+    return ret
 
-print(hy_down('\x01\x02\x03\x04', 4))
+def hy_fromUTF16(byteVal):
+    # byteVal=byteVal.encode('ascii')
+    # print(byteVal)
+    ret=byteVal.decode('utf-16BE')
+    print(type(ret),ret)
+    return ret
+
+print(hy_toUTF16('啊'))
+print(hy_fromUTF16(b'\x56\xde\x5b\xb6'))

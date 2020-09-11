@@ -451,24 +451,110 @@ fail_pmodule:
     return -1;
 }
 
+int hy_conversion4_updown(char *modelId, char *dir, char *in, int inLen, char *out, int *outLen)
+{
+    Py_Initialize(); //开始Python解释器
+
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString("sys.path.append('./')");
+
+    //导入python源文件
+    PyObject *pname = NULL;
+    pname = PyUnicode_FromString(modelId);
+
+    PyObject *pmodule = NULL;
+    pmodule = PyImport_Import(pname);
+    if (pmodule == NULL)
+    {
+        printf("can not find %s.py\n", modelId);
+        goto fail_pmodule;
+    }
+    //调用函数
+
+    PyObject *pfunc = PyObject_GetAttrString(pmodule, dir);
+    if (!pfunc)
+    {
+        printf("can not find function %s\n", dir);
+        goto fail_pfunc;
+    }
+
+    PyObject *pArgs = NULL;
+    PyObject *pRetVal = NULL;
+    PyObject *PyList = NULL;
+
+    PyList = PyTuple_New(inLen);
+    for (int i = 0; i < inLen; i++)
+        PyTuple_SetItem(PyList, i, PyLong_FromLong(in[i]));
+
+    pArgs = PyTuple_New(1);
+
+    PyTuple_SetItem(pArgs, 0, PyList);
+
+    //调用函数
+    pRetVal = PyObject_CallObject(pfunc, pArgs);
+    if (!pRetVal)
+    {
+        printf("PyObject_CallObject error\n");
+
+        goto fail_pRetVal;
+    }
+
+    if (PyTuple_Check(pRetVal))
+    {
+        int result;                             //检查是否为List对象
+        int SizeOfList = PyTuple_Size(pRetVal); //List对象的大小，这里SizeOfList = 2
+        *outLen = SizeOfList;
+        printf("返回的结果result：\n");
+        for (int i = 0; i < SizeOfList; i++)
+        {
+            PyObject *Item = PyTuple_GetItem(pRetVal, i); //获取List对象中的每一个元素
+            PyArg_Parse(Item, "i", &result);
+            printf("%x ", result);
+            out[i] = result;
+
+            // Py_DECREF(Item); //释放空间
+        }
+        printf("\n");
+    }
+
+    Py_DECREF(pRetVal);
+    Py_DECREF(pArgs);
+    Py_DECREF(pfunc);
+    Py_DECREF(pmodule);
+    Py_DECREF(pname);
+    Py_Finalize();
+    return 0;
+
+fail_pRetVal:
+    Py_DECREF(pArgs);
+    Py_DECREF(pfunc);
+fail_pfunc:
+    Py_DECREF(pmodule);
+fail_pmodule:
+    Py_DECREF(pname);
+    Py_Finalize();
+    return -1;
+}
+
 int main(int argc, char **argv)
 {
     printf("main start\n");
 
-    char str[9] = {1, 3, 0, 222};
+    char str[10] = {0x56, 0xde, 0x5b, 0xb6};
     int len = 4;
     char num[9] = {0};
     int numlen = 1;
 
-    char out1[9] = {4, 0, 5, 0};
-    int out1len = 4;
     char out2[9] = {0};
     int out2len = 0;
     // hy_conversion("HY123", "name", "up", str, len, out, &outlen);
     if (1)
     {
-        hy_conversion2_updown("TS0002", "up", str, len, out1, &out1len, out2, &out2len);
-        printf("%x,%d,%d,%d\n", (unsigned char)out1[2], out1len, out2[2], out2len);
+        hy_conversion4_updown("TS0002", "up", str, len, out2, &out2len);
+        printf("%x,%d,%d,%d\n", (unsigned char)out2[0], (unsigned char)out2[1], (unsigned char)out2[2], out2len);
+
+        // hy_conversion2_updown("TS0002", "up", str, len, out1, &out1len, out2, &out2len);
+        // printf("%x,%d,%d,%d\n", (unsigned char)out1[2], out1len, out2[2], out2len);
         // hy_conversion2_updown("TS0002", "down", str, len, out1, &out1len, out2, &out2len);
         // printf("%d,%d\n", out2[2], out2len);
 

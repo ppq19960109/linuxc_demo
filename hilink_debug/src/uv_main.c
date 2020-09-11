@@ -1,5 +1,5 @@
+#if USE_LIBUV
 #include "uv_main.h"
-#ifdef USE_LIBUV
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -97,6 +97,7 @@ static void on_connect(uv_connect_t *req, int status)
     }
     uv_timer_stop(&timer_client);
     s_isConnect = 1;
+    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
     write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
 
     struct sockaddr addrpeer;
@@ -167,7 +168,7 @@ void net_client_close()
 void timer_callback(uv_timer_t *timer)
 {
     printf("HY_HEART timer_callback\n");
-    client_write(HY_HEART, strlen(HY_HEART));
+    write_haryan(HY_HEART, strlen(HY_HEART));
 }
 
 int timer_open()

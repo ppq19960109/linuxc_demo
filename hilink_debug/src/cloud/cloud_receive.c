@@ -68,7 +68,7 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         }
         else if (cJSON_HasObjectItem(root, STR_MODE))
         {
-            strcpy(out.Type, STR_ATTRIBUTE);
+            strcpy(out.Type, STR_CTRL);
             val = cJSON_GetObjectItem(root, STR_MODE);
         }
         else
@@ -104,7 +104,7 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         }
         else if (cJSON_HasObjectItem(root, STR_MODE))
         {
-            strcpy(out.Type, STR_ATTRIBUTE);
+            strcpy(out.Type, STR_CTRL);
             val = cJSON_GetObjectItem(root, STR_MODE);
         }
         else
@@ -122,6 +122,8 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         {
             sprintf(out.Data.Key, "SceName_%d", index);
             val = cJSON_GetObjectItem(root, STR_NAME);
+
+            // log_debug("SceName:%x,%x,%x,%x,\n", val->valuestring[0], val->valuestring[1], val->valuestring[2], val->valuestring[3]);
         }
         else
         {
@@ -158,17 +160,6 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         else if (cJSON_HasObjectItem(root, STR_MODE))
         {
             val = cJSON_GetObjectItem(root, STR_MODE);
-            if (val->valueint == 3)
-            {
-                val->valueint = 4;
-            }
-            else if (val->valueint == 4)
-            {
-                val->valueint = 3;
-            }
-            else
-            {
-            }
         }
         else if (cJSON_HasObjectItem(root, STR_TARGET))
         {
@@ -177,7 +168,6 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         else if (cJSON_HasObjectItem(root, STR_GEAR))
         {
             val = cJSON_GetObjectItem(root, STR_GEAR);
-            val->valueint += 2;
         }
         else
         {
@@ -199,7 +189,6 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
         {
             strcpy(out.Data.Key, "WindSpeed_2");
             val = cJSON_GetObjectItem(root, STR_GEAR);
-            val->valueint += 2;
         }
         else
         {

@@ -41,7 +41,7 @@ LocalControl_t g_SLocalControl;
 void local_control_init(LocalControl_t *localControl)
 {
     INIT_LIST_HEAD(&localControl->head);
-#ifndef USE_LIBUV
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
     main_thread_set_signal();
     localControl->pid = net_client(localControl);
 #endif
@@ -49,7 +49,7 @@ void local_control_init(LocalControl_t *localControl)
 
 void local_control_destory(LocalControl_t *localControl)
 {
-#ifndef USE_LIBUV
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
     if (localControl->pid != 0)
     {
         pthread_cancel(localControl->pid);
@@ -99,6 +99,7 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
                 continue;
             }
             list_add(&dev_buf->node, localNode);
+            HilinkSyncBrgDevStatus(dev_buf->DeviceId, dev_buf->Online);
         }
         else
         {
@@ -270,7 +271,6 @@ int read_from_local(const char *json, struct list_head *localNode)
     case 4: //设备全部属性上报：”DevAttri”;
     case 5: //设备事件上报：”Event”；恢复出厂设置上报：”
     {
-        // log_debug("设备属性上报：”Attribute”；");
 
         dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
         if (dev_buf != NULL)

@@ -26,6 +26,7 @@ INCLUDE_PATH += -I$(BASE_PATH)/src/rk3308
 INCLUDE_PATH += -I$(BASE_PATH)/lib/curl/include/curl
 
 INCLUDE_PATH += -I$(PWD)$(PWD)/$(PWD)$(PWD)/libuv/libuv/include
+INCLUDE_PATH += -I$(BASE_PATH)/lib/libevent_rk3308/include
 #适配源文件
 SOURCE_FILES := $(wildcard $(BASE_PATH)/adapter/network_adapter/*.c)
 SOURCE_FILES += $(wildcard $(BASE_PATH)/adapter/config_adapter/*.c)
@@ -44,8 +45,9 @@ SOURCE_FILES += $(wildcard $(BASE_PATH)/src/rk3308/*.c)
 LIB_FILE_PATH := -L$(BASE_PATH)/lib
 
 LIB_FILE_PATH +=  -L$(PWD)$(PWD)/$(PWD)$(PWD)/libuv/libuv/lib
+LIB_FILE_PATH +=  -L$(BASE_PATH)/lib/libevent_rk3308/lib
 #库文件
-LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota  -luv -Wl,-Bdynamic -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
+LIB_FILES := -Wl,--start-group -Wl,-Bstatic -lhilinkdevicesdk -lhilinkota  -luv -levent_core -levent  -levent_pthreads  -levent_extra -levent_openssl -Wl,-Bdynamic -lrt -ldl -lm -lpthread  -lDeviceIo -lasound -Wl,--end-group 
 # LIB_FILES := -Wl,--start-group -Wl,-Bstatic  -Wl,-Bdynamic  -lpthread -lm -ldl -Wl,--end-group 
 #编译出的.o文件
 
@@ -54,7 +56,7 @@ OBJECTS := $(patsubst %.c, %.o, $(SOURCE_FILES))
 
 #编译选项
 
-COMPILE_FLAGS := -O  $(INCLUDE_PATH)
+COMPILE_FLAGS := -O  $(INCLUDE_PATH) -DUSE_LIBUV=0 -DUSE_LIBEVENT=0
 LINK_FLAGS := $(LIB_FILE_PATH) $(LIB_FILES)
 
 #编译开始
