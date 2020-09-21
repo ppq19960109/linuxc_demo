@@ -5,7 +5,7 @@ RM = rm -f
 
 TOPDIR = .
 SRC_INCPATH = $(TOPDIR)/include
-SRC_PATH = $(TOPDIR)/src
+SRC_PATH = src
 
 
 CFLAGS += -I$(TOPDIR)$(TOPDIR)/libs/libevent/include/
@@ -39,6 +39,7 @@ TARGET := libevent_demo
 all: $(TARGET)
 
 $(TARGET) : $(OBJ)
+	echo $(SRC)
 	$(CC) $^  $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
 
 clean :

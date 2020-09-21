@@ -24,10 +24,10 @@
     #include "ota_service.h"
 #endif
 
-char g_product_key[IOTX_PRODUCT_KEY_LEN + 1]       = "a1RIsMLz2BJ";
-char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "fSAF0hle6xL0oRWd";
-char g_device_name[IOTX_DEVICE_NAME_LEN + 1]       = "example1";
-char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = "RDXf67itLqZCwdMCRrw0N5FHbv5D7jrE";
+char g_product_key[IOTX_PRODUCT_KEY_LEN + 1]       = "a1f0jNVDEPL";
+char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "iaBya0CvodivLBg6";
+char g_device_name[IOTX_DEVICE_NAME_LEN + 1]       = "gateway123";
+char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = "3e8f6cfae83ad6a4ddd1bdf860bb02ac";
 
 #define USER_EXAMPLE_YIELD_TIMEOUT_MS (200)
 
