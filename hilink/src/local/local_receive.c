@@ -201,7 +201,7 @@ int read_from_local(const char *json, struct list_head *localNode)
     }
 
     dev_data_t dev_data;
-    dev_data_t *dev_buf;
+    dev_data_t *dev_buf = NULL;
     cJSON *array_sub = cJSON_GetArrayItem(Data, 0);
     str_copy_from_json(array_sub, STR_DEVICEID, dev_data.DeviceId);
 
@@ -233,10 +233,12 @@ int read_from_local(const char *json, struct list_head *localNode)
     break;
     case 1: //设备注销上报：”UnRegister”；
     {
-        if (list_del_by_id(dev_data.DeviceId, localNode) == 0)
+        dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
+        if (dev_buf != NULL)
         {
+            hilink_onlineStatus(dev_buf, DEV_RESTORE);
             list_del_by_id_hilink(dev_data.DeviceId, cloud_get_list_head(&g_SCloudControl));
-            HilinkSyncBrgDevStatus(dev_data.DeviceId, DEV_RESTORE);
+            list_del_dev(dev_buf);
         }
         else
         {
@@ -251,7 +253,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         if (dev_buf != NULL && Key != NULL && strcmp(Key->valuestring, STR_ONLINE) == 0)
         {
             char_copy_from_json(array_sub, STR_VALUE, &dev_buf->Online);
-            hilink_online(dev_buf);
+            hilink_onlineStatus(dev_buf,dev_buf->Online);
         }
     }
     break;

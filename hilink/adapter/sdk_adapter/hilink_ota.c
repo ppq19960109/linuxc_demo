@@ -20,7 +20,7 @@
 #define UPDATE_PATH "/userdata/update/"
 #define UPDATE_FILE "upgrade.bin"
 #define UPDATE_PATH_ALL "/userdata/update/upgrade.bin"
-#define OTA_VERSION "1.0.0"
+#define OTA_VERSION "1.0.1"
 /*
  * 获取MCU当前版本
  * version表示版本字符串

@@ -41,45 +41,53 @@ int main(int argc, char *argv[])
 
 	filename = argv[1];
 
-	if(argc != 2) {
+	if (argc != 2)
+	{
 		printf("Error Usage!\r\n");
 		return -1;
 	}
 
 	fd = open(filename, O_RDWR);
-	if (fd < 0) {
+	if (fd < 0)
+	{
 		printf("Can't open file %s\r\n", filename);
 		return -1;
 	}
 
-	while (1) {
+	while (1)
+	{
 		err = read(fd, &inputevent, sizeof(inputevent));
-		if (err > 0) { /* 读取数据成功 */
-			switch (inputevent.type) {
+		if (err > 0)
+		{ /* 读取数据成功 */
+			switch (inputevent.type)
+			{
 
+			case EV_KEY:
+				if (inputevent.code < BTN_MISC)
+				{ /* 键盘键值 */
+					printf("key %d %s\r\n", inputevent.code, inputevent.value ? "press" : "release");
+				}
+				else
+				{
+					printf("button %d %s\r\n", inputevent.code, inputevent.value ? "press" : "release");
+				}
+				break;
 
-				case EV_KEY:
-					if (inputevent.code < BTN_MISC) { /* 键盘键值 */
-						printf("key %d %s\r\n", inputevent.code, inputevent.value ? "press" : "release");
-					} else {
-						printf("button %d %s\r\n", inputevent.code, inputevent.value ? "press" : "release");
-					}
-					break;
-
-				/* 其他类型的事件，自行处理 */
-				case EV_REL:
-					break;
-				case EV_ABS:
-					break;
-				case EV_MSC:
-					break;
-				case EV_SW:
-					break;
+			/* 其他类型的事件，自行处理 */
+			case EV_REL:
+				break;
+			case EV_ABS:
+				break;
+			case EV_MSC:
+				break;
+			case EV_SW:
+				break;
 			}
-		} else {
+		}
+		else
+		{
 			printf("读取数据失败\r\n");
 		}
 	}
 	return 0;
 }
-

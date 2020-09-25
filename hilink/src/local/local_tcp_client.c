@@ -8,14 +8,12 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
-#include <signal.h>
-#include <time.h>
 #include "local_tcp_client.h"
 #include "local_send.h"
 #include "socket.h"
 
 #include "cloud_receive.h"
-
+#include "cloud_send.h"
 typedef struct
 {
     int socketfd;
@@ -106,33 +104,39 @@ void delay_timer_destroy()
     timer_delete(tcp_app.delay_timerid);
 }
 
-static void timer_thread(union sigval v)
+static void timer_thread_handler(union sigval v)
 {
-    printf("timer_thread function! %s\n", HY_HEART);
+    // printf("timer_thread function!\n");
+    if (v.sival_int == 1)
+    {
+        write_haryan(HY_HEART, strlen(HY_HEART));
+    }
 }
+
 void timer_signal_handler(int signal)
 {
     // printf("timer_signal_handler function! %s\n", HY_HEART);
     write_haryan(HY_HEART, strlen(HY_HEART));
 }
 
-static timer_t start_timer()
+timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec)
 {
-    struct sigaction act;
-    act.sa_handler = timer_signal_handler;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
-    sigaction(SIGUSR1, &act, NULL);
+    // struct sigaction act;
+    // act.sa_handler = timer_signal_handler;
+    // sigemptyset(&act.sa_mask);
+    // act.sa_flags = SA_RESTART;
+    // sigaction(SIGUSR1, &act, NULL);
 
     timer_t timerid;
     struct sigevent evp;
     memset(&evp, 0, sizeof(struct sigevent)); //清零初始化
 
-    // evp.sigev_value.sival_int = 1;                //也是标识定时器的，回调函数可以获得
-    // evp.sigev_notify = SIGEV_THREAD;                //线程通知的方式，派驻新线程
-    // evp.sigev_notify_function = timer_thread;       //线程函数地址
-    evp.sigev_signo = SIGUSR1;
-    evp.sigev_notify = SIGEV_SIGNAL;
+    evp.sigev_value.sival_int = sival;     //也是标识定时器的，回调函数可以获得
+    evp.sigev_notify = SIGEV_THREAD;       //线程通知的方式，派驻新线程
+    evp.sigev_notify_function = fun; //线程函数地址
+
+    // evp.sigev_signo = SIGUSR1;
+    // evp.sigev_notify = SIGEV_SIGNAL;
 
     if (timer_create(CLOCK_REALTIME, &evp, &timerid) == -1)
     {
@@ -142,9 +146,9 @@ static timer_t start_timer()
 
     /* 第一次间隔it.it_value这么长,以后每次都是it.it_interval这么长,就是说it.it_value变0的时候会>装载it.it_interval的值 */
     struct itimerspec it;
-    it.it_interval.tv_sec = 60; // 回调函数执行频率为1s运行1次
+    it.it_interval.tv_sec = interval_sec; // 回调函数执行频率为1s运行1次
     it.it_interval.tv_nsec = 0;
-    it.it_value.tv_sec = 3; // 倒计时3秒开始调用回调函数
+    it.it_value.tv_sec = sec; // 倒计时3秒开始调用回调函数
     it.it_value.tv_nsec = 0;
 
     if (timer_settime(timerid, 0, &it, NULL) == -1)
@@ -179,7 +183,7 @@ static void *thread_hander(void *arg)
     {
         pdata->socketfd = net_client_srart();
         int readLen = 0;
-        timer_t timerid = start_timer();
+        timer_t timerid = start_timer(1, timer_thread_handler, 60, 0);
         delay_timer_init();
         write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
         write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
@@ -209,6 +213,7 @@ static void *thread_hander(void *arg)
 
         timer_delete(timerid);
         delay_timer_destroy();
+        hilink_all_online(0);
     } while (1);
     pthread_exit(0);
 }
@@ -222,11 +227,11 @@ pthread_t net_client(void *arg)
     //要将id分配出去。
     pthread_detach(id);
 
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, SIGALRM);
-    sigaddset(&set, SIGUSR1);
-    pthread_sigmask(SIG_BLOCK, &set, NULL);
+    // sigset_t set;
+    // sigemptyset(&set);
+    // sigaddset(&set, SIGALRM);
+    // sigaddset(&set, SIGUSR1);
+    // pthread_sigmask(SIG_BLOCK, &set, NULL);
 
     return id;
 }

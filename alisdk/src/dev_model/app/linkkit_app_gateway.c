@@ -161,9 +161,12 @@ static int user_initialized(const int devid)
     if (user_example_ctx->master_devid == devid)
     {
         user_example_ctx->master_initialized = 1;
-        user_example_ctx->subdev_index++;
     }
-
+    user_example_ctx->subdev_index++;
+    if(user_example_ctx->subdev_index>2)
+    {
+        IOT_Linkkit_Query(devid,ITM_MSG_QUERY_TOPOLIST,NULL,0);
+    }
     return 0;
 }
 
@@ -228,10 +231,14 @@ int linkkit_subdev_online(iotx_linkkit_dev_meta_info_t *meta_info, int *dst_devi
     pthread_mutex_lock(&mutex);
     int res = -1, devid = -1;
 
+    if (dst_devid == NULL)
+        goto fail;
+
     switch (status)
     {
     case DEV_OFFLINE:
-
+        if (*dst_devid < 0)
+            goto fail;
         devid = *dst_devid;
         res = IOT_Linkkit_Report(devid, ITM_MSG_LOGOUT, NULL, 0);
         if (res == FAIL_RETURN)
@@ -270,16 +277,16 @@ int linkkit_subdev_online(iotx_linkkit_dev_meta_info_t *meta_info, int *dst_devi
 
         break;
     case DEV_RESTORE:
-        if (dst_devid == NULL || *dst_devid < 0)
+        if (*dst_devid < 0)
             goto fail;
         devid = *dst_devid;
         res = IOT_Linkkit_Report(devid, ITM_MSG_DELETE_TOPO, NULL, 0);
         if (res == FAIL_RETURN)
         {
-            EXAMPLE_TRACE("subdev logout DELETE Failed\n");
+            EXAMPLE_TRACE("subdev logout DELETE_TOPO Failed\n");
             goto fail;
         }
-        EXAMPLE_TRACE("subdev logout DELETE success: devid = %d\n", devid);
+        EXAMPLE_TRACE("subdev logout DELETE_TOPO success: devid = %d\n", devid);
         break;
 
     default:
@@ -325,6 +332,22 @@ static int user_sdk_state_dump(int ev, const char *msg)
     return 0;
 }
 
+int user_state_dev_bind_handler(const int state_code, const char *state_message)
+{
+    EXAMPLE_TRACE("user_state_dev_bind_handler:%d,%s", state_code, state_message);
+    return 0;
+}
+
+int user_state_dev_model_handler(const int state_code, const char *state_message)
+{
+    EXAMPLE_TRACE("user_state_dev_model_handler:%d,%s", state_code, state_message);
+    return 0;
+}
+int user_topolist_handler(const int devid, const int msgid, const int code, const char *payload, const int payload_len)
+{
+    EXAMPLE_TRACE("user_topolist_handler devid:%d,msgid:%d,code:%d,%s", devid, msgid, code, payload);
+    return 0;
+}
 static int max_running_seconds = 0;
 
 void main_close()
@@ -401,8 +424,11 @@ int main(int argc, char **argv)
     IOT_RegisterCallback(ITE_INITIALIZE_COMPLETED, user_initialized);
     IOT_RegisterCallback(ITE_PERMIT_JOIN, user_permit_join_event_handler);
     IOT_RegisterCallback(ITE_CLOUD_ERROR, user_cloud_error_handler);
+    IOT_RegisterCallback(ITE_TOPOLIST_REPLY, user_topolist_handler);
 #ifdef DEV_BIND_ENABLED
     IOT_RegisterCallback(ITE_BIND_EVENT, user_dev_bind_handler);
+    // IOT_RegisterCallback(ITE_STATE_DEV_BIND, user_state_dev_bind_handler);
+    // IOT_RegisterCallback(ITE_STATE_DEV_MODEL, user_state_dev_model_handler);
 #endif
     memset(&master_meta_info, 0, sizeof(iotx_linkkit_dev_meta_info_t));
     memcpy(master_meta_info.product_key, g_product_key, strlen(g_product_key));
@@ -454,8 +480,6 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    // user_example_ctx->auto_add_subdev = 1;
-
     tcp_client_open();
     time_begin_sec = user_update_sec();
     while (1)
@@ -471,44 +495,6 @@ int main(int argc, char **argv)
         {
             EXAMPLE_TRACE("Example Run for Over %d Seconds, Break Loop!\n", max_running_seconds);
             break;
-        }
-
-        /* Add subdev */
-        if (user_example_ctx->master_initialized && user_example_ctx->subdev_index >= 0 &&
-            (user_example_ctx->auto_add_subdev == 1 || user_example_ctx->permit_join != 0))
-        {
-            if (user_example_ctx->subdev_index < EXAMPLE_SUBDEV_ADD_NUM)
-            {
-                /* Add next subdev */
-                if (linkkit_subdev_online((iotx_linkkit_dev_meta_info_t *)&subdevArr[user_example_ctx->subdev_index], NULL, DEV_ONLINE) == SUCCESS_RETURN)
-                {
-                    EXAMPLE_TRACE("subdev %s add succeed", subdevArr[user_example_ctx->subdev_index].device_name);
-                }
-                else
-                {
-                    EXAMPLE_TRACE("subdev %s add failed", subdevArr[user_example_ctx->subdev_index].device_name);
-                }
-                user_example_ctx->subdev_index++;
-                user_example_ctx->permit_join = 0;
-            }
-        }
-
-        /* Post Proprety Example */
-        if (time_now_sec % 11 == 0 && user_master_dev_available())
-        {
-            /* user_post_property(); */
-        }
-
-        /* Device Info Update Example */
-        if (time_now_sec % 23 == 0 && user_master_dev_available())
-        {
-            /* user_deviceinfo_update(); */
-        }
-
-        /* Device Info Delete Example */
-        if (time_now_sec % 29 == 0 && user_master_dev_available())
-        {
-            /* user_deviceinfo_delete(); */
         }
 
         time_prev_sec = time_now_sec;

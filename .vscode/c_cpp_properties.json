@@ -4,9 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/ppq/imx6ull/imx6ull/linux-imx-rel_imx_4.1.15_2.1.0_ga/include",
-                "/home/ppq/imx6ull/imx6ull/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/include",
-                "/usr/include/python3.8/"
+                "/home/ppq/rockchip/mdk3308/kernel/include",
+                "/home/ppq/rockchip/mdk3308/kernel/arch/arm/include",
+                "/home/ppq/rockchip/mdk3308/kernel/arch/arm/include/generated/"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

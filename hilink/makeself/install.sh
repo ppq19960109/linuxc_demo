@@ -12,6 +12,7 @@ APP_NAME="hilinkapp"
 HILINK_CONFIG_FILE="hilink.cfg"
 HILINK_BAK_CONFIG_FILE="hilink_bak.cfg"
 START_APP_FILE="start_app.sh"
+RESTORE_FILE="restore.sh"
 #kill app
 killall $APP_NAME
 killall hydevapp
@@ -20,9 +21,9 @@ killall hy_server_iot
 if [ ! -d "$HILINK_CONFIG_PATH" ]; then
     mkdir "$HILINK_CONFIG_PATH"
 fi
-cp -rf $APP_NAME $APP_PATH/
-cp -rf $HILINK_CONFIG_FILE $HILINK_CONFIG_PATH/
-cp -rf $HILINK_BAK_CONFIG_FILE $HILINK_CONFIG_PATH/
+cp -rf $APP_NAME $RESTORE_FILE $APP_PATH/
+cp -rf $HILINK_CONFIG_FILE $HILINK_BAK_CONFIG_FILE $APP_PATH/
+cp -rf $HILINK_CONFIG_FILE $HILINK_BAK_CONFIG_FILE $HILINK_CONFIG_PATH/
 cp -rf $START_APP_FILE $OEM_PATH/
 
 HYAPP_PATH="hyapp"

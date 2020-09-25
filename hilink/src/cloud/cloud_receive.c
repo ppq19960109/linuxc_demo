@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "cloud_list.h"
 #include "cloud_send.h"
@@ -10,7 +11,7 @@
 #include "local_device.h"
 
 #include "tool.h"
-
+#include "rk_driver.h"
 #include "hilink.h"
 #include "hilink_softap_adapter.h"
 
@@ -212,15 +213,17 @@ fail:
 int cloud_delete_device(const char *sn)
 {
     local_dev_t out = {0};
-    char ssn[24] = {0};
+    char ssn[32] = {0};
 
     dev_cloud_t *dev_cloud = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
     int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
+
+    stpcpy(ssn, sn);
+
     switch (index)
     {
     case 8:
     {
-        stpcpy(ssn, sn);
         int p = strlen(sn);
         for (int j = 0; j < 3; j++)
         {
@@ -235,7 +238,6 @@ int cloud_delete_device(const char *sn)
     case 10:
     case 11:
     {
-        stpcpy(ssn, sn);
         int p = strlen(sn);
         ssn[p] = 0;
         --p;
@@ -267,16 +269,20 @@ int cloud_delete_device(const char *sn)
 void cloud_restart_reFactory(int index)
 {
     write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
+    hilink_all_online(0);
+    sleep(1);
     if (index)
     {
         write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
         hilink_restore_factory_settings();
         cloud_control_destory(&g_SCloudControl);
         local_control_destory(&g_SLocalControl);
+        create_gateway(local_get_list_head(&g_SLocalControl));
     }
     else
     {
         HILINK_StopSoftAp();
+        driver_exit();
         cloud_control_destory(&g_SCloudControl);
         local_control_destory(&g_SLocalControl);
     }

@@ -11,6 +11,7 @@
 #include "cloud_receive.h"
 #include "cloud_send.h"
 #include "tool.h"
+#include "rk_driver.h"
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -27,7 +28,8 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CLOUD_ONLINE:
         log_info("HILINK_M2M_CLOUD_ONLINE\n");
         /* 设备连接云端成功，请在此处添加实现 */
-        hilink_online_all();
+
+        hilink_all_online(1);
         break;
     case HILINK_M2M_LONG_OFFLINE:
         log_info("HILINK_M2M_LONG_OFFLINE\n");
@@ -62,6 +64,15 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CONNECTTING_CLOUD:
         log_info("HILINK_M2M_CONNECTTING_CLOUD\n");
         /* 设备正在连接云端，请在此处添加实现 */
+        if (HILINK_IsRegister())
+        {
+            driver_deviceRegister();
+        }
+        else
+        {
+            driver_deviceUnRegister();
+        }
+        
         break;
     case HILINK_M2M_CLOUD_DISCONNECT:
         log_info("HILINK_M2M_CLOUD_DISCONNECT\n");
@@ -70,12 +81,13 @@ void hilink_notify_devstatus(int status)
     case HILINK_DEVICE_REGISTERED:
         log_info("HILINK_DEVICE_REGISTERED\n");
         /* 设备被注册，请在此处添加实现 */
+        driver_deviceRegister();
         break;
     case HILINK_DEVICE_UNREGISTER:
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
-
-        // cloud_restart_reFactory(INT_REFACTORY);
+        driver_deviceUnRegister();
+        cloud_restart_reFactory(INT_REFACTORY);
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");

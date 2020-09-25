@@ -7,6 +7,7 @@ extern "C"
 #endif
 
 #include "local_receive.h"
+#define HY0134_INDEX 8
 
     typedef struct
     {

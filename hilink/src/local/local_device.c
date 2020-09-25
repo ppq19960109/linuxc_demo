@@ -6,7 +6,7 @@
 #include "local_send.h"
 #include "cloud_send.h"
 
-#define HY0134_INDEX 8
+
 #define HY0134 "_TZE200_twuagcv5"
 static char *g_sLocalModel[] = {"_TYZB01_mq6qwmfy", "_TYZB01_i8yav3hg", "_TYZB01_42x30fz4", "_TYZB01_lc17o7gh", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "_TYZB01_kw2okqc3", HY0134, HY0134, HY0134, HY0134};
 const SAttrInfo g_SLocalModel = {
@@ -18,8 +18,8 @@ static char *s_sHY0096[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtec
 static char *s_sHY0097[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection"};
 static char *s_s09223f[] = {"ColorTemperature", "Luminance", "Switch"};
 static char *s_sHY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMode"};
-static char *s_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection", "KeyMode"};
-static char *s_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection", "KeyMode"};
+static char *s_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
+static char *s_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 static char *s_sHY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
 static char *s_sHY0134[] = {"CurrentTemperature_1", "Switch_", "WindSpeed_", "TargetTemperature_", "WorkMode_1", "Enable_", "KeyFobValue", "SceName_", "ScePhoto_"};
 static char *s_sHY0134_0[] = {"Switch_3", "TargetTemperature_3"};

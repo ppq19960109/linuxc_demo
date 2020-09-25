@@ -4,6 +4,7 @@
 
 #include "cloud_send.h"
 #include "cloud_list.h"
+#include "local_device.h"
 
 #include "tool.h"
 
@@ -15,8 +16,8 @@ static char *s_cloudHY0096[] = {"switch1", "switch2", "indicator"};
 static char *s_cloudHY0097[] = {"switch1", "switch2", "switch3", "indicator"};
 static char *s_cloud09223f[] = {"cct", "brightness", "switch"};
 static char *s_cloudHY0121[] = {"switch", "indicator"};
-static char *s_cloudHY0122[] = {"switch1", "switch2", "indicator"};
-static char *s_cloudHY0107[] = {"switch1", "switch2", "switch3", "indicator"};
+static char *s_cloudHY0122[] = {"switch1", "switch2", "indicator", "switch"};
+static char *s_cloudHY0107[] = {"switch1", "switch2", "switch3", "indicator", "switch"};
 static char *s_cloudHY0093[] = {"doorEvent", "status"};
 static char *s_cloudHY0134[] = {"scene", "button1", "button2", "button3", "button4", "button5", "button6"}; //场景面板2ANF
 static char *s_cloudHY0134_0[] = {"switch", "temperature"};                                                 //地暖 2ANK
@@ -155,6 +156,7 @@ void cloud_add_device(const int index, dev_cloud_t **out, const char *sn, dev_da
     cloud_init_device_attr(index, brgDevInfo);
     cloud_add_device_attr(index, *out, brgDevInfo->sn);
     HilinkSyncBrgDevStatus(brgDevInfo->sn, local->Online);
+    log_info("HilinkSyncBrgDevStatus:%s,%d\n", brgDevInfo->sn, local->Online);
 }
 void cloud_update_device_int(cJSON *root, char *key, int value, dev_cloud_t *out, int pos)
 {
@@ -284,6 +286,8 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
         }
         //indicator
         cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+
+        cloud_update_device_int(root, STR_ON, 0, out, pos++);
     }
     break;
     case 6: //3路智能开关模块（HY0107，型号IHC1240）
@@ -297,6 +301,8 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
         }
         //indicator
         cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+
+        cloud_update_device_int(root, STR_ON, 0, out, pos++);
     }
     break;
     case 7: //门窗传感器
@@ -316,7 +322,7 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
     {
         dev_HY0134_t *dev_sub = (dev_HY0134_t *)src->private;
         dev_cloud_t *out_sub[3] = {0};
-        char sn[24] = {0};
+        char sn[32] = {0};
         stpcpy(sn, src->DeviceId);
         int p = strlen(src->DeviceId);
         for (int j = 0; j < 3; j++)
@@ -329,6 +335,10 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
                 cloud_add_device(index + j + 1, &out_sub[j], sn, src, cloudNode);
                 strcpy(out_sub[j]->brgDevInfo.mac, src->GatewayId);
             }
+            // else
+            // {
+            //     log_error("HY0134 out_sub exist\n");
+            // }
 
             pos = 0;
             switch (j)
@@ -398,10 +408,10 @@ fail:
     return -1;
 }
 
-void hilink_online(dev_data_t *src)
+void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status)
 {
-    HilinkSyncBrgDevStatus(src->DeviceId, src->Online);
-    if (strcmp(src->ModelId, g_SLocalModel.attr[8]) == 0)
+    HilinkSyncBrgDevStatus(src->DeviceId, status);
+    if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
     {
         char sn[24] = {0};
         stpcpy(sn, src->DeviceId);
@@ -409,27 +419,49 @@ void hilink_online(dev_data_t *src)
         for (int j = 0; j < 3; j++)
         {
             sn[p] = j + '0';
-            HilinkSyncBrgDevStatus(sn, src->Online);
+            HilinkSyncBrgDevStatus(sn, status);
+            if (status == DEV_RESTORE)
+            {
+                list_del_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+            }
         }
     }
 }
 
-void hilink_online_all()
+void hilink_all_online(int online)
 {
-    dev_data_t *ptr;
-    struct list_head *head = local_get_list_head(&g_SLocalControl);
-    if (head == NULL)
+    if (online)
     {
-        return;
-    }
+        dev_data_t *ptr;
+        struct list_head *head = local_get_list_head(&g_SLocalControl);
+        if (head == NULL)
+        {
+            return;
+        }
 
-    list_for_each_entry(ptr, head, node)
+        list_for_each_entry(ptr, head, node)
+        {
+            if (strcmp(STR_HOST_GATEWAYID, ptr->DeviceId) == 0)
+                continue;
+            hilink_onlineStatus(ptr, ptr->Online);
+        }
+    }
+    else
     {
-        if (strcmp(STR_HOST_GATEWAYID, ptr->DeviceId) == 0)
-            continue;
-        hilink_online(ptr);
+        dev_cloud_t *ptr;
+        struct list_head *head = cloud_get_list_head(&g_SCloudControl);
+        if (head == NULL)
+        {
+            return;
+        }
+
+        list_for_each_entry(ptr, head, node)
+        {
+            HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, DEV_OFFLINE);
+        }
     }
 }
+
 // void cloud_hilink_upload_int(const char *svcId, const char *key, int value)
 // {
 //     cJSON *root = cJSON_CreateObject();

@@ -13,7 +13,7 @@ extern "C"
 #define STR_DEVATTRI "DevAttri"
 #define STR_REFACTORY "ReFactory"
 
-#define STR_NET_OPEN "120"
+#define STR_NET_OPEN "180"
 #define STR_NET_CLOSE "0"
 
     int write_haryan(const char *data,int dataLen);

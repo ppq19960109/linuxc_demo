@@ -238,7 +238,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         if (list_del_by_id(dev_data.DeviceId, localNode) == 0)
         {
             dev_cloud_t *ptr = list_get_by_id_hilink(dev_data.DeviceId, cloud_get_list_head(&g_SCloudControl));
-            linkkit_subdev_online(NULL, &ptr->brgDevInfo.cloudDevId, DEV_OFFLINE);
+            linkkit_subdev_online(NULL, &ptr->brgDevInfo.cloudDevId, DEV_RESTORE);
             list_del_dev_hilink(ptr);
         }
         else
