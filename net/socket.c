@@ -105,8 +105,6 @@ again:
     {
         if (errno == EINTR)
             goto again;
-        else
-            return -1;
     }
     return n;
 }

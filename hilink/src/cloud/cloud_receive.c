@@ -269,11 +269,12 @@ int cloud_delete_device(const char *sn)
 void cloud_restart_reFactory(int index)
 {
     write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-    hilink_all_online(0);
-    sleep(1);
+
     if (index)
     {
         write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
+        hilink_all_online(0, DEV_RESTORE);
+        sleep(2);
         hilink_restore_factory_settings();
         cloud_control_destory(&g_SCloudControl);
         local_control_destory(&g_SLocalControl);
@@ -281,6 +282,8 @@ void cloud_restart_reFactory(int index)
     }
     else
     {
+        hilink_all_online(0, DEV_OFFLINE);
+        sleep(1);
         HILINK_StopSoftAp();
         driver_exit();
         cloud_control_destory(&g_SCloudControl);

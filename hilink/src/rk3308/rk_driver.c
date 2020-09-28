@@ -8,6 +8,7 @@
 
 #include "local_tcp_client.h"
 #include "tool.h"
+#include "cloud_receive.h"
 
 int led_driver_open()
 {
@@ -109,8 +110,9 @@ void driver_deviceUnRegister()
 
 static void sigio_signal_func(int signum)
 {
-
-    printf("sigio_signal_func\n");
+    printf("sigio_signal_func:refactory\n");
+    cloud_restart_reFactory(INT_REFACTORY);
+    sleep(2);
     system("sh /userdata/app/restore.sh");
 }
 

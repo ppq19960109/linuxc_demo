@@ -162,6 +162,7 @@ static int keyio_init(void)
 			goto fail_gpio;
 		}
 		gpio_direction_input(imx6uirq.irqkeydesc[i].gpio);
+		
 		imx6uirq.irqkeydesc[i].irqnum = irq_of_parse_and_map(imx6uirq.nd, i);
 #if 0
 		imx6uirq.irqkeydesc[i].irqnum = gpio_to_irq(imx6uirq.irqkeydesc[i].gpio);
@@ -179,19 +180,24 @@ static int keyio_init(void)
 		if (ret < 0)
 		{
 			printk("irq %d request failed!\r\n", imx6uirq.irqkeydesc[i].irqnum);
-			return -EFAULT;
+			goto fail_irq;
 		}
 	}
 
 	/* 创建tasklet */
 	tasklet_init(&imx6uirq.testtasklet, testtasklet_func, (unsigned long)&imx6uirq);
 	return 0;
+fail_irq:
+	for (i = 0; i < KEY_NUM; i++)
+	{
+		free_irq(imx6uirq.irqkeydesc[i].irqnum, &imx6uirq);
+	}
 fail_gpio:
 	for (i = 0; i < KEY_NUM; i++)
 	{
 		gpio_free(imx6uirq.irqkeydesc[i].gpio);
 	}
-	return -1;
+	return ret;
 }
 
 /*

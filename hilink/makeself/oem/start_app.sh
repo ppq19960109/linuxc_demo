@@ -12,6 +12,8 @@ echo "start app..."
 #     fi  
 #     sleep 1
 # done
+rmmod rkled
+rmmod rkkeyasync
 
 insmod /oem/rkled.ko
 insmod /oem/rkkeyasync.ko
@@ -19,7 +21,12 @@ insmod /oem/rkkeyasync.ko
 killall dnsmasq
 rfkill block all
 
-sleep 2
+killall hilinkapp
+killall hydevapp
+killall hy_server_iot
+killall runing.sh
+
+sleep 1
 
 cd /userdata/iotapp
 ./hy_server_iot > /dev/null &
@@ -27,3 +34,5 @@ cd /userdata/hyapp
 ./hydevapp > /dev/null &
 cd /userdata/app
 ./hilinkapp &
+sleep 1
+/oem/runing.sh &

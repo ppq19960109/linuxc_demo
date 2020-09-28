@@ -51,58 +51,6 @@ void main_thread_set_signal()
 
     sigaction(SIGINT, &act, &oldact);
 }
-static void delay_timer_handler(int signal)
-{
-    printf("delay_timer_handler!\n");
-    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-}
-timer_t delay_timer_init()
-{
-    struct sigaction act;
-    act.sa_handler = delay_timer_handler;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
-    sigaction(SIGUSR2, &act, NULL);
-
-    struct sigevent evp;
-    memset(&evp, 0, sizeof(struct sigevent)); //清零初始化
-
-    // evp.sigev_value.sival_int = 1;                //也是标识定时器的，回调函数可以获得
-    // evp.sigev_notify = SIGEV_THREAD;                //线程通知的方式，派驻新线程
-    // evp.sigev_notify_function = timer_thread;       //线程函数地址
-    evp.sigev_signo = SIGUSR2;
-    evp.sigev_notify = SIGEV_SIGNAL;
-
-    if (timer_create(CLOCK_REALTIME, &evp, &tcp_app.delay_timerid) == -1)
-    {
-        perror("fail to timer_create");
-        return NULL;
-    }
-
-    return tcp_app.delay_timerid;
-}
-
-int delay_timer_start(int second)
-{
-    /* 第一次间隔it.it_value这么长,以后每次都是it.it_interval这么长,就是说it.it_value变0的时候会>装载it.it_interval的值 */
-    struct itimerspec it;
-    it.it_interval.tv_sec = 0; // 回调函数执行频率为1s运行1次
-    it.it_interval.tv_nsec = 0;
-    it.it_value.tv_sec = second; // 倒计时3秒开始调用回调函数
-    it.it_value.tv_nsec = 0;
-
-    if (timer_settime(tcp_app.delay_timerid, 0, &it, NULL) == -1)
-    {
-        perror("fail to timer_settime");
-        return -1;
-    }
-    return 0;
-}
-
-void delay_timer_destroy()
-{
-    timer_delete(tcp_app.delay_timerid);
-}
 
 static void timer_thread_handler(union sigval v)
 {
@@ -131,9 +79,9 @@ timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec)
     struct sigevent evp;
     memset(&evp, 0, sizeof(struct sigevent)); //清零初始化
 
-    evp.sigev_value.sival_int = sival;     //也是标识定时器的，回调函数可以获得
-    evp.sigev_notify = SIGEV_THREAD;       //线程通知的方式，派驻新线程
-    evp.sigev_notify_function = fun; //线程函数地址
+    evp.sigev_value.sival_int = sival; //也是标识定时器的，回调函数可以获得
+    evp.sigev_notify = SIGEV_THREAD;   //线程通知的方式，派驻新线程
+    evp.sigev_notify_function = fun;   //线程函数地址
 
     // evp.sigev_signo = SIGUSR1;
     // evp.sigev_notify = SIGEV_SIGNAL;
@@ -178,15 +126,25 @@ static int net_client_srart()
 
 static void *thread_hander(void *arg)
 {
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGIO);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+    int readLen = 0;
+    timer_t timerid = NULL;
     tcp_app_t *pdata = ((tcp_app_t *)arg);
     do
     {
         pdata->socketfd = net_client_srart();
-        int readLen = 0;
-        timer_t timerid = start_timer(1, timer_thread_handler, 60, 0);
-        delay_timer_init();
-        write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-        write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
+
+        timerid = start_timer(1, timer_thread_handler, 60, 60);
+        readLen = write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
+        if (readLen < 0)
+            goto fail_write;
+        readLen = write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
+        if (readLen < 0)
+            goto fail_write;
         while (1)
         {
             readLen = Recv(pdata->socketfd, pdata->tcpBuf, RECVLEN, 0);
@@ -206,14 +164,13 @@ static void *thread_hander(void *arg)
                 recv_toLocal(pdata->tcpBuf, readLen);
             }
         }
-
+    fail_write:
         printf("thread_hander close\n");
         Close(pdata->socketfd);
         pdata->socketfd = 0;
 
         timer_delete(timerid);
-        delay_timer_destroy();
-        hilink_all_online(0);
+        hilink_all_online(0, DEV_OFFLINE);
     } while (1);
     pthread_exit(0);
 }

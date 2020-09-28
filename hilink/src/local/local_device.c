@@ -6,7 +6,6 @@
 #include "local_send.h"
 #include "cloud_send.h"
 
-
 #define HY0134 "_TZE200_twuagcv5"
 static char *g_sLocalModel[] = {"_TYZB01_mq6qwmfy", "_TYZB01_i8yav3hg", "_TYZB01_42x30fz4", "_TYZB01_lc17o7gh", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "_TYZB01_kw2okqc3", HY0134, HY0134, HY0134, HY0134};
 const SAttrInfo g_SLocalModel = {
@@ -92,10 +91,6 @@ int hostGateway_attr(dev_data_t *dev_data, cJSON *Data)
         if (strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
         {
             char_copy_from_json(array_sub, STR_VALUE, &dev->PermitJoining);
-            if (dev->PermitJoining)
-            {
-                delay_timer_start(atoi(STR_NET_OPEN));
-            }
         }
     }
     return 0;
@@ -368,6 +363,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
                 {
                     out = dev->SceName[pos];
                     str_copy_from_json(array_sub, STR_VALUE, out);
+                    dev->SceName[pos][sizeof(dev->SceName[0]) - 1] = '\0';
                 }
                 continue;
             case 8: //ScePhoto_

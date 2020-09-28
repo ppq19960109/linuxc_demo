@@ -4,5 +4,5 @@
 void driver_deviceRegister();
 void driver_deviceUnRegister();
 void driver_exit();
-
+int driver_keyOpen();
 #endif

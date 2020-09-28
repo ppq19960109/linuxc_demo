@@ -11,7 +11,7 @@ typedef void (*timer_function)(union sigval);
 void tcp_client_open();
 void tcp_client_close();
 int tcp_client_write(char *data, unsigned int len);
-int delay_timer_start(int second);
+
 timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec);
 #endif
 #endif

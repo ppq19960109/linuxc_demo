@@ -65,7 +65,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
     int ret = write_to_local(&local_cmd, &g_SLocalControl);
     if (ret < 0)
     {
-        log_error("write_hanyar_cmd error\n");
+        log_error("write_hanyar_cmd error:%d,%s\n", ret,strerror(errno));
     }
     return ret;
 }

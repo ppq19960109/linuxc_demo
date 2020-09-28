@@ -29,7 +29,7 @@ void hilink_notify_devstatus(int status)
         log_info("HILINK_M2M_CLOUD_ONLINE\n");
         /* 设备连接云端成功，请在此处添加实现 */
 
-        hilink_all_online(1);
+        hilink_all_online(1, DEV_ONLINE);
         break;
     case HILINK_M2M_LONG_OFFLINE:
         log_info("HILINK_M2M_LONG_OFFLINE\n");
@@ -72,7 +72,7 @@ void hilink_notify_devstatus(int status)
         {
             driver_deviceUnRegister();
         }
-        
+
         break;
     case HILINK_M2M_CLOUD_DISCONNECT:
         log_info("HILINK_M2M_CLOUD_DISCONNECT\n");

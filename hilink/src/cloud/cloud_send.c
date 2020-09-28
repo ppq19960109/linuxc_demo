@@ -428,7 +428,7 @@ void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status)
     }
 }
 
-void hilink_all_online(int online)
+void hilink_all_online(int online, DevOnlineStatus status)
 {
     if (online)
     {
@@ -457,7 +457,7 @@ void hilink_all_online(int online)
 
         list_for_each_entry(ptr, head, node)
         {
-            HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, DEV_OFFLINE);
+            HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, status);
         }
     }
 }
