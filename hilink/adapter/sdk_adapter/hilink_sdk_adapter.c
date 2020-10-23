@@ -12,6 +12,20 @@
 #include "cloud_send.h"
 #include "tool.h"
 #include "rk_driver.h"
+
+void hlink_online_led(void)
+{
+    if (HILINK_IsRegister())
+    {
+        log_info("HILINK_M2M_CONNECTTING_CLOUD:Register\n");
+        driver_deviceRegister();
+    }
+    else
+    {
+        log_info("HILINK_M2M_CONNECTTING_CLOUD:UnRegister\n");
+        driver_deviceUnRegister();
+    }
+}
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -30,7 +44,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CLOUD_ONLINE:
         log_info("HILINK_M2M_CLOUD_ONLINE\n");
         /* 设备连接云端成功，请在此处添加实现 */
-
+        hlink_online_led();
         hilink_all_online(1, DEV_ONLINE);
         break;
     case HILINK_M2M_LONG_OFFLINE:
@@ -66,16 +80,6 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CONNECTTING_CLOUD:
         log_info("HILINK_M2M_CONNECTTING_CLOUD\n");
         /* 设备正在连接云端，请在此处添加实现 */
-        if (HILINK_IsRegister())
-        {
-            log_info("HILINK_M2M_CONNECTTING_CLOUD:Register\n");
-            driver_deviceRegister();
-        }
-        else
-        {
-            log_info("HILINK_M2M_CONNECTTING_CLOUD:UnRegister\n");
-            driver_deviceUnRegister();
-        }
 
         break;
     case HILINK_M2M_CLOUD_DISCONNECT:

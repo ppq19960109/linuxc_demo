@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <ctype.h>
 
 #include "cloud_send.h"
@@ -466,6 +467,7 @@ void hilink_all_online(int online, DevOnlineStatus status)
             HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, status);
         }
     }
+    sleep(4);
 }
 
 // void cloud_hilink_upload_int(const char *svcId, const char *key, int value)

@@ -11,6 +11,8 @@
 
 #define DIR_OUT_FILE "/userdata/app/daemon.log"
 
+static char cmd[80];
+
 int init_daemon(void)
 {
     int pid;
@@ -93,7 +95,6 @@ unsigned long get_file_size(const char *path)
 int get_pid(char *Name)
 {
     char buf[4] = {0};
-    char cmd[64] = {0};
 
     sprintf(cmd, "%s", DIR_OUT_FILE);
     if ((access(cmd, F_OK)) != 0)
@@ -127,7 +128,7 @@ static const struct pidInfo_t pidInfo[] = {
 
 int main()
 {
-    char cmd[64] = {0};
+
     int i, pidCount;
     const int pidInfoNum = sizeof(pidInfo) / sizeof(pidInfo[0]);
 

@@ -67,6 +67,7 @@ struct imx6uirq_dev
 	struct tasklet_struct testtasklet;
 	struct fasync_struct *async_queue; /* 异步相关结构体 */
 	unsigned long press_time;
+	char notice_type;
 };
 
 struct imx6uirq_dev imx6uirq; /* irq设备 */
@@ -117,9 +118,21 @@ void testtasklet_func(unsigned long data)
 		{
 			// printk(KERN_ERR " eytime_after!\r\n");
 
-			// printk(KERN_ERR "jiffies:%ld,%d\r\n", jiffies, HZ);
+			printk(KERN_ERR "%d jiffies:%ld,%d\r\n", SIGIO, jiffies, HZ);
+			dev->notice_type = 1;
 			if (dev->async_queue)
 				kill_fasync(&dev->async_queue, SIGIO, POLL_IN); /* 释放SIGIO信号 */
+		}
+		else if (time_after(jiffies, dev->press_time + HZ/5))
+		{
+			printk(KERN_ERR "%d jiffies:%ld,%d\r\n", SIGIO, jiffies, HZ);
+			dev->notice_type = 2;
+			if (dev->async_queue)
+				kill_fasync(&dev->async_queue, SIGIO, POLL_IN); /* 释放SIGIO信号 */
+		}
+		else
+		{
+			/* code */
 		}
 	}
 }
@@ -162,7 +175,7 @@ static int keyio_init(void)
 			goto fail_gpio;
 		}
 		gpio_direction_input(imx6uirq.irqkeydesc[i].gpio);
-		
+
 		imx6uirq.irqkeydesc[i].irqnum = irq_of_parse_and_map(imx6uirq.nd, i);
 #if 0
 		imx6uirq.irqkeydesc[i].irqnum = gpio_to_irq(imx6uirq.irqkeydesc[i].gpio);
@@ -225,14 +238,15 @@ static ssize_t imx6uirq_read(struct file *filp, char __user *buf, size_t cnt, lo
 {
 	int ret;
 	char value;
-	struct irq_keydesc *keydesc;
+	// struct irq_keydesc *keydesc;
 	struct imx6uirq_dev *dev = filp->private_data;
 
-	keydesc = &dev->irqkeydesc[dev->curkeynum];
+	// keydesc = &dev->irqkeydesc[dev->curkeynum];
+	// value = gpio_get_value(keydesc->gpio);
 
-	value = gpio_get_value(keydesc->gpio);
-
+	value = dev->notice_type;
 	ret = copy_to_user(buf, &value, sizeof(value));
+	dev->notice_type = 0;
 	return 0;
 }
 

@@ -25,7 +25,7 @@ OBJ += $(SRC:%.c=%.o)
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-TARGET := daemon
+TARGET := hy_daemon
 .PHONY : clean all
 
 all: $(TARGET)

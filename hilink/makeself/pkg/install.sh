@@ -4,8 +4,9 @@ echo "start install......"
 #Add operation permission
 chmod -R 777 ./
 #kill app
-ALL_APP="runing.sh hilinkapp hy_server_iot hydevapp"
+ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
 killall $ALL_APP
+# sleep 4
 
 USER_PATH="/userdata"
 HILINK_CONFIG_PATH="/userdata/hilink"
@@ -54,4 +55,3 @@ echo "Successfully installed"
 
 echo "App reboot......"
 reboot
-sleep 2

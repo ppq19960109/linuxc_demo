@@ -12,7 +12,7 @@
 #include "local_send.h"
 #include "local_callback.h"
 #include "socket.h"
-
+#include "rk_driver.h"
 #include "cloud_receive.h"
 #include "cloud_send.h"
 
@@ -47,8 +47,9 @@ static void main_thread_signal_open()
     struct sigaction act, oldact;
     act.sa_handler = main_thread_signal_handler;
     sigemptyset(&act.sa_mask);
-    // sigaddset(&act.sa_mask, SIGQUIT); //见注(1)
-    // act.sa_flags = SA_RESETHAND; //| SA_NODEFER 见注(2)
+
+    sigaddset(&act.sa_mask, SIGQUIT); //见注(1)
+    // act.sa_flags = SA_NODEFER; //| SA_NODEFER 见注(2)SA_RESETHAND
     act.sa_flags = 0; //见注(3)
 
     sigaction(SIGINT, &act, &oldact);
@@ -126,6 +127,7 @@ static int net_client_srart()
     return sockfd;
 }
 //---------------------------------------------------------------
+extern void hlink_online_led(void);
 static void *thread_hander(void *arg)
 {
     sigset_t set;
@@ -139,6 +141,7 @@ static void *thread_hander(void *arg)
     do
     {
         pdata->socketfd = net_client_srart();
+        hlink_online_led();
 
         timerid = start_timer(1, timer_thread_handler, 60, 60);
         readLen = write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
@@ -173,6 +176,7 @@ static void *thread_hander(void *arg)
 
         timer_delete(timerid);
         hilink_all_online(0, DEV_OFFLINE);
+        driver_deviceCloudOffline();
     } while (1);
     pthread_exit(0);
 }

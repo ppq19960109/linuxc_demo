@@ -8,10 +8,11 @@ HYAPP_PATH="/userdata/hyapp"
 IOTAPP_PATH="/userdata/iotapp"
 
 APP_HILINK_CONFIG_FILE="/userdata/app/hilink*.cfg"
-ALL_APP="runing.sh hilinkapp hy_server_iot hydevapp"
+ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
 #kill app
 
 killall $ALL_APP
+sleep 4
 echo "Return to factory......"
 rm -rf $HILINK_CONFIG_PATH/*
 cp -r $APP_HILINK_CONFIG_FILE $HILINK_CONFIG_PATH
@@ -22,5 +23,4 @@ rm -f $USER_PATH/*.txt $USER_PATH/*.db* $USER_PATH/crash/* $USER_PATH/logSeq/* $
 sync
 echo "reboot......"
 #app reboot
-
 reboot

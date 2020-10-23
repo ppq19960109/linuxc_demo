@@ -268,11 +268,10 @@ int cloud_delete_device(const char *sn)
     return write_to_local(&out);
 }
 
-
 void cloud_restart_reFactory(int index)
 {
+    log_info("cloud_restart_reFactory:%d\n", index);
     write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-    driver_exit();
     HILINK_StopSoftAp();
 
     if (index == INT_REFACTORY)
@@ -280,26 +279,24 @@ void cloud_restart_reFactory(int index)
         write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
 
         hilink_all_online(0, DEV_RESTORE);
-        sleep(1);
         cloud_control_destory();
         local_control_destory();
         sync();
         run_closeCallback();
-
+        driver_exit();
         hilink_restore_factory_settings();
 
-        sleep(1);
-        system("sh /userdata/app/restore.sh");
+        sleep(2);
+        system("sh /userdata/app/restore.sh &");
     }
     else
     {
         hilink_all_online(0, DEV_OFFLINE);
-        sleep(1);
         cloud_control_destory();
         local_control_destory();
         sync();
         run_closeCallback();
-
+        driver_exit();
         if (INT_REBOOT == index)
         {
             reboot(RB_AUTOBOOT);

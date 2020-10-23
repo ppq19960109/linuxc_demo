@@ -22,16 +22,18 @@ insmod /oem/rkkeyasync.ko
 killall dnsmasq
 rfkill block all
 
-ALL_APP="runing.sh hilinkapp hy_server_iot hydevapp"
+ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
 killall $ALL_APP
 
 UPDATE_PATH="/userdata/update"
 UPDATE_FILE="upgrade.bin"
 if [ -e "$UPDATE_PATH/$UPDATE_FILE" ]; then
-    cd UPDATE_PATH
+    echo Power on find upgrade
+    cd $UPDATE_PATH
     chmod -R 777 ./
     ./$UPDATE_FILE
     if [ $? != 0 ];then
+        echo Power on rm upgrade
         rm $UPDATE_FILE
         # ./upgrade_backup.bin
     fi
@@ -49,4 +51,4 @@ cd /userdata/app
 ./hilinkapp &
 
 # /oem/runing.sh &
-/userdata/app/daemon
+/userdata/app/hy_daemon
