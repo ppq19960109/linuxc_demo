@@ -12,6 +12,7 @@ echo "start app..."
 #     fi  
 #     sleep 1
 # done
+
 rmmod rkled
 rmmod rkkeyasync
 
@@ -21,18 +22,31 @@ insmod /oem/rkkeyasync.ko
 killall dnsmasq
 rfkill block all
 
-killall hilinkapp
-killall hydevapp
-killall hy_server_iot
-killall runing.sh
+ALL_APP="runing.sh hilinkapp hy_server_iot hydevapp"
+killall $ALL_APP
 
-sleep 1
+UPDATE_PATH="/userdata/update"
+UPDATE_FILE="upgrade.bin"
+if [ -e "$UPDATE_PATH/$UPDATE_FILE" ]; then
+    cd UPDATE_PATH
+    chmod -R 777 ./
+    ./$UPDATE_FILE
+    if [ $? != 0 ];then
+        rm $UPDATE_FILE
+        # ./upgrade_backup.bin
+    fi
+fi
+
+# sleep 5
+
+cd /userdata/hyapp
+./hydevapp > /dev/null &
 
 cd /userdata/iotapp
 ./hy_server_iot > /dev/null &
-cd /userdata/hyapp
-./hydevapp > /dev/null &
+
 cd /userdata/app
 ./hilinkapp &
-sleep 1
-/oem/runing.sh &
+
+# /oem/runing.sh &
+/userdata/app/daemon

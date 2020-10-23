@@ -74,15 +74,17 @@ extern "C"
     {
 #define SENDTOLOCAL_SIZE 1024
         char sendData[SENDTOLOCAL_SIZE];
-
+        dev_data_t gateway;
         struct list_head head;
     } LocalControl_t;
 
-    extern LocalControl_t g_SLocalControl;
 
-    void local_control_init(LocalControl_t *localControl);
-    void local_control_destory(LocalControl_t *localControl);
-    struct list_head *local_get_list_head(LocalControl_t *localControl);
+    void local_control_init();
+    void local_control_destory();
+    struct list_head *local_get_list_head();
+    char *local_get_sendData();
+    dev_data_t *local_get_gateway();
+    
     dev_data_t *create_gateway(struct list_head *head);
     int read_from_local(const char *json, struct list_head *node);
     void recv_toLocal(char *data, int len);

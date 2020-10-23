@@ -10,33 +10,35 @@
 
 #include "local_tcp_client.h"
 #include "local_send.h"
+#include "local_callback.h"
 #include "socket.h"
 
 #include "cloud_receive.h"
 #include "cloud_send.h"
+
 typedef struct
 {
     int socketfd;
     pthread_t pid;
 #define RECVLEN 16384
     char tcpBuf[RECVLEN + 1];
-    timer_t delay_timerid;
 } tcp_app_t;
 
-tcp_app_t tcp_app;
+static tcp_app_t tcp_app;
 
 static void main_thread_signal_handler(int signal)
 {
     printf("signal is %d\n", signal);
-    if (signal == SIGINT || signal == SIGQUIT || signal == SIGKILL || signal == SIGTERM)
+    if (signal == SIGHUP || signal == SIGINT || signal == SIGQUIT || signal == SIGKILL || signal == SIGTERM)
     {
-        cloud_restart_reFactory(INT_RESTART);
-        tcp_client_close();
-        printf(" exit(0)\n");
-        exit(0);
+        if (signal == SIGQUIT)
+            cloud_restart_reFactory(INT_REBOOT);
+        else
+            cloud_restart_reFactory(INT_OFFLINE);
     }
 }
-void main_thread_set_signal()
+
+static void main_thread_signal_open()
 {
     signal(SIGQUIT, main_thread_signal_handler);
     signal(SIGKILL, main_thread_signal_handler);
@@ -46,22 +48,22 @@ void main_thread_set_signal()
     act.sa_handler = main_thread_signal_handler;
     sigemptyset(&act.sa_mask);
     // sigaddset(&act.sa_mask, SIGQUIT); //见注(1)
-    act.sa_flags = SA_RESETHAND | SA_NODEFER; //见注(2)
-    // act.sa_flags = 0; //见注(3)
+    // act.sa_flags = SA_RESETHAND; //| SA_NODEFER 见注(2)
+    act.sa_flags = 0; //见注(3)
 
     sigaction(SIGINT, &act, &oldact);
+    sigaction(SIGHUP, &act, &oldact);
 }
-
+//---------------------------------------------------------------
 static void timer_thread_handler(union sigval v)
 {
-    // printf("timer_thread function!\n");
     if (v.sival_int == 1)
     {
         write_haryan(HY_HEART, strlen(HY_HEART));
     }
 }
 
-void timer_signal_handler(int signal)
+static void timer_signal_handler(int signal)
 {
     // printf("timer_signal_handler function! %s\n", HY_HEART);
     write_haryan(HY_HEART, strlen(HY_HEART));
@@ -123,7 +125,7 @@ static int net_client_srart()
     }
     return sockfd;
 }
-
+//---------------------------------------------------------------
 static void *thread_hander(void *arg)
 {
     sigset_t set;
@@ -175,7 +177,7 @@ static void *thread_hander(void *arg)
     pthread_exit(0);
 }
 
-pthread_t net_client(void *arg)
+static pthread_t net_client(void *arg)
 {
 
     pthread_t id;
@@ -192,8 +194,8 @@ pthread_t net_client(void *arg)
 
     return id;
 }
-
-int tcp_client_write(char *data, unsigned int len)
+//---------------------------------------------------------------
+static int tcp_client_write(char *data, unsigned int len)
 {
     if (tcp_app.socketfd == 0)
     {
@@ -202,15 +204,20 @@ int tcp_client_write(char *data, unsigned int len)
     }
     return Write(tcp_app.socketfd, data, len);
 }
-
+//---------------------------------------------------------------
 void tcp_client_open()
 {
-    main_thread_set_signal();
+    printf("tcp_client_open\n");
+    register_closeCallback(tcp_client_close);
+    register_writeCallback(tcp_client_write);
+
+    main_thread_signal_open();
     tcp_app.pid = net_client(&tcp_app);
 }
 
 void tcp_client_close()
 {
+    printf("tcp_client_close\n");
     if (tcp_app.pid != 0)
     {
         pthread_cancel(tcp_app.pid);

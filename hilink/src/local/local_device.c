@@ -66,35 +66,6 @@ static const SAttrInfo s_SLocalAttrSize[] = {
     {.attrLen = sizeof(dev_HY0134_t)},
 };
 
-int hostGateway_attr(dev_data_t *dev_data, cJSON *Data)
-{
-    cJSON *Key, *array_sub;
-    if (strcmp(STR_HOST_GATEWAYID, dev_data->DeviceId))
-        return -1;
-    if (dev_data->private == NULL)
-    {
-        dev_data->private = malloc(sizeof(DevGateway_t));
-        memset(dev_data->private, 0, sizeof(DevGateway_t));
-    }
-
-    if (Data == NULL)
-        return 0;
-
-    DevGateway_t *dev = (DevGateway_t *)dev_data->private;
-    int array_size = cJSON_GetArraySize(Data);
-    for (int cnt = 0; cnt < array_size; ++cnt)
-    {
-        array_sub = cJSON_GetArrayItem(Data, cnt);
-        Key = cJSON_GetObjectItem(array_sub, STR_KEY);
-        if (Key == NULL)
-            continue;
-        if (strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
-        {
-            char_copy_from_json(array_sub, STR_VALUE, &dev->PermitJoining);
-        }
-    }
-    return 0;
-}
 
 int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
 {
@@ -102,8 +73,6 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
     int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
     if (index < 0)
     {
-        if (hostGateway_attr(dev_data, Data) == 0)
-            return 0;
         log_error("local ModelId not exist:%s\n", dev_data->ModelId);
         return -1;
     }
@@ -139,7 +108,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
             log_error("local Attr not exist:%s\n", Key->valuestring);
             continue;
         }
-        log_debug("local_attribute_update index_sub:%d\n", index_sub);
+        // log_debug("local_attribute_update index_sub:%d\n", index_sub);
         switch (index)
         {
         case 0: //U2/天际系列：单键智能开关（HY0095）
@@ -386,5 +355,5 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         }
     }
 cloud:
-    return local_tohilink(dev_data, index, cloud_get_list_head(&g_SCloudControl));
+    return local_tohilink(dev_data, index, cloud_get_list_head());
 }

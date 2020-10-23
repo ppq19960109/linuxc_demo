@@ -37,13 +37,13 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
     {
         return -1;
     }
-    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head());
     if (dev == NULL)
     {
         return -1;
     }
     memcpy(devInfo, &dev->brgDevInfo, sizeof(BrgDevInfo));
-    log_debug("HilinkGetBrgDevInfo sn:%s\n", sn);
+    // log_debug("HilinkGetBrgDevInfo sn:%s\n", sn);
     return 0;
 }
 
@@ -65,7 +65,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         return -1;
     }
 
-    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head());
     if (dev == NULL)
     {
         log_debug("HilinkGetBrgSvcInfo err\n");
@@ -75,7 +75,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
     {
         strcpy(svcInfo->st[i], dev->devSvc[i].svcId);
         strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
-        log_debug("HilinkGetBrgSvcInfo svcInfo:%s\n", svcInfo->st[i]);
+        // log_debug("HilinkGetBrgSvcInfo svcInfo:%s\n", svcInfo->st[i]);
     }
     *svcNum = dev->devSvcNum;
 
@@ -119,14 +119,14 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
  */
 int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out, unsigned int *outLen)
 {
-    log_debug("HilinkGetBrgDevCharState svcId:%s,json:%s,jsonLen:%d\n", in->svcId, in->json, in->jsonLen);
+    // log_debug("HilinkGetBrgDevCharState svcId:%s,json:%s,jsonLen:%d\n", in->svcId, in->json, in->jsonLen);
     /* 厂商实现此接口 */
     if ((sn == NULL) || (in == NULL) || (out == NULL) || (outLen == NULL))
     {
         return -1;
     }
 
-    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head());
     if (dev == NULL)
     {
         return -1;
@@ -141,7 +141,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
             *outLen = strlen(dev->devSvc[i].svcVal) + 1;
             *out = malloc(*outLen);
             strcpy(*out, dev->devSvc[i].svcVal);
-            log_debug("HilinkGetBrgDevCharState %s\n", *out);
+            log_debug("HilinkGetBrgDevCharState sn:%s, svcId:%s ,%s\n", sn, in->svcId, *out);
             break;
         }
     }
@@ -164,14 +164,13 @@ int HILINK_GetBrgSubDevRoomInfo(const char *sn, char *roomId, unsigned int *room
                                 char *devName, unsigned int *devNameLen)
 
 {
+    log_debug("HILINK_GetBrgSubDevRoomInfo sn:%s\n", sn);
     /* 厂商实现此接口 */
     if ((sn == NULL) || (roomId == NULL) || (roomIdLen == NULL) || (devName == NULL) || (devNameLen == NULL))
     {
         return -1;
     }
-    char *name = "1";
-    strcpy(roomId, name);
-    *roomIdLen = strlen(name) + 1;
+
     return 0;
 }
 
@@ -188,7 +187,7 @@ int HilinkDelBrgDev(const char *sn)
     {
         return -1;
     }
- 
+
     return cloud_delete_device(sn);
 }
 

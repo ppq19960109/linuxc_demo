@@ -33,16 +33,14 @@ typedef struct
 
 typedef struct
 {
-    struct list_head node;
+    struct list_head head;
 } CloudControl_t;
-
-extern CloudControl_t g_SCloudControl;
 
 extern const SAttrInfo g_SCloudAttr[];
 
-void cloud_control_init(CloudControl_t *cloudControl);
-void cloud_control_destory(CloudControl_t *cloudControl);
-struct list_head *cloud_get_list_head(CloudControl_t *cloudControl);
+void cloud_control_init();
+void cloud_control_destory();
+struct list_head *cloud_get_list_head();
 
 void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status);
 void hilink_all_online(int online,DevOnlineStatus status);

@@ -13,9 +13,6 @@
 
 #include "cloud_send.h"
 #include "local_send.h"
-#include "local_receive.h"
-#include "local_device.h"
-#include "local_list.h"
 #include "cJSON.h"
 /* 设备类型定义 */
 typedef struct
@@ -161,14 +158,14 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
     log_info("hilink_get_char_state %s\n", json);
     if (json == NULL)
     {
-        free(root);
+        cJSON_Delete(root);
         return -1;
     }
 
     *out = json;
     *outLen = strlen(json) + 1;
 
-    free(root);
+    cJSON_Delete(root);
 
     return 0;
 }

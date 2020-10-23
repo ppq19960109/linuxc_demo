@@ -14,6 +14,11 @@ function check_process()
     if [ $count -eq 0 ];then
         # echo $1" process not exist"
         cd $2
+        if [ ! -e $1 ]; then
+            cd /userdata/update/
+            chmod 777 upgrade_backup.bin
+            ./upgrade_backup.bin
+        fi 
         chmod 777 $1
         ./$1 &
     elif  [ $count -gt 1 ];then
@@ -30,8 +35,8 @@ function check_process()
 
 while true
 do
-    check_process $APP $APP_PATH
     check_process $HYAPP $HYAPP_PATH
     check_process $IOTAPP $IOTAPP_PATH
+    check_process $APP $APP_PATH
     sleep 60
 done

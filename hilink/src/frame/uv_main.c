@@ -5,7 +5,9 @@
 #include <stdlib.h>
 
 #include <uv.h>
+
 #include "local_send.h"
+#include "local_callback.h"
 #include "cloud_receive.h"
 
 static uv_tcp_t *tcp_client;
@@ -41,7 +43,7 @@ static void client_write_cb(uv_write_t *req, int status)
     printf("client write succeed!\n");
 }
 
-int client_write(char *data, unsigned int len)
+static int client_write(char *data, unsigned int len)
 {
     if (!s_isConnect)
     {
@@ -137,9 +139,9 @@ static void client_timer()
 {
     uv_timer_again(&timer_client);
 }
-int net_client_open()
+static int net_client_open()
 {
-    
+
     tcp_client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
 
     g_connect = (uv_connect_t *)malloc(sizeof(uv_connect_t));
@@ -157,7 +159,7 @@ int net_client_open()
     return 0;
 }
 
-void net_client_close()
+static void net_client_close()
 {
     uv_read_stop(g_connect->handle);
 
@@ -168,52 +170,48 @@ void net_client_close()
 }
 //------------------------------
 
-void timer_callback(uv_timer_t *timer)
+static void timer_callback(uv_timer_t *timer)
 {
     printf("HY_HEART timer_callback\n");
     write_haryan(HY_HEART, strlen(HY_HEART));
 }
 
-int timer_open()
+static int timer_open()
 {
     uv_timer_init(uv_default_loop(), &timer_req);
     uv_timer_start(&timer_req, timer_callback, 5000, 60000);
     return 0;
 }
-void timer_close()
+static void timer_close()
 {
     uv_timer_stop(&timer_req);
 }
 //---------------------------------------------
 
-void signal_handler(uv_signal_t *handle, int signum)
+static void signal_handler(uv_signal_t *handle, int signum)
 {
 
     if (signum == SIGINT || signum == SIGQUIT || signum == SIGKILL)
     {
-        main_close();
-        uv_signal_stop(handle);
-        printf("exit(0)\n");
-        exit(0);
+        cloud_restart_reFactory(INT_OFFLINE);
     }
     printf("signal received: %d\n", signum);
 }
 
-void signal_open()
+static void signal_open()
 {
     uv_signal_init(uv_default_loop(), &g_signal);
     uv_signal_start_oneshot(&g_signal, signal_handler, SIGINT);
     // uv_signal_start(&g_signal, signal_handler, SIGQUIT);
     // uv_signal_start(&g_signal, signal_handler, SIGKILL);
 }
-void signal_close()
+static void signal_close()
 {
     uv_signal_stop(&g_signal);
 }
 //--------------------------------------------------
-void main_close()
+void uv_main_close()
 {
-    cloud_restart_reFactory(INT_RESTART);
     timer_close();
     net_client_close();
     signal_close();
@@ -223,9 +221,10 @@ void uv_idle_task(uv_idle_t *handle)
 {
     // printf("uv_idle_task\n");
 }
-int main_open()
+int uv_main_open()
 {
-
+    register_closeCallback(main_close);
+    register_writeCallback(client_write);
     signal_open();
     net_client_open();
     timer_open();

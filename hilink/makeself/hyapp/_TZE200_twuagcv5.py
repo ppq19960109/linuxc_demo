@@ -79,11 +79,6 @@ def up(inValue, valueLen):
             out2 = '1'
             len2 = 1
     # 当前地暖温度
-    elif inValue[4:6] == '6D':
-        out1 = 'TargetTemperature_3'
-        len1 = 19
-        out2 = str(int(inValue[18:], 16))
-        len2 = len(out2)
     # 设置地暖温度
     elif inValue[4:6] == '6E':
         out1 = 'TargetTemperature_3'
@@ -212,7 +207,7 @@ def down(inKey, keyLen, inValue, valueLen):
             value = '03'
         elif inValue == '4':
             value = '02'
-        out2 = '6b' + '01' + '00' + '01' + value
+        out2 = '6b' + '04' + '00' + '01' + value
         len2 = 10
     # 地暖开关
     elif inKey == 'Switch_3':

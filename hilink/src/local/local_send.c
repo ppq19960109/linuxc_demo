@@ -12,8 +12,7 @@
 #include "socket.h"
 #include "tool.h"
 
-#include "uv_main.h"
-#include "event_main.h"
+#include "local_callback.h"
 #include "local_tcp_client.h"
 
 static char *s_hanyarCmd[] = {STR_ADD, STR_DEVSINFO, STR_DEVATTRI, STR_REFACTORY};
@@ -62,10 +61,10 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
         return -1;
     }
 
-    int ret = write_to_local(&local_cmd, &g_SLocalControl);
+    int ret = write_to_local(&local_cmd);
     if (ret < 0)
     {
-        log_error("write_hanyar_cmd error:%d,%s\n", ret,strerror(errno));
+        log_error("write_hanyar_cmd error:%d,%s\n", ret, strerror(errno));
     }
     return ret;
 }
@@ -73,7 +72,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
 int write_haryan(const char *data, int dataLen)
 {
     int ret = 0;
-    char *sendBuf = g_SLocalControl.sendData;
+    char *sendBuf = local_get_sendData();
     if (dataLen + 3 <= SENDTOLOCAL_SIZE)
     {
         sendBuf[0] = 0x02;
@@ -81,13 +80,7 @@ int write_haryan(const char *data, int dataLen)
         sendBuf[dataLen + 1] = 0x03;
         sendBuf[dataLen + 2] = 0x00;
 
-#if USE_LIBEVENT
-        ret = event_client_write(sendBuf, dataLen + 3);
-#elif USE_LIBUV
-        ret = client_write(sendBuf, dataLen + 3);
-#else
-        ret = tcp_client_write(sendBuf, dataLen + 3);
-#endif
+        ret = run_writeCallback(sendBuf, dataLen + 3);
 
         // for (int i = 0; i < dataLen + 3; ++i)
         // {
@@ -100,7 +93,7 @@ int write_haryan(const char *data, int dataLen)
     return -1;
 }
 
-int write_to_local(void *ptr, LocalControl_t *localControl)
+int write_to_local(void *ptr)
 {
     if (NULL == ptr)
     {

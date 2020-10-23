@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/reboot.h>
+
 #include "hilink_network_adapter.h"
 #include "hilink_netconfig_mode_mgt.h"
 
@@ -245,7 +248,8 @@ int HILINK_GetWiFiRssi(signed char *rssi)
 int HILINK_Restart(void)
 {
     log_info("HILINK_Restart\n");
-    system("sync;reboot");
+    sync();
+    reboot(RB_AUTOBOOT);
     return 0;
 }
 

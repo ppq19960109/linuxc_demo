@@ -10,10 +10,23 @@
 #include "tool.h"
 #include "cloud_receive.h"
 
+#define DRIVER_LED_NAME "/dev/rkled1"
+#define DRIVER_KEY_NAME "/dev/rkasync"
+
+typedef struct
+{
+    char flip;
+    int fd;
+    int keyfd;
+    timer_t timerid;
+} rk_driver_t;
+
+rk_driver_t rk_driver;
+
 int led_driver_open()
 {
     int fd;
-    char *filename = "/dev/rkled1";
+    char *filename = DRIVER_LED_NAME;
     /* 打开 led 驱动 */
     fd = open(filename, O_RDWR);
     if (fd < 0)
@@ -60,66 +73,68 @@ int driver_close(int fd)
     return 0;
 }
 /*-------------------------------------------------------------*/
-typedef struct
-{
-    int fd;
-    int keyfd;
-    timer_t timerid;
-    char flip;
-} led_driver_t;
-
-led_driver_t led_driver;
 
 static void driver_timer_thread_handler(union sigval v)
 {
-    // printf("driver_timer_thread_handler!:%d\n", led_driver.flip);
+    // printf("driver_timer_thread_handler!:%d\n", rk_driver.flip);
     if (v.sival_int == 0)
     {
-        led_driver.flip = !led_driver.flip;
-        led_driver_write(led_driver.fd, led_driver.flip);
+        rk_driver.flip = !rk_driver.flip;
+        led_driver_write(rk_driver.fd, rk_driver.flip);
     }
 }
 
 void driver_deviceRegister()
 {
     log_info("driver_deviceRegister\n");
-    if (led_driver.timerid != NULL)
+    if (rk_driver.timerid != NULL)
     {
-        timer_delete(led_driver.timerid);
-        led_driver.timerid = NULL;
+        timer_delete(rk_driver.timerid);
+        rk_driver.timerid = NULL;
     }
-    if (led_driver.fd <= 0)
-        led_driver.fd = led_driver_open();
-    led_driver_write(led_driver.fd, 0);
-    driver_close(led_driver.fd);
-    led_driver.fd = 0;
+    if (rk_driver.fd <= 0)
+        rk_driver.fd = led_driver_open();
+    led_driver_write(rk_driver.fd, 0);
+    driver_close(rk_driver.fd);
+    rk_driver.fd = 0;
+}
+void driver_deviceCloudOffline()
+{
+    log_info("driver_deviceCloudOffline\n");
+    if (rk_driver.timerid != NULL)
+    {
+        timer_delete(rk_driver.timerid);
+        rk_driver.timerid = NULL;
+    }
+    if (rk_driver.fd <= 0)
+        rk_driver.fd = led_driver_open();
+    led_driver_write(rk_driver.fd, 1);
+    driver_close(rk_driver.fd);
+    rk_driver.fd = 0;
 }
 
 void driver_deviceUnRegister()
 {
     log_info("driver_deviceUnRegister\n");
-    if (led_driver.timerid != NULL)
+    if (rk_driver.timerid != NULL)
     {
         return;
     }
-    if (led_driver.fd <= 0)
-        led_driver.fd = led_driver_open();
-    led_driver.timerid = start_timer(0, driver_timer_thread_handler, 1, 1);
+    if (rk_driver.fd <= 0)
+        rk_driver.fd = led_driver_open();
+    rk_driver.timerid = start_timer(0, driver_timer_thread_handler, 1, 1);
 }
 //------------------------------------------
 
 static void sigio_signal_func(int signum)
 {
-    printf("sigio_signal_func:refactory\n");
+    printf("sigio_signal_func:%d,refactory\n", signum);
     cloud_restart_reFactory(INT_REFACTORY);
-    sleep(2);
-    system("sh /userdata/app/restore.sh");
 }
 
 int driver_keyOpen()
 {
-    int flags = 0;
-    char *filename = "/dev/rkasync";
+    char *filename = DRIVER_KEY_NAME;
 
     int fd = open(filename, O_RDWR);
     if (fd < 0)
@@ -132,15 +147,15 @@ int driver_keyOpen()
     signal(SIGIO, sigio_signal_func);
 
     fcntl(fd, F_SETOWN, getpid());      /* 设置当前进程接收SIGIO信号 	*/
-    flags = fcntl(fd, F_GETFL);         /* 获取当前的进程状态 			*/
+    int flags = fcntl(fd, F_GETFL);     /* 获取当前的进程状态 			*/
     fcntl(fd, F_SETFL, flags | FASYNC); /* 设置进程启用异步通知功能 	*/
 
-    led_driver.keyfd = fd;
+    rk_driver.keyfd = fd;
     return 0;
 }
 
 void driver_exit()
 {
-    driver_close(led_driver.fd);
-    driver_close(led_driver.keyfd);
+    driver_close(rk_driver.fd);
+    driver_close(rk_driver.keyfd);
 }

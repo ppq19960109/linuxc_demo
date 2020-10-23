@@ -14,7 +14,7 @@ if [ $? -ne 0 ]; then
 fi
 #makeself pack
 MAKESELF_FILE="/home/ppq/git/makeself/makeself.sh"
-$MAKESELF_FILE --notemp --sha256 $PKG_DIRNAME $PKG_FINAL_FILENAME "hy hilink package v1.0.1" ./$PKG_INSTALL_FILE
+$MAKESELF_FILE --notemp $PKG_DIRNAME $PKG_FINAL_FILENAME "Haryon hilink package v1.0.0" ./$PKG_INSTALL_FILE
 
 ./$PKG_FINAL_FILENAME --list
 #makeself check

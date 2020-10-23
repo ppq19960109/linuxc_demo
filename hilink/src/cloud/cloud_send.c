@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "cloud_send.h"
 #include "cloud_list.h"
@@ -79,21 +80,21 @@ static const SAttrInfo g_SCloudProdId[] = {
     {.attr = s_cloud2ANI},
 };
 
-CloudControl_t g_SCloudControl;
+static CloudControl_t g_SCloudControl;
 
-void cloud_control_init(CloudControl_t *cloudControl)
+void cloud_control_init()
 {
-    INIT_LIST_HEAD(&cloudControl->node);
+    INIT_LIST_HEAD(&g_SCloudControl.head);
 }
 
-void cloud_control_destory(CloudControl_t *cloudControl)
+void cloud_control_destory()
 {
-    list_del_all_hilink(&cloudControl->node);
+    list_del_all_hilink(&g_SCloudControl.head);
 }
 
-struct list_head *cloud_get_list_head(CloudControl_t *cloudControl)
+struct list_head *cloud_get_list_head()
 {
-    return &cloudControl->node;
+    return &g_SCloudControl.head;
 }
 
 void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
@@ -120,7 +121,6 @@ int modSvc(const char *sn, const char *svcId, char **svcVal, char *json)
         if (*svcVal != NULL)
         {
             free(*svcVal);
-
             HilinkUploadBrgDevCharState(sn, svcId);
         }
         *svcVal = json;
@@ -202,11 +202,10 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
         // log_info("cloud_add_device %s,%d\n",src->DeviceId,src->Online);
         cloud_add_device(index, &out, src->DeviceId, src, cloudNode);
         strcpy(out->brgDevInfo.mac, src->GatewayId);
-    }
-
-    if (strlen(src->Version) > 0 && strcmp(out->brgDevInfo.fwv, src->Version))
-    {
-        strcpy(out->brgDevInfo.fwv, src->Version);
+        if (strlen(src->Version) > 0 && isdigit(src->Version[0]) && strcmp(out->brgDevInfo.fwv, src->Version))
+        {
+            strcpy(out->brgDevInfo.fwv, src->Version);
+        }
     }
 
     cJSON *root = cJSON_CreateObject();
@@ -377,6 +376,13 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
 
         if (out->devSvc[pos].svcVal == NULL)
             dev_sub->KeyFobValue = 0xff;
+        else
+        {
+            free(out->devSvc[pos].svcVal);
+            out->devSvc[pos].svcVal = malloc(1);
+            out->devSvc[pos].svcVal[0] = 0;
+            // out->devSvc[pos].svcVal = NULL;
+        }
 
         cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
         // const char name[] = {0xe5, 0x9b, 0x9e, 0xe5, 0xae, 0xb6, 0x00};
@@ -399,7 +405,7 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
 
     return 0;
 fail:
-    log_error("hilink modelId not exist");
+    log_error("hilink modelId not exist\n");
     if (out != NULL)
     {
         list_del_dev_hilink(out);
@@ -411,6 +417,7 @@ fail:
 void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status)
 {
     HilinkSyncBrgDevStatus(src->DeviceId, status);
+    log_info("HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, status);
     if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
     {
         char sn[24] = {0};
@@ -422,7 +429,7 @@ void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status)
             HilinkSyncBrgDevStatus(sn, status);
             if (status == DEV_RESTORE)
             {
-                list_del_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+                list_del_by_id_hilink(sn, cloud_get_list_head());
             }
         }
     }
@@ -430,10 +437,11 @@ void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status)
 
 void hilink_all_online(int online, DevOnlineStatus status)
 {
+    log_info("hilink_all_online!!!!\n");
     if (online)
     {
         dev_data_t *ptr;
-        struct list_head *head = local_get_list_head(&g_SLocalControl);
+        struct list_head *head = local_get_list_head();
         if (head == NULL)
         {
             return;
@@ -441,15 +449,13 @@ void hilink_all_online(int online, DevOnlineStatus status)
 
         list_for_each_entry(ptr, head, node)
         {
-            if (strcmp(STR_HOST_GATEWAYID, ptr->DeviceId) == 0)
-                continue;
             hilink_onlineStatus(ptr, ptr->Online);
         }
     }
     else
     {
         dev_cloud_t *ptr;
-        struct list_head *head = cloud_get_list_head(&g_SCloudControl);
+        struct list_head *head = cloud_get_list_head();
         if (head == NULL)
         {
             return;

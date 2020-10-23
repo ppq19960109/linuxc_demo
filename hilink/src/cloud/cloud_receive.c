@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/reboot.h>
 
 #include "cloud_list.h"
 #include "cloud_send.h"
@@ -9,6 +10,7 @@
 #include "local_send.h"
 #include "local_list.h"
 #include "local_device.h"
+#include "local_callback.h"
 
 #include "tool.h"
 #include "rk_driver.h"
@@ -39,7 +41,7 @@ static int getValue_FromJson(cJSON *val, char *dst)
 //cloud转换成hanyar的json格式
 int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
 {
-    dev_cloud_t *in = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+    dev_cloud_t *in = list_get_by_id_hilink(sn, cloud_get_list_head());
     if (in == NULL)
         return -1;
 
@@ -201,7 +203,7 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
     }
 
     getValue_FromJson(val, out.Data.Value);
-    write_to_local(&out, &g_SLocalControl);
+    write_to_local(&out);
     cJSON_Delete(root);
     return 0;
 fail:
@@ -215,7 +217,7 @@ int cloud_delete_device(const char *sn)
     local_dev_t out = {0};
     char ssn[32] = {0};
 
-    dev_cloud_t *dev_cloud = list_get_by_id_hilink(sn, cloud_get_list_head(&g_SCloudControl));
+    dev_cloud_t *dev_cloud = list_get_by_id_hilink(sn, cloud_get_list_head());
     int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
 
     stpcpy(ssn, sn);
@@ -228,7 +230,7 @@ int cloud_delete_device(const char *sn)
         for (int j = 0; j < 3; j++)
         {
             ssn[p] = j + '0';
-            list_del_by_id_hilink(ssn, cloud_get_list_head(&g_SCloudControl));
+            list_del_by_id_hilink(ssn, cloud_get_list_head());
             HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
         }
         ssn[p] = 0;
@@ -244,7 +246,7 @@ int cloud_delete_device(const char *sn)
         for (int j = 0; j < 3; j++)
         {
             ssn[p] = j + '0';
-            list_del_by_id_hilink(ssn, cloud_get_list_head(&g_SCloudControl));
+            list_del_by_id_hilink(ssn, cloud_get_list_head());
             HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
         }
         ssn[p] = 0;
@@ -254,39 +256,55 @@ int cloud_delete_device(const char *sn)
         break;
     }
 
-    list_del_by_id_hilink(ssn, cloud_get_list_head(&g_SCloudControl));
+    list_del_by_id_hilink(ssn, cloud_get_list_head());
 
     HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
-    list_del_by_id(ssn, local_get_list_head(&g_SLocalControl));
+    list_del_by_id(ssn, local_get_list_head());
 
     out.FrameNumber = g_iFrameNumber++;
     strcpy(out.Type, STR_DELETE);
     strcpy(out.Data.DeviceId, ssn);
 
-    return write_to_local(&out, &g_SLocalControl);
+    return write_to_local(&out);
 }
+
 
 void cloud_restart_reFactory(int index)
 {
     write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
+    driver_exit();
+    HILINK_StopSoftAp();
 
-    if (index)
+    if (index == INT_REFACTORY)
     {
         write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
+
         hilink_all_online(0, DEV_RESTORE);
-        sleep(2);
+        sleep(1);
+        cloud_control_destory();
+        local_control_destory();
+        sync();
+        run_closeCallback();
+
         hilink_restore_factory_settings();
-        cloud_control_destory(&g_SCloudControl);
-        local_control_destory(&g_SLocalControl);
-        create_gateway(local_get_list_head(&g_SLocalControl));
+
+        sleep(1);
+        system("sh /userdata/app/restore.sh");
     }
     else
     {
         hilink_all_online(0, DEV_OFFLINE);
         sleep(1);
-        HILINK_StopSoftAp();
-        driver_exit();
-        cloud_control_destory(&g_SCloudControl);
-        local_control_destory(&g_SLocalControl);
+        cloud_control_destory();
+        local_control_destory();
+        sync();
+        run_closeCallback();
+
+        if (INT_REBOOT == index)
+        {
+            reboot(RB_AUTOBOOT);
+        }
     }
+    printf("\texit(0)\t\n");
+    exit(0);
 }

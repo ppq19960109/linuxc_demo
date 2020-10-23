@@ -44,11 +44,31 @@ def Luminance_up(inValue, valueLen):
 
 
 def Luminance_down(inValue, valueLen):
-    outValue = str(hex(int(254 * int(inValue) / 100)))
-    if len(outValue)==3:
-        outValue='0'+outValue[2:]
+
+    if inValue == '72':
+        outValue = 'B8'
+    elif inValue == '74':
+        outValue = 'BD'
+    elif inValue == '83':
+        outValue = 'D4'
+    elif inValue == '85':
+        outValue = 'D9'
+    elif inValue == '87':
+        outValue = 'DE'
+    elif inValue == '92':
+        outValue = 'EB'
+    elif inValue == '94':
+        outValue = 'F0'
+    elif inValue == '96':
+        outValue = 'F5'
+    elif inValue == '98':
+        outValue = 'FA'
     else:
-        outValue=outValue[2:]
+        outValue = str(hex(int(254 * int(inValue) / 100)))
+        if len(outValue)==3:
+            outValue='0'+outValue[2:]
+        else:
+            outValue=outValue[2:]
     outbuff = STRING_Z3_LEVEL_CTRL_CMD_ID+outValue+STRING_Z3_LEVEL_CTRL_TRANSITION_TIME
     return outbuff, len(outbuff)
 

@@ -24,6 +24,8 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CLOUD_OFFLINE:
         log_info("HILINK_M2M_CLOUD_OFFLINE\n");
         /* 设备与云端连接断开，请在此处添加实现 */
+        driver_deviceCloudOffline();
+        hilink_all_online(0, DEV_OFFLINE);
         break;
     case HILINK_M2M_CLOUD_ONLINE:
         log_info("HILINK_M2M_CLOUD_ONLINE\n");
@@ -38,7 +40,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_LONG_OFFLINE_REBOOT:
         log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
         /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
-        hilink_restore_factory_settings();
+        cloud_restart_reFactory(INT_REBOOT);
         break;
     case HILINK_UNINITIALIZED:
         log_info("HILINK_UNINITIALIZED\n");
@@ -51,7 +53,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_LINK_CONFIG_TIMEOUT:
         log_info("HILINK_LINK_CONFIG_TIMEOUT\n");
         /* 设备处于10分钟超时状态，请在此处添加实现 */
-        hilink_restore_factory_settings();
+
         break;
     case HILINK_LINK_CONNECTTING_WIFI:
         log_info("HILINK_LINK_CONNECTTING_WIFI\n");
@@ -66,10 +68,12 @@ void hilink_notify_devstatus(int status)
         /* 设备正在连接云端，请在此处添加实现 */
         if (HILINK_IsRegister())
         {
+            log_info("HILINK_M2M_CONNECTTING_CLOUD:Register\n");
             driver_deviceRegister();
         }
         else
         {
+            log_info("HILINK_M2M_CONNECTTING_CLOUD:UnRegister\n");
             driver_deviceUnRegister();
         }
 
@@ -115,7 +119,7 @@ int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart\n");
 
-    cloud_restart_reFactory(INT_RESTART);
+    cloud_restart_reFactory(INT_OFFLINE);
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
