@@ -6,14 +6,14 @@
  */
 
 #include "hilink_sdk_adapter.h"
+#include "hilink_profile_bridge.h"
 #include "hilink.h"
 
-#include "cloud_receive.h"
-#include "cloud_send.h"
+#include "local_device.h"
 #include "tool.h"
 #include "rk_driver.h"
 
-void hlink_online_led(void)
+void hlink_online_ledStatus(void)
 {
     if (HILINK_IsRegister())
     {
@@ -39,13 +39,13 @@ void hilink_notify_devstatus(int status)
         log_info("HILINK_M2M_CLOUD_OFFLINE\n");
         /* 设备与云端连接断开，请在此处添加实现 */
         driver_deviceCloudOffline();
-        hilink_all_online(0, DEV_OFFLINE);
+        local_allDevice_onlineStatus(0, DEV_OFFLINE);
         break;
     case HILINK_M2M_CLOUD_ONLINE:
         log_info("HILINK_M2M_CLOUD_ONLINE\n");
         /* 设备连接云端成功，请在此处添加实现 */
-        hlink_online_led();
-        hilink_all_online(1, DEV_ONLINE);
+        hlink_online_ledStatus();
+        local_allDevice_onlineStatus(1, DEV_ONLINE);
         break;
     case HILINK_M2M_LONG_OFFLINE:
         log_info("HILINK_M2M_LONG_OFFLINE\n");
@@ -54,7 +54,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_LONG_OFFLINE_REBOOT:
         log_info("HILINK_M2M_LONG_OFFLINE_REBOOT\n");
         /* 设备与云端连接长时间断开后进行重启，请在此处添加实现 */
-        cloud_restart_reFactory(INT_REBOOT);
+        local_system_restartOrReFactory(INT_REBOOT);
         break;
     case HILINK_UNINITIALIZED:
         log_info("HILINK_UNINITIALIZED\n");
@@ -95,7 +95,7 @@ void hilink_notify_devstatus(int status)
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
         driver_deviceUnRegister();
-        cloud_restart_reFactory(INT_REFACTORY);
+        local_system_restartOrReFactory(INT_REFACTORY);
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");
@@ -123,7 +123,7 @@ int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart\n");
 
-    cloud_restart_reFactory(INT_OFFLINE);
+    local_system_restartOrReFactory(INT_OFFLINE);
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {

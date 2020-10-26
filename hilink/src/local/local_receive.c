@@ -14,7 +14,7 @@
 
 #include "cloud_list.h"
 #include "cloud_send.h"
-#include "cloud_receive.h"
+#include "local_device.h"
 
 #include "socket.h"
 
@@ -44,8 +44,8 @@ static LocalControl_t g_SLocalControl;
 
 void local_init_gateway()
 {
-    dev_data_t *dev_buf = local_get_gateway();
-    memset(dev_buf, 0, sizeof(dev_data_t));
+    dev_local_t *dev_buf = local_get_gateway();
+    memset(dev_buf, 0, sizeof(dev_local_t));
     strcpy(dev_buf->GatewayId, "");
     strcpy(dev_buf->DeviceId, STR_HOST_GATEWAYID);
     strcpy(dev_buf->ModelId, "000000");
@@ -84,12 +84,12 @@ char *local_get_sendData()
     return g_SLocalControl.sendData;
 }
 
-dev_data_t *local_get_gateway()
+dev_local_t *local_get_gateway()
 {
     return &g_SLocalControl.gateway;
 }
 
-int gateway_attr(dev_data_t *dev_data, cJSON *Data)
+int local_attr_gateway(dev_local_t *dev_data, cJSON *Data)
 {
     if (strcmp(STR_HOST_GATEWAYID, dev_data->DeviceId))
         return -1;
@@ -105,9 +105,9 @@ int gateway_attr(dev_data_t *dev_data, cJSON *Data)
 
     DevGateway_t *dev = (DevGateway_t *)dev_data->private;
     int array_size = cJSON_GetArraySize(Data);
-    for (int cnt = 0; cnt < array_size; ++cnt)
+    for (int i = 0; i < array_size; ++i)
     {
-        array_sub = cJSON_GetArrayItem(Data, cnt);
+        array_sub = cJSON_GetArrayItem(Data, i);
         Key = cJSON_GetObjectItem(array_sub, STR_KEY);
         if (Key == NULL)
             continue;
@@ -121,7 +121,7 @@ int gateway_attr(dev_data_t *dev_data, cJSON *Data)
 
 void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct list_head *localNode)
 {
-    dev_data_t *dev_buf;
+    dev_local_t *dev_buf;
     cJSON *array_sub;
 
     int array_size = cJSON_GetArraySize(Data);
@@ -133,14 +133,13 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
         dev_buf = list_get_by_id(cJSON_GetObjectItem(array_sub, STR_DEVICEID)->valuestring, localNode);
         if (dev_buf == NULL)
         {
-            dev_buf = (dev_data_t *)malloc(sizeof(dev_data_t));
-            memset(dev_buf, 0, sizeof(dev_data_t));
+            dev_buf = (dev_local_t *)malloc(sizeof(dev_local_t));
+            memset(dev_buf, 0, sizeof(dev_local_t));
             str_copy_from_json(root, STR_GATEWAYID, dev_buf->GatewayId);
             str_copy_from_json(array_sub, STR_DEVICEID, dev_buf->DeviceId);
             str_copy_from_json(array_sub, STR_MODELID, dev_buf->ModelId);
             str_copy_from_json(array_sub, STR_VERSION, dev_buf->Version);
             char_copy_from_json(array_sub, STR_ONLINE, &dev_buf->Online);
-            char_copy_from_json(array_sub, STR_REGISTERSTATUS, &dev_buf->RegisterStatus);
 
             if (local_attribute_update(dev_buf, cJSON_GetObjectItem(array_sub, Params)) != 0)
             {
@@ -159,12 +158,11 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
             str_copy_from_json(array_sub, STR_VERSION, dev_buf->Version);
             char_copy_from_json(array_sub, STR_ONLINE, &dev_buf->Online);
 
-            char_copy_from_json(array_sub, STR_REGISTERSTATUS, &dev_buf->RegisterStatus);
-
-            local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
-
-            if (gateway_attr(dev_buf, cJSON_GetObjectItem(array_sub, Params)) != 0)
+            if (local_attr_gateway(dev_buf, cJSON_GetObjectItem(array_sub, Params)) != 0)
+            {
+                local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
                 local_attribute_update(dev_buf, cJSON_GetObjectItem(array_sub, Params));
+            }
         }
     }
 }
@@ -241,14 +239,14 @@ int read_from_local(const char *json, struct list_head *localNode)
         goto fail;
     }
 
-    dev_data_t dev_data;
-    dev_data_t *dev_buf = NULL;
+    dev_local_t dev_data;
+    dev_local_t *dev_buf = NULL;
     cJSON *array_sub = cJSON_GetArrayItem(Data, 0);
     if (array_sub != NULL)
         str_copy_from_json(array_sub, STR_DEVICEID, dev_data.DeviceId);
     else
     {
-        /* code */
+        goto fail;
     }
 
     switch (type)
@@ -258,12 +256,12 @@ int read_from_local(const char *json, struct list_head *localNode)
         dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
         if (dev_buf == NULL)
         {
-            dev_buf = (dev_data_t *)malloc(sizeof(dev_data_t));
-            memset(dev_buf, 0, sizeof(dev_data_t));
+            dev_buf = (dev_local_t *)malloc(sizeof(dev_local_t));
+            memset(dev_buf, 0, sizeof(dev_local_t));
             str_copy_from_json(root, STR_GATEWAYID, dev_buf->GatewayId);
             str_copy_from_json(array_sub, STR_DEVICEID, dev_buf->DeviceId);
             str_copy_from_json(array_sub, STR_MODELID, dev_buf->ModelId);
-            dev_buf->Online = 1;
+            dev_buf->Online = INT_ONLINK;
             if (local_attribute_update(dev_buf, NULL) != 0)
             {
                 log_error("local_attribute_update error\n");
@@ -273,8 +271,6 @@ int read_from_local(const char *json, struct list_head *localNode)
 
             list_add(&dev_buf->node, localNode);
         }
-        str_copy_from_json(array_sub, STR_DEVICETYPE, dev_buf->DeviceType);
-        str_copy_from_json(array_sub, STR_SECRET, dev_buf->Secret);
     }
     break;
     case 1: //设备注销上报：”UnRegister”；
@@ -283,7 +279,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         if (dev_buf != NULL)
         {
             local_singleDevice_onlineStatus(dev_buf, DEV_RESTORE);
-            list_del_by_id_hilink(dev_data.DeviceId, cloud_get_list_head());
+            list_del_by_id_cloud(dev_data.DeviceId, cloud_get_list_head());
             list_del_dev(dev_buf);
         }
         else
@@ -294,8 +290,9 @@ int read_from_local(const char *json, struct list_head *localNode)
     break;
     case 2: //设备在线状态上报, “OnOff”
     {
-        cJSON *Key = cJSON_GetObjectItem(array_sub, STR_KEY);
         dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
+        cJSON *Key = cJSON_GetObjectItem(array_sub, STR_KEY);
+
         if (dev_buf != NULL && Key != NULL && strcmp(Key->valuestring, STR_ONLINE) == 0)
         {
             char_copy_from_json(array_sub, STR_VALUE, &dev_buf->Online);
@@ -307,24 +304,15 @@ int read_from_local(const char *json, struct list_head *localNode)
     case 4: //设备全部属性上报：”DevAttri”;
     case 5: //设备事件上报：”Event”；
     {
-
         dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
         if (dev_buf != NULL)
         {
-            if (dev_buf->Online == 0)
+            if (dev_buf->Online == INT_OFFLINK)
             {
-                dev_buf->Online = 1;
+                dev_buf->Online = INT_ONLINK;
                 local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
             }
-            cJSON *Key = cJSON_GetObjectItem(array_sub, STR_KEY);
-            if (Key != NULL)
-            {
-                if (strcmp(Key->valuestring, STR_VERSION) == 0)
-                {
-                    str_copy_from_json(array_sub, STR_VALUE, dev_buf->Version);
-                }
-            }
-            if (gateway_attr(dev_buf, Data) != 0)
+            if (local_attr_gateway(dev_buf, Data) != 0)
                 local_attribute_update(dev_buf, Data);
         }
         else
@@ -345,7 +333,7 @@ int read_from_local(const char *json, struct list_head *localNode)
     break;
     case 8: //恢复出厂设置上报：”ReFactory”；
     {
-        cloud_restart_reFactory(INT_REFACTORY);
+        local_system_restartOrReFactory(INT_REFACTORY);
     }
     break;
     case 9: //COO网络信息上报：”CooInfo”；
@@ -377,6 +365,7 @@ int read_from_local(const char *json, struct list_head *localNode)
 
         break;
     }
+
 heart:
     cJSON_Delete(root);
     // list_print_all(localNode);

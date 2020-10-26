@@ -1,11 +1,23 @@
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/reboot.h>
 
-#include "local_tcp_client.h"
 #include "local_device.h"
+#include "local_tcp_client.h"
 #include "local_send.h"
+#include "local_callback.h"
+
+
 #include "cloud_send.h"
 #include "cloud_list.h"
+
+#include "rk_driver.h"
+
+#include "hilink.h"
+#include "hilink_softap_adapter.h"
+
+
 
 #define HY0134_INDEX 8
 #define HY0134 "_TZE200_twuagcv5"
@@ -68,7 +80,7 @@ static const SAttrInfo s_SLocalAttrSize[] = {
     {.attrLen = sizeof(dev_HY0134_t)},
 };
 
-int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
+int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
 {
 
     int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
@@ -356,16 +368,16 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         }
     }
 cloud:
-    return local_tohilink(dev_data, index, cloud_get_list_head());
+    return local_tocloud(dev_data, index, cloud_get_list_head());
 }
 
-void local_singleDevice_onlineStatus(dev_data_t *src, int status)
+void local_singleDevice_onlineStatus(dev_local_t *src, int status)
 {
     HilinkSyncBrgDevStatus(src->DeviceId, status);
     log_info("HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, status);
     if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
     {
-        char sn[24] = {0};
+        char sn[32] = {0};
         stpcpy(sn, src->DeviceId);
         int p = strlen(src->DeviceId);
         for (int j = 0; j < 3; j++)
@@ -374,7 +386,7 @@ void local_singleDevice_onlineStatus(dev_data_t *src, int status)
             HilinkSyncBrgDevStatus(sn, status);
             if (status == DEV_RESTORE)
             {
-                list_del_by_id_hilink(sn, cloud_get_list_head());
+                list_del_by_id_cloud(sn, cloud_get_list_head());
             }
         }
     }
@@ -385,7 +397,7 @@ void local_allDevice_onlineStatus(int online, int status)
     log_info("local_allDevice_onlineStatus!\n");
     if (online)
     {
-        dev_data_t *ptr;
+        dev_local_t *ptr;
         struct list_head *head = local_get_list_head();
         if (head == NULL)
         {
@@ -412,4 +424,42 @@ void local_allDevice_onlineStatus(int online, int status)
         }
         sleep(4);
     }
+}
+
+void local_system_restartOrReFactory(int index)
+{
+    log_info("local_system_restartOrReFactory:%d\n", index);
+    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
+    HILINK_StopSoftAp();
+
+    if (index == INT_REFACTORY)
+    {
+        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
+
+        local_allDevice_onlineStatus(0, DEV_RESTORE);
+        cloud_control_destory();
+        local_control_destory();
+        sync();
+        run_closeCallback();
+        driver_exit();
+        hilink_restore_factory_settings();
+
+        sleep(2);
+        system("sh /userdata/app/restore.sh &");
+    }
+    else
+    {
+        local_allDevice_onlineStatus(0, DEV_OFFLINE);
+        cloud_control_destory();
+        local_control_destory();
+        sync();
+        run_closeCallback();
+        driver_exit();
+        if (INT_REBOOT == index)
+        {
+            reboot(RB_AUTOBOOT);
+        }
+    }
+    printf("\texit(0)\t\n");
+    exit(0);
 }

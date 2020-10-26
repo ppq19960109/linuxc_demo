@@ -1,21 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/reboot.h>
 
-#include "cloud_list.h"
-#include "cloud_send.h"
 #include "cloud_receive.h"
+#include "cloud_list.h"
+
 #include "local_send.h"
 #include "local_list.h"
 #include "local_device.h"
-#include "local_callback.h"
 
 #include "tool.h"
-#include "rk_driver.h"
-#include "hilink.h"
-#include "hilink_softap_adapter.h"
+
+
 
 static char *g_sCloudModel[] = {"2AP1", "2AP0", "2AN9", "2AN7", "2AOZ", "2AOY", "2ANO", "2AN8", "2ANF", "2ANK", "2ANJ", "2ANI"};
 //单键智能开关 双键智能开关 三键智能开关 DLT液晶调光器 1路智能开关模块 2路智能开关模块 3路智能开关模块 门磁传感器  智镜:场景面板 地暖 空调 新风
@@ -41,7 +37,7 @@ static int getValue_FromJson(cJSON *val, char *dst)
 //cloud转换成hanyar的json格式
 int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
 {
-    dev_cloud_t *in = list_get_by_id_hilink(sn, cloud_get_list_head());
+    dev_cloud_t *in = list_get_by_id_cloud(sn, cloud_get_list_head());
     if (in == NULL)
         return -1;
 
@@ -217,7 +213,7 @@ int cloud_delete_device(const char *sn)
     local_dev_t out = {0};
     char ssn[32] = {0};
 
-    dev_cloud_t *dev_cloud = list_get_by_id_hilink(sn, cloud_get_list_head());
+    dev_cloud_t *dev_cloud = list_get_by_id_cloud(sn, cloud_get_list_head());
     int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
 
     stpcpy(ssn, sn);
@@ -230,7 +226,7 @@ int cloud_delete_device(const char *sn)
         for (int j = 0; j < 3; j++)
         {
             ssn[p] = j + '0';
-            list_del_by_id_hilink(ssn, cloud_get_list_head());
+            list_del_by_id_cloud(ssn, cloud_get_list_head());
             HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
         }
         ssn[p] = 0;
@@ -246,7 +242,7 @@ int cloud_delete_device(const char *sn)
         for (int j = 0; j < 3; j++)
         {
             ssn[p] = j + '0';
-            list_del_by_id_hilink(ssn, cloud_get_list_head());
+            list_del_by_id_cloud(ssn, cloud_get_list_head());
             HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
         }
         ssn[p] = 0;
@@ -256,7 +252,7 @@ int cloud_delete_device(const char *sn)
         break;
     }
 
-    list_del_by_id_hilink(ssn, cloud_get_list_head());
+    list_del_by_id_cloud(ssn, cloud_get_list_head());
 
     HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
     list_del_by_id(ssn, local_get_list_head());
@@ -268,40 +264,3 @@ int cloud_delete_device(const char *sn)
     return write_to_local(&out);
 }
 
-void cloud_restart_reFactory(int index)
-{
-    log_info("cloud_restart_reFactory:%d\n", index);
-    write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-    HILINK_StopSoftAp();
-
-    if (index == INT_REFACTORY)
-    {
-        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
-
-        hilink_all_online(0, DEV_RESTORE);
-        cloud_control_destory();
-        local_control_destory();
-        sync();
-        run_closeCallback();
-        driver_exit();
-        hilink_restore_factory_settings();
-
-        sleep(2);
-        system("sh /userdata/app/restore.sh &");
-    }
-    else
-    {
-        hilink_all_online(0, DEV_OFFLINE);
-        cloud_control_destory();
-        local_control_destory();
-        sync();
-        run_closeCallback();
-        driver_exit();
-        if (INT_REBOOT == index)
-        {
-            reboot(RB_AUTOBOOT);
-        }
-    }
-    printf("\texit(0)\t\n");
-    exit(0);
-}

@@ -11,10 +11,11 @@
 #include "local_tcp_client.h"
 #include "local_send.h"
 #include "local_callback.h"
+#include "local_device.h"
+
 #include "socket.h"
 #include "rk_driver.h"
-#include "cloud_receive.h"
-#include "cloud_send.h"
+
 
 typedef struct
 {
@@ -32,9 +33,9 @@ static void main_thread_signal_handler(int signal)
     if (signal == SIGHUP || signal == SIGINT || signal == SIGQUIT || signal == SIGKILL || signal == SIGTERM)
     {
         if (signal == SIGQUIT)
-            cloud_restart_reFactory(INT_REBOOT);
+            local_system_restartOrReFactory(INT_REBOOT);
         else
-            cloud_restart_reFactory(INT_OFFLINE);
+            local_system_restartOrReFactory(INT_OFFLINE);
     }
 }
 
@@ -127,7 +128,7 @@ static int net_client_srart()
     return sockfd;
 }
 //---------------------------------------------------------------
-extern void hlink_online_led(void);
+extern void hlink_online_ledStatus(void);
 static void *thread_hander(void *arg)
 {
     sigset_t set;
@@ -141,7 +142,7 @@ static void *thread_hander(void *arg)
     do
     {
         pdata->socketfd = net_client_srart();
-        hlink_online_led();
+        hlink_online_ledStatus();
 
         timerid = start_timer(1, timer_thread_handler, 60, 60);
         readLen = write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
@@ -175,7 +176,7 @@ static void *thread_hander(void *arg)
         pdata->socketfd = 0;
 
         timer_delete(timerid);
-        hilink_all_online(0, DEV_OFFLINE);
+        local_allDevice_onlineStatus(0, DEV_OFFLINE);
         driver_deviceCloudOffline();
     } while (1);
     pthread_exit(0);

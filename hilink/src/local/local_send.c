@@ -4,16 +4,12 @@
 #include <errno.h>
 
 #include "local_send.h"
-#include "local_device.h"
-#include "cloud_send.h"
-#include "local_list.h"
 #include "local_receive.h"
+#include "local_callback.h"
 
 #include "socket.h"
 #include "tool.h"
 
-#include "local_callback.h"
-#include "local_tcp_client.h"
 
 static char *s_hanyarCmd[] = {STR_ADD, STR_DEVSINFO, STR_DEVATTRI, STR_REFACTORY};
 const SAttrInfo g_SHamyarCmd = {

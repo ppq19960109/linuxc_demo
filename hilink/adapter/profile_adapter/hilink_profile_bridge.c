@@ -37,7 +37,7 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
     {
         return -1;
     }
-    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head());
+    dev_cloud_t *dev = list_get_by_id_cloud(sn, cloud_get_list_head());
     if (dev == NULL)
     {
         return -1;
@@ -65,7 +65,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         return -1;
     }
 
-    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head());
+    dev_cloud_t *dev = list_get_by_id_cloud(sn, cloud_get_list_head());
     if (dev == NULL)
     {
         log_debug("HilinkGetBrgSvcInfo err\n");
@@ -126,7 +126,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
         return -1;
     }
 
-    dev_cloud_t *dev = list_get_by_id_hilink(sn, cloud_get_list_head());
+    dev_cloud_t *dev = list_get_by_id_cloud(sn, cloud_get_list_head());
     if (dev == NULL)
     {
         return -1;

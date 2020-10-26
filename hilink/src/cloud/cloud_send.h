@@ -43,6 +43,6 @@ void cloud_control_destory();
 struct list_head *cloud_get_list_head();
 
 
-int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode);
+int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode);
 
 #endif

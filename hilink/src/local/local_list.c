@@ -4,9 +4,9 @@
 
 #include "local_list.h"
 
-dev_data_t *list_get_by_id(const char *id, struct list_head *head)
+dev_local_t *list_get_by_id(const char *id, struct list_head *head)
 {
-    dev_data_t *ptr;
+    dev_local_t *ptr;
     if (head == NULL)
     {
         return NULL;
@@ -23,7 +23,7 @@ dev_data_t *list_get_by_id(const char *id, struct list_head *head)
     return NULL;
 }
 
-void list_del_dev(dev_data_t *ptr)
+void list_del_dev(dev_local_t *ptr)
 {
     list_del(&ptr->node);
     if (ptr->private != NULL)
@@ -37,7 +37,7 @@ void list_del_dev(dev_data_t *ptr)
 int list_del_by_id(const char *id, struct list_head *head)
 {
 
-    dev_data_t *ptr = list_get_by_id(id, head);
+    dev_local_t *ptr = list_get_by_id(id, head);
     if (ptr == NULL)
     {
         return -1;
@@ -48,7 +48,7 @@ int list_del_by_id(const char *id, struct list_head *head)
 
 void list_del_all(struct list_head *head)
 {
-    dev_data_t *ptr, *next;
+    dev_local_t *ptr, *next;
     if (head == NULL)
     {
         return;
@@ -61,7 +61,7 @@ void list_del_all(struct list_head *head)
 
 void list_print_all(struct list_head *head)
 {
-    dev_data_t *ptr;
+    dev_local_t *ptr;
     if (head == NULL)
     {
         return;
@@ -72,12 +72,9 @@ void list_print_all(struct list_head *head)
     {
         log_debug(" ---------------------entry num:%d\n", ++i);
         log_debug("GatewayId:%s\n", ptr->GatewayId);
-        log_debug("DeviceType:%s\n", ptr->DeviceType);
         log_debug("DeviceId:%s\n", ptr->DeviceId);
         log_debug("ModelId:%s\n", ptr->ModelId);
-        // log_debug("Version:%s\n", ptr->Version);
-        // log_debug("Secret:%s\n", ptr->Secret);
+        log_debug("Version:%s\n", ptr->Version);
         log_debug("Online:%d\n", ptr->Online);
-        log_debug("RegisterStatus:%d\n", ptr->RegisterStatus);
     }
 }

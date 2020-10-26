@@ -14,7 +14,7 @@
 #include "event_main.h"
 #include "local_send.h"
 #include "local_callback.h"
-#include "cloud_receive.h"
+#include "local_device.h"
 
 struct ev_app_t
 {
@@ -202,7 +202,7 @@ static void event_signal_cb(evutil_socket_t fd, short event, void *arg)
     printf("event_signal_cb:%d\n", fd);
     if (fd == SIGINT || fd == SIGQUIT || fd == SIGKILL)
     {
-        cloud_restart_reFactory(INT_OFFLINE);
+        local_system_restartOrReFactory(INT_OFFLINE);
     }
 }
 static void event_signal_open()

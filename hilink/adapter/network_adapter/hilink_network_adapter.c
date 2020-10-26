@@ -13,7 +13,7 @@
 
 #include "net_info.h"
 #include "wifi.h"
-#include "log.h"
+#include "tool.h"
 
 char wifi_ssid[32];
 char wifi_psk[32];

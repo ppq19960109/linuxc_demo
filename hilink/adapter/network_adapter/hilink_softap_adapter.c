@@ -10,7 +10,7 @@
 
 #include "net_info.h"
 #include "wifi.h"
-#include "log.h"
+#include "tool.h"
 /*
  * 获取广播ip
  * broadcastIp表示存放Ip的缓冲

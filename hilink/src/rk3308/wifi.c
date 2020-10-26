@@ -5,8 +5,10 @@
 #include <sys/stat.h>
 
 #include <DeviceIo/Rk_wifi.h>
-#include "cJSON.h"
+
 #include "wifi.h"
+#include "cJSON.h"
+
 
 int get_pid(char *Name)
 {

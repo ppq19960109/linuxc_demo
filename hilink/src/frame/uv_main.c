@@ -8,27 +8,32 @@
 
 #include "local_send.h"
 #include "local_callback.h"
-#include "cloud_receive.h"
+#include "local_device.h"
 
-static uv_tcp_t *tcp_client;
-static uv_connect_t *g_connect;
-static uv_write_t writereq;
-static uv_timer_t timer_client;
-static uv_signal_t g_signal;
-static uv_timer_t timer_req;
-static volatile int s_isConnect = 0;
-static uv_buf_t w_buf;
+struct uv_app_t
+{
+    uv_tcp_t *tcp_client;
+    uv_connect_t *g_connect;
+    uv_timer_t timer_client;
+    uv_write_t writereq;
+    uv_buf_t w_buf;
 
+    uv_signal_t g_signal;
+    uv_timer_t timer_req;
+    volatile int s_isConnect;
 #define RECVLEN 16384
-char tcpBuf[RECVLEN + 1];
+    char tcpBuf[RECVLEN + 1];
+};
+
+static struct uv_app_t uv_app;
 
 static void client_timer();
 
 static void client_close(uv_handle_t *handle)
 {
     printf("client_close\n");
-    s_isConnect = 0;
-    uv_tcp_init(uv_default_loop(), tcp_client);
+    uv_app.s_isConnect = 0;
+    uv_tcp_init(uv_default_loop(), uv_app.tcp_client);
     client_timer();
 }
 
@@ -45,16 +50,16 @@ static void client_write_cb(uv_write_t *req, int status)
 
 static int client_write(char *data, unsigned int len)
 {
-    if (!s_isConnect)
+    if (!uv_app.s_isConnect)
     {
         fprintf(stderr, "client not connect\n");
         return -1;
     }
-    w_buf = uv_buf_init(data, len);
+    uv_app.w_buf = uv_buf_init(data, len);
 
-    printf("w_buf:%p,%d\n", data, len);
-    uv_write(&writereq, (uv_stream_t *)tcp_client, &w_buf, 1, client_write_cb);
-    return writereq.error;
+    printf("uv_app.w_buf:%p,%d\n", data, len);
+    uv_write(&uv_app.writereq, (uv_stream_t *)uv_app.tcp_client, &uv_app.w_buf, 1, client_write_cb);
+    return uv_app.writereq.error;
 }
 
 static void client_alloc_buf(uv_handle_t *handle,
@@ -100,8 +105,8 @@ static void on_connect(uv_connect_t *req, int status)
         // error!
         return;
     }
-    uv_timer_stop(&timer_client);
-    s_isConnect = 1;
+    uv_timer_stop(&uv_app.timer_client);
+    uv_app.s_isConnect = 1;
     write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
     write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
 
@@ -129,7 +134,7 @@ static void client_timer_callback(uv_timer_t *timer)
     struct sockaddr_in dest;
     uv_ip4_addr("127.0.0.1", SERVER_PORT, &dest);
 
-    uv_tcp_connect(g_connect, tcp_client, (struct sockaddr *)&dest, on_connect);
+    uv_tcp_connect(uv_app.g_connect, uv_app.tcp_client, (struct sockaddr *)&dest, on_connect);
 
     // uv_timer_stop(timer);
 }
@@ -137,36 +142,36 @@ static void client_timer_callback(uv_timer_t *timer)
 
 static void client_timer()
 {
-    uv_timer_again(&timer_client);
+    uv_timer_again(&uv_app.timer_client);
 }
 static int net_client_open()
 {
 
-    tcp_client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
+    uv_app.tcp_client = (uv_tcp_t *)malloc(sizeof(uv_tcp_t));
 
-    g_connect = (uv_connect_t *)malloc(sizeof(uv_connect_t));
+    uv_app.g_connect = (uv_connect_t *)malloc(sizeof(uv_connect_t));
 
     // struct sockaddr_in dest;
     // uv_ip4_addr("127.0.0.1", SERVER_PORT, &dest);
-    // if (uv_tcp_connect(g_connect, tcp_client, (struct sockaddr *)&dest, on_connect) == 0)
+    // if (uv_tcp_connect(uv_app.g_connect, uv_app.tcp_client, (struct sockaddr *)&dest, on_connect) == 0)
     // {
     //     printf("uv_tcp_connect\n");
     // }
-    uv_tcp_init(uv_default_loop(), tcp_client);
+    uv_tcp_init(uv_default_loop(), uv_app.tcp_client);
 
-    uv_timer_init(uv_default_loop(), &timer_client);
-    uv_timer_start(&timer_client, client_timer_callback, 100, 2000);
+    uv_timer_init(uv_default_loop(), &uv_app.timer_client);
+    uv_timer_start(&uv_app.timer_client, client_timer_callback, 100, 2000);
     return 0;
 }
 
 static void net_client_close()
 {
-    uv_read_stop(g_connect->handle);
+    uv_read_stop(uv_app.g_connect->handle);
 
-    uv_close((uv_handle_t *)tcp_client, NULL);
-    s_isConnect = 0;
-    free(tcp_client);
-    free(g_connect);
+    uv_close((uv_handle_t *)uv_app.tcp_client, NULL);
+    uv_app.s_isConnect = 0;
+    free(uv_app.tcp_client);
+    free(uv_app.g_connect);
 }
 //------------------------------
 
@@ -178,13 +183,13 @@ static void timer_callback(uv_timer_t *timer)
 
 static int timer_open()
 {
-    uv_timer_init(uv_default_loop(), &timer_req);
-    uv_timer_start(&timer_req, timer_callback, 5000, 60000);
+    uv_timer_init(uv_default_loop(), &uv_app.timer_req);
+    uv_timer_start(&uv_app.timer_req, timer_callback, 5000, 60000);
     return 0;
 }
 static void timer_close()
 {
-    uv_timer_stop(&timer_req);
+    uv_timer_stop(&uv_app.timer_req);
 }
 //---------------------------------------------
 
@@ -193,21 +198,21 @@ static void signal_handler(uv_signal_t *handle, int signum)
 
     if (signum == SIGINT || signum == SIGQUIT || signum == SIGKILL)
     {
-        cloud_restart_reFactory(INT_OFFLINE);
+        local_system_restartOrReFactory(INT_OFFLINE);
     }
     printf("signal received: %d\n", signum);
 }
 
 static void signal_open()
 {
-    uv_signal_init(uv_default_loop(), &g_signal);
-    uv_signal_start_oneshot(&g_signal, signal_handler, SIGINT);
-    // uv_signal_start(&g_signal, signal_handler, SIGQUIT);
-    // uv_signal_start(&g_signal, signal_handler, SIGKILL);
+    uv_signal_init(uv_default_loop(), &uv_app.g_signal);
+    uv_signal_start_oneshot(&uv_app.g_signal, signal_handler, SIGINT);
+    // uv_signal_start(&uv_app.g_signal, signal_handler, SIGQUIT);
+    // uv_signal_start(&uv_app.g_signal, signal_handler, SIGKILL);
 }
 static void signal_close()
 {
-    uv_signal_stop(&g_signal);
+    uv_signal_stop(&uv_app.g_signal);
 }
 //--------------------------------------------------
 void uv_main_close()

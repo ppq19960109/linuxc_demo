@@ -4,7 +4,7 @@
 
 #include "cloud_list.h"
 
-dev_cloud_t *list_get_by_id_hilink(const char *id, struct list_head *head)
+dev_cloud_t *list_get_by_id_cloud(const char *id, struct list_head *head)
 {
     dev_cloud_t *ptr, *next;
     if (head == NULL)
@@ -21,7 +21,7 @@ dev_cloud_t *list_get_by_id_hilink(const char *id, struct list_head *head)
     return NULL;
 }
 
-void list_del_dev_hilink(dev_cloud_t *ptr)
+void list_del_dev_cloud(dev_cloud_t *ptr)
 {
     list_del(&ptr->node);
     for (int i = 0; i < ptr->devSvcNum; ++i)
@@ -36,19 +36,18 @@ void list_del_dev_hilink(dev_cloud_t *ptr)
     ptr=NULL;
 }
 
-int list_del_by_id_hilink(const char *id, struct list_head *head)
+int list_del_by_id_cloud(const char *id, struct list_head *head)
 {
-
-    dev_cloud_t *ptr = list_get_by_id_hilink(id, head);
+    dev_cloud_t *ptr = list_get_by_id_cloud(id, head);
     if (ptr == NULL)
     {
         return -1;
     }
-    list_del_dev_hilink(ptr);
+    list_del_dev_cloud(ptr);
     return 0;
 }
 
-void list_del_all_hilink(struct list_head *head)
+void list_del_all_cloud(struct list_head *head)
 {
     dev_cloud_t *ptr, *next;
     if (head == NULL)
@@ -57,18 +56,18 @@ void list_del_all_hilink(struct list_head *head)
     }
     list_for_each_entry_safe(ptr, next, head, node)
     {
-        list_del_dev_hilink(ptr);
+        list_del_dev_cloud(ptr);
     }
 }
 
-void list_print_all_hilink(struct list_head *head)
+void list_print_all_cloud(struct list_head *head)
 {
     dev_cloud_t *ptr;
     if (head == NULL)
     {
         return;
     }
-    log_info(" ---------------------list_print_all_hilink\n");
+    log_info(" ---------------------list_print_all_cloud\n");
     int i = 0;
     list_for_each_entry(ptr, head, node)
     {

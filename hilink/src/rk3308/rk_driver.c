@@ -7,9 +7,9 @@
 #include <fcntl.h>
 
 #include "local_tcp_client.h"
+#include "local_device.h"
 #include "local_send.h"
 #include "tool.h"
-#include "cloud_receive.h"
 
 #define DRIVER_LED_NAME "/dev/rkled1"
 #define DRIVER_KEY_NAME "/dev/rkasync"
@@ -155,7 +155,7 @@ static void sigio_signal_func(int signum)
         printf("sigio_signal_func read:%d\n", buf);
         if (buf == 1)
         {
-            cloud_restart_reFactory(INT_REFACTORY);
+            local_system_restartOrReFactory(INT_REFACTORY);
         }
         else if (buf == 2)
         {

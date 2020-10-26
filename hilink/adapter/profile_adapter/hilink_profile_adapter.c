@@ -11,7 +11,6 @@
 #include "hilink_profile_adapter.h"
 #include "hilink.h"
 
-#include "cloud_send.h"
 #include "local_send.h"
 #include "cJSON.h"
 /* 设备类型定义 */

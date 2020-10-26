@@ -89,7 +89,7 @@ void cloud_control_init()
 
 void cloud_control_destory()
 {
-    list_del_all_hilink(&g_SCloudControl.head);
+    list_del_all_cloud(&g_SCloudControl.head);
 }
 
 struct list_head *cloud_get_list_head()
@@ -144,7 +144,7 @@ void cloud_add_device_attr(const int index, dev_cloud_t *out, const char *sn)
     for (int i = 0; i < out->devSvcNum; ++i)
         out->devSvc[i].svcId = g_SCloudAttr[index].attr[i];
 }
-void cloud_add_device(const int index, dev_cloud_t **out, const char *sn, dev_data_t *local, struct list_head *cloudNode)
+void cloud_add_device(const int index, dev_cloud_t **out, const char *sn, dev_local_t *local, struct list_head *cloudNode)
 {
     *out = malloc(sizeof(dev_cloud_t));
     memset(*out, 0, sizeof(dev_cloud_t));
@@ -191,12 +191,12 @@ void cloud_update_device_str(cJSON *root, char *key, char *value, dev_cloud_t *o
     modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &out->devSvc[pos].svcVal, json);
 }
 
-int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode)
+int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode)
 {
-    log_info("local_tohilink index:%d\n", index);
+    log_info("local_tocloud index:%d\n", index);
     int pos = 0, i;
 
-    dev_cloud_t *out = list_get_by_id_hilink(src->DeviceId, cloudNode);
+    dev_cloud_t *out = list_get_by_id_cloud(src->DeviceId, cloudNode);
     if (out == NULL)
     {
         // log_info("cloud_add_device %s,%d\n",src->DeviceId,src->Online);
@@ -327,7 +327,7 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
         for (int j = 0; j < 3; j++)
         {
             sn[p] = j + '0';
-            out_sub[j] = list_get_by_id_hilink(sn, cloudNode);
+            out_sub[j] = list_get_by_id_cloud(sn, cloudNode);
 
             if (out_sub[j] == NULL)
             {
@@ -399,7 +399,7 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
     default:
         goto fail;
     }
-    // list_print_all_hilink(cloudNode);
+    // list_print_all_cloud(cloudNode);
 
     cJSON_Delete(root);
 
@@ -408,7 +408,7 @@ fail:
     log_error("hilink modelId not exist\n");
     if (out != NULL)
     {
-        list_del_dev_hilink(out);
+        list_del_dev_cloud(out);
     }
     cJSON_Delete(root);
     return -1;

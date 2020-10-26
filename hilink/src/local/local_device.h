@@ -101,10 +101,15 @@ extern "C"
     extern const SAttrInfo g_SLocalModel;
     extern const SAttrInfo g_SLocalAttr[];
 
-    int local_attribute_update(dev_data_t *dev, cJSON *Data);
+    int local_attribute_update(dev_local_t *dev, cJSON *Data);
 
-    void local_singleDevice_onlineStatus(dev_data_t *src, int status);
-    void hilink_all_online(int online,DevOnlineStatus status);
+    void local_singleDevice_onlineStatus(dev_local_t *src, int status);
+    void local_allDevice_onlineStatus(int online, int status);
+
+#define INT_REBOOT 0
+#define INT_REFACTORY 1
+#define INT_OFFLINE 2
+    void local_system_restartOrReFactory(int index);
 #ifdef __cplusplus
 }
 #endif

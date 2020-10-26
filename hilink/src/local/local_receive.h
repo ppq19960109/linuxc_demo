@@ -9,7 +9,7 @@ extern "C"
 #include "list.h"
 #include "tool.h"
 
-#define SERVER_PORT 7000 //7000
+#define SERVER_PORT 7000
 #define HY_HEART "{\"Command\":\"TcpBeatHeart\",\"Period\":\"60\"}"
 
 #define STR_KEY "Key"
@@ -24,11 +24,8 @@ extern "C"
 #define STR_DEVICEID "DeviceId"
 #define STR_MODELID "ModelId"
 #define STR_GATEWAYID "GatewayId"
-#define STR_DEVICETYPE "DeviceType"
-#define STR_SECRET "Secret"
 #define STR_ONLINE "Online"
 #define STR_VERSION "Version"
-#define STR_REGISTERSTATUS "RegisterStatus"
 #define STR_PARAMS "Params"
 
 #define STR_CTRL "Ctrl"
@@ -38,24 +35,24 @@ extern "C"
 #define STR_HOST_GATEWAYID "0000000000000000"
 #define STR_PERMITJOINING "PermitJoining"
 
+#define INT_ONLINK 1
+#define INT_OFFLINK 0
+
     typedef struct
     {
-        char GatewayId[20];
-        char DeviceType[16];
-        char DeviceId[20];
+        char DeviceId[24];
         char ModelId[24];
+        char GatewayId[20];
         char Version[16];
-        char Secret[40];
         char Online;
-        char RegisterStatus;
         void *private;
         struct list_head node;
-    } dev_data_t;
-
+    } dev_local_t;
+    //---------------------------
     struct local_data_t
     {
-        char DeviceId[20];
-        char ModelId[20];
+        char DeviceId[24];
+        char ModelId[24];
         char Key[24];
         char Value[16];
         void *private;
@@ -74,18 +71,16 @@ extern "C"
     {
 #define SENDTOLOCAL_SIZE 1024
         char sendData[SENDTOLOCAL_SIZE];
-        dev_data_t gateway;
+        dev_local_t gateway;
         struct list_head head;
     } LocalControl_t;
-
 
     void local_control_init();
     void local_control_destory();
     struct list_head *local_get_list_head();
     char *local_get_sendData();
-    dev_data_t *local_get_gateway();
-    
-    dev_data_t *create_gateway(struct list_head *head);
+    dev_local_t *local_get_gateway();
+
     int read_from_local(const char *json, struct list_head *node);
     void recv_toLocal(char *data, int len);
 #ifdef __cplusplus
