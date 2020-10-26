@@ -7,6 +7,7 @@ extern "C"
 #endif
 
 #include "local_receive.h"
+#define HY0134_INDEX 8
 
     typedef struct
     {
@@ -54,7 +55,6 @@ extern "C"
     typedef struct
     {
         char Switch;
-        char Switch_All;
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
@@ -63,7 +63,6 @@ extern "C"
     typedef struct
     {
         char Switch[2];
-        char Switch_All;
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
@@ -72,7 +71,6 @@ extern "C"
     typedef struct
     {
         char Switch[3];
-        char Switch_All;
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;

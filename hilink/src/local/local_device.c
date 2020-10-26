@@ -5,7 +5,9 @@
 #include "local_device.h"
 #include "local_send.h"
 #include "cloud_send.h"
+#include "cloud_list.h"
 
+#define HY0134_INDEX 8
 #define HY0134 "_TZE200_twuagcv5"
 static char *g_sLocalModel[] = {"_TYZB01_mq6qwmfy", "_TYZB01_i8yav3hg", "_TYZB01_42x30fz4", "_TYZB01_lc17o7gh", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "_TYZB01_kw2okqc3", HY0134, HY0134, HY0134, HY0134};
 const SAttrInfo g_SLocalModel = {
@@ -65,7 +67,6 @@ static const SAttrInfo s_SLocalAttrSize[] = {
     {.attrLen = sizeof(dev_HY0134_t)},
     {.attrLen = sizeof(dev_HY0134_t)},
 };
-
 
 int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
 {
@@ -356,4 +357,59 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
     }
 cloud:
     return local_tohilink(dev_data, index, cloud_get_list_head());
+}
+
+void local_singleDevice_onlineStatus(dev_data_t *src, int status)
+{
+    HilinkSyncBrgDevStatus(src->DeviceId, status);
+    log_info("HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, status);
+    if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
+    {
+        char sn[24] = {0};
+        stpcpy(sn, src->DeviceId);
+        int p = strlen(src->DeviceId);
+        for (int j = 0; j < 3; j++)
+        {
+            sn[p] = j + '0';
+            HilinkSyncBrgDevStatus(sn, status);
+            if (status == DEV_RESTORE)
+            {
+                list_del_by_id_hilink(sn, cloud_get_list_head());
+            }
+        }
+    }
+}
+
+void local_allDevice_onlineStatus(int online, int status)
+{
+    log_info("local_allDevice_onlineStatus!\n");
+    if (online)
+    {
+        dev_data_t *ptr;
+        struct list_head *head = local_get_list_head();
+        if (head == NULL)
+        {
+            return;
+        }
+
+        list_for_each_entry(ptr, head, node)
+        {
+            local_singleDevice_onlineStatus(ptr, ptr->Online);
+        }
+    }
+    else
+    {
+        dev_cloud_t *ptr;
+        struct list_head *head = cloud_get_list_head();
+        if (head == NULL)
+        {
+            return;
+        }
+
+        list_for_each_entry(ptr, head, node)
+        {
+            HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, status);
+        }
+        sleep(4);
+    }
 }

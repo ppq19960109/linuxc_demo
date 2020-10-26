@@ -16,6 +16,7 @@
 #include "dev_model_api.h"
 #include "wrappers.h"
 #include <pthread.h>
+
 #include "local_tcp_client.h"
 #include "local_receive.h"
 #include "cloud_send.h"
@@ -124,8 +125,8 @@ static int user_property_set_event_handler(const int devid, const char *request,
     // res = IOT_Linkkit_Report(devid, ITM_MSG_POST_PROPERTY,
     //                          (unsigned char *)request, request_len);
     // EXAMPLE_TRACE("Post Property Message ID: %d", res);
-    cloud_tolocal(devid, request);
-    return 0;
+
+    return cloud_tolocal(devid, request);
 }
 
 static int user_report_reply_event_handler(const int devid, const int msgid, const int code, const char *reply,
@@ -163,9 +164,9 @@ static int user_initialized(const int devid)
         user_example_ctx->master_initialized = 1;
     }
     user_example_ctx->subdev_index++;
-    if(user_example_ctx->subdev_index>2)
+    if (user_example_ctx->subdev_index > 2)
     {
-        IOT_Linkkit_Query(devid,ITM_MSG_QUERY_TOPOLIST,NULL,0);
+        IOT_Linkkit_Query(devid, ITM_MSG_QUERY_TOPOLIST, NULL, 0);
     }
     return 0;
 }
@@ -187,7 +188,7 @@ void linkkit_user_post_property(const int devid, const char *json)
     int res = 0;
     user_example_ctx_t *user_example_ctx = user_example_get_ctx();
     // char *property_payload = "{\"Counter\":1}";
-
+    EXAMPLE_TRACE("linkkit_user_post_property:%d,%s", devid, json);
     res = IOT_Linkkit_Report(devid, ITM_MSG_POST_PROPERTY, (unsigned char *)json, strlen(json));
     EXAMPLE_TRACE("Post Property Message ID: %d", res);
 }
@@ -331,7 +332,7 @@ static int user_sdk_state_dump(int ev, const char *msg)
     printf("received state: -0x%04X(%s)\n", -ev, msg);
     return 0;
 }
-
+//--------------------------------------------------
 int user_state_dev_bind_handler(const int state_code, const char *state_message)
 {
     EXAMPLE_TRACE("user_state_dev_bind_handler:%d,%s", state_code, state_message);
@@ -343,11 +344,13 @@ int user_state_dev_model_handler(const int state_code, const char *state_message
     EXAMPLE_TRACE("user_state_dev_model_handler:%d,%s", state_code, state_message);
     return 0;
 }
+
 int user_topolist_handler(const int devid, const int msgid, const int code, const char *payload, const int payload_len)
 {
     EXAMPLE_TRACE("user_topolist_handler devid:%d,msgid:%d,code:%d,%s", devid, msgid, code, payload);
     return 0;
 }
+
 static int max_running_seconds = 0;
 
 void main_close()

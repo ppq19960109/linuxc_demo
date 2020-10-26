@@ -6,7 +6,6 @@
 
 #include "cloud_send.h"
 #include "cloud_list.h"
-#include "local_device.h"
 
 #include "tool.h"
 
@@ -415,67 +414,3 @@ fail:
     return -1;
 }
 
-void hilink_onlineStatus(dev_data_t *src, DevOnlineStatus status)
-{
-    HilinkSyncBrgDevStatus(src->DeviceId, status);
-    log_info("HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, status);
-    if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
-    {
-        char sn[24] = {0};
-        stpcpy(sn, src->DeviceId);
-        int p = strlen(src->DeviceId);
-        for (int j = 0; j < 3; j++)
-        {
-            sn[p] = j + '0';
-            HilinkSyncBrgDevStatus(sn, status);
-            if (status == DEV_RESTORE)
-            {
-                list_del_by_id_hilink(sn, cloud_get_list_head());
-            }
-        }
-    }
-}
-
-void hilink_all_online(int online, DevOnlineStatus status)
-{
-    log_info("hilink_all_online!!!!\n");
-    if (online)
-    {
-        dev_data_t *ptr;
-        struct list_head *head = local_get_list_head();
-        if (head == NULL)
-        {
-            return;
-        }
-
-        list_for_each_entry(ptr, head, node)
-        {
-            hilink_onlineStatus(ptr, ptr->Online);
-        }
-    }
-    else
-    {
-        dev_cloud_t *ptr;
-        struct list_head *head = cloud_get_list_head();
-        if (head == NULL)
-        {
-            return;
-        }
-
-        list_for_each_entry(ptr, head, node)
-        {
-            HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, status);
-        }
-    }
-    sleep(4);
-}
-
-// void cloud_hilink_upload_int(const char *svcId, const char *key, int value)
-// {
-//     cJSON *root = cJSON_CreateObject();
-//     cJSON_AddNumberToObject(root, key, value);
-//     char *json = cJSON_PrintUnformatted(root);
-//     hilink_upload_char_state(svcId, json, strlen(json) + 1);
-//     free(json);
-//     free(root);
-// }

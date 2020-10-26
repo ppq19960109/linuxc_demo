@@ -161,7 +161,7 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params, struct
 
             char_copy_from_json(array_sub, STR_REGISTERSTATUS, &dev_buf->RegisterStatus);
 
-            hilink_onlineStatus(dev_buf, dev_buf->Online);
+            local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
 
             if (gateway_attr(dev_buf, cJSON_GetObjectItem(array_sub, Params)) != 0)
                 local_attribute_update(dev_buf, cJSON_GetObjectItem(array_sub, Params));
@@ -282,7 +282,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         dev_buf = list_get_by_id(dev_data.DeviceId, localNode);
         if (dev_buf != NULL)
         {
-            hilink_onlineStatus(dev_buf, DEV_RESTORE);
+            local_singleDevice_onlineStatus(dev_buf, DEV_RESTORE);
             list_del_by_id_hilink(dev_data.DeviceId, cloud_get_list_head());
             list_del_dev(dev_buf);
         }
@@ -299,7 +299,7 @@ int read_from_local(const char *json, struct list_head *localNode)
         if (dev_buf != NULL && Key != NULL && strcmp(Key->valuestring, STR_ONLINE) == 0)
         {
             char_copy_from_json(array_sub, STR_VALUE, &dev_buf->Online);
-            hilink_onlineStatus(dev_buf, dev_buf->Online);
+            local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
         }
     }
     break;
@@ -314,7 +314,7 @@ int read_from_local(const char *json, struct list_head *localNode)
             if (dev_buf->Online == 0)
             {
                 dev_buf->Online = 1;
-                hilink_onlineStatus(dev_buf, dev_buf->Online);
+                local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
             }
             cJSON *Key = cJSON_GetObjectItem(array_sub, STR_KEY);
             if (Key != NULL)

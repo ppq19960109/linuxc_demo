@@ -4,23 +4,6 @@
 
 #include "cloud_list.h"
 
-dev_cloud_t *list_get_by_devid_cloud(const int id, struct list_head *head)
-{
-    dev_cloud_t *ptr, *next;
-    if (head == NULL)
-    {
-        return NULL;
-    }
-    list_for_each_entry_safe(ptr, next, head, node)
-    {
-        if (ptr->brgDevInfo.cloudDevId == id)
-        {
-            return ptr;
-        }
-    }
-    return NULL;
-}
-
 dev_cloud_t *list_get_by_id_hilink(const char *id, struct list_head *head)
 {
     dev_cloud_t *ptr, *next;
@@ -50,7 +33,7 @@ void list_del_dev_hilink(dev_cloud_t *ptr)
         free(ptr->devSvc);
 
     free(ptr);
-    ptr = NULL;
+    ptr=NULL;
 }
 
 int list_del_by_id_hilink(const char *id, struct list_head *head)
@@ -91,9 +74,9 @@ void list_print_all_hilink(struct list_head *head)
     {
         log_info(" ---------------------hilink entry num:%d\n", ++i);
         log_info("sn:%s\n", ptr->brgDevInfo.sn);
-        // log_info("prodId:%s\n", ptr->brgDevInfo.prodId);
-        // log_info("model:%s\n", ptr->brgDevInfo.model);
-        // log_info("devType:%s\n", ptr->brgDevInfo.devType);
-        // log_info("mac:%s\n", ptr->brgDevInfo.mac);
+        log_info("prodId:%s\n", ptr->brgDevInfo.prodId);
+        log_info("model:%s\n", ptr->brgDevInfo.model);
+        log_info("devType:%s\n", ptr->brgDevInfo.devType);
+        log_info("mac:%s\n", ptr->brgDevInfo.mac);
     }
 }

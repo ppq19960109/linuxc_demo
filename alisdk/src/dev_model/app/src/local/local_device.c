@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "local_tcp_client.h"
 #include "local_device.h"
+#include "local_send.h"
 #include "cloud_send.h"
 
-#define HY0134_INDEX 8
 #define HY0134 "_TZE200_twuagcv5"
-static char *g_sLocalModel[] = {"_TYZB01_mq6qwmfy", "_TYZB01_i8yav3hg", "_TYZB01_42x30fz4", "_TYZB01_lc17o7gh", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "_TYZB01_kw2okqc3", HY0134};
+static char *g_sLocalModel[] = {"_TYZB01_mq6qwmfy", "_TYZB01_i8yav3hg", "_TYZB01_42x30fz4", "_TYZB01_lc17o7gh", "_TZ3210_xblxvcat", "_TZ3210_pcikchu8", "_TZ3210_xoj72sps", "_TYZB01_kw2okqc3", HY0134, HY0134, HY0134, HY0134};
 const SAttrInfo g_SLocalModel = {
     .attr = g_sLocalModel,
     .attrLen = sizeof(g_sLocalModel) / sizeof(g_sLocalModel[0])};
@@ -16,11 +17,13 @@ static char *s_sHY0096[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtec
 static char *s_sHY0097[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection"};
 static char *s_s09223f[] = {"ColorTemperature", "Luminance", "Switch"};
 static char *s_sHY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMode"};
-static char *s_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "PowerOffProtection", "KeyMode"};
-static char *s_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "PowerOffProtection", "KeyMode"};
+static char *s_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
+static char *s_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 static char *s_sHY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
 static char *s_sHY0134[] = {"CurrentTemperature_1", "Switch_", "WindSpeed_", "TargetTemperature_", "WorkMode_1", "Enable_", "KeyFobValue", "SceName_", "ScePhoto_"};
-
+static char *s_sHY0134_0[] = {"Switch_3", "TargetTemperature_3"};
+static char *s_sHY0134_1[] = {"Switch_1", "TargetTemperature_1", "WorkMode_1", "WindSpeed_1"};
+static char *s_sHY0134_2[] = {"Switch_2", "WindSpeed_2"};
 const SAttrInfo g_SLocalAttr[] = {
     {.attr = s_sHY0095,
      .attrLen = sizeof(s_sHY0095) / sizeof(s_sHY0095[0])},
@@ -40,7 +43,12 @@ const SAttrInfo g_SLocalAttr[] = {
      .attrLen = sizeof(s_sHY0093) / sizeof(s_sHY0093[0])},
     {.attr = s_sHY0134,
      .attrLen = sizeof(s_sHY0134) / sizeof(s_sHY0134[0])},
-
+    {.attr = s_sHY0134_0,
+     .attrLen = sizeof(s_sHY0134_0) / sizeof(s_sHY0134_0[0])},
+    {.attr = s_sHY0134_1,
+     .attrLen = sizeof(s_sHY0134_1) / sizeof(s_sHY0134_1[0])},
+    {.attr = s_sHY0134_2,
+     .attrLen = sizeof(s_sHY0134_2) / sizeof(s_sHY0134_2[0])},
 };
 
 static const SAttrInfo s_SLocalAttrSize[] = {
@@ -53,50 +61,20 @@ static const SAttrInfo s_SLocalAttrSize[] = {
     {.attrLen = sizeof(dev_HY0107_t)},
     {.attrLen = sizeof(dev_HY0093_t)},
     {.attrLen = sizeof(dev_HY0134_t)},
+    {.attrLen = sizeof(dev_HY0134_t)},
+    {.attrLen = sizeof(dev_HY0134_t)},
+    {.attrLen = sizeof(dev_HY0134_t)},
 };
 
-int hostGateway_attr(dev_data_t *dev_data, cJSON *Data)
-{
-    cJSON *Key, *array_sub;
-    if (strcmp(STR_HOST_GATEWAYID, dev_data->DeviceId))
-        return -1;
-    if (dev_data->private == NULL)
-    {
-        dev_data->private = malloc(sizeof(DevGateway_t));
-        memset(dev_data->private, 0, sizeof(DevGateway_t));
-    }
-
-    if (Data == NULL)
-        return 0;
-
-    DevGateway_t *dev = (DevGateway_t *)dev_data->private;
-    int array_size = cJSON_GetArraySize(Data);
-    for (int cnt = 0; cnt < array_size; ++cnt)
-    {
-        array_sub = cJSON_GetArrayItem(Data, cnt);
-        Key = cJSON_GetObjectItem(array_sub, STR_KEY);
-        if (Key == NULL)
-            continue;
-        if (strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
-        {
-            char_copy_from_json(array_sub, STR_VALUE, &dev->PermitJoining);
-        }
-    }
-    return 0;
-}
 
 int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
 {
-    pthread_mutex_lock(&g_SLocalControl.mutex);
-    int ret = -1;
+
     int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
     if (index < 0)
     {
-        ret = hostGateway_attr(dev_data, Data);
-        if (ret == 0)
-            goto fail;
         log_error("local ModelId not exist:%s\n", dev_data->ModelId);
-        goto fail;
+        return -1;
     }
 
     log_debug("local_attribute_update:%d\n", index);
@@ -130,7 +108,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
             log_error("local Attr not exist:%s\n", Key->valuestring);
             continue;
         }
-        log_debug("local_attribute_update index_sub:%d\n", index_sub);
+        // log_debug("local_attribute_update index_sub:%d\n", index_sub);
         switch (index)
         {
         case 0: //U2/天际系列：单键智能开关（HY0095）
@@ -308,6 +286,9 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         }
         break;
         case 8: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+        case 9:
+        case 10:
+        case 11:
         {
             dev_HY0134_t *dev = (dev_HY0134_t *)dev_data->private;
             int pos;
@@ -336,7 +317,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
             case 4:
                 out = &dev->WorkMode_1;
                 break;
-            case 5: //Enable_
+            case 5:
                 pos = atoi(&Key->valuestring[num_pos]) - 1;
                 if (pos < sizeof(dev->Enable))
                     out = &dev->Enable[pos];
@@ -351,6 +332,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
                 {
                     out = dev->SceName[pos];
                     str_copy_from_json(array_sub, STR_VALUE, out);
+                    dev->SceName[pos][sizeof(dev->SceName[0]) - 1] = '\0';
                 }
                 continue;
             case 8: //ScePhoto_
@@ -365,7 +347,7 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         default:
             free(dev_data->private);
             log_error("hanyar modelId not exist\n");
-            goto fail;
+            return -1;
         }
         if (out)
         {
@@ -373,10 +355,5 @@ int local_attribute_update(dev_data_t *dev_data, cJSON *Data)
         }
     }
 cloud:
-
-    ret = local_tohilink(dev_data, index, cloud_get_list_head(&g_SCloudControl));
-fail:
-    pthread_mutex_unlock(&g_SLocalControl.mutex);
-
-    return ret;
+    return local_tohilink(dev_data, index, cloud_get_list_head());
 }

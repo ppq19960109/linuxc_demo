@@ -12,7 +12,6 @@ extern "C"
     int list_del_by_id_hilink(const char *id, struct list_head *head);
     void list_del_all_hilink(struct list_head *head);
     dev_cloud_t *list_get_by_id_hilink(const char *id, struct list_head *head);
-    dev_cloud_t *list_get_by_devid_cloud(const int id, struct list_head *head);
     void list_print_all_hilink(struct list_head *head);
 
 #ifdef __cplusplus

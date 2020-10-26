@@ -7,7 +7,6 @@ extern "C"
 #endif
 
 #include "local_receive.h"
-#define HY0134_INDEX 8
 
     typedef struct
     {
@@ -104,6 +103,8 @@ extern "C"
 
     int local_attribute_update(dev_data_t *dev, cJSON *Data);
 
+    void local_singleDevice_onlineStatus(dev_data_t *src, int status);
+    void hilink_all_online(int online,DevOnlineStatus status);
 #ifdef __cplusplus
 }
 #endif

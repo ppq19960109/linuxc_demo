@@ -10,6 +10,7 @@ typedef struct
 {
     int cloudDevId;
     char sn[32];
+    char mac[32];
     char fwv[18]; /* 设备固件版本*/
     iotx_linkkit_dev_meta_info_t meta_info;
 } CloudDevInfo;

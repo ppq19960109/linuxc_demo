@@ -87,7 +87,6 @@ int modSvc(const char *sn, const char *svcId, char **svcVal, char *json, const i
             free(*svcVal);
         }
         *svcVal = json;
-        log_info("linkkit_user_post_property:%d,%s\n", devId, json);
         linkkit_user_post_property(devId, json);
     }
     else
@@ -95,6 +94,7 @@ int modSvc(const char *sn, const char *svcId, char **svcVal, char *json, const i
         free(json);
     }
 }
+
 void cloud_init_device_attr(const int index, CloudDevInfo *brgDevInfo)
 {
     strcpy(brgDevInfo->meta_info.product_key, g_SCloudProdId[index].attr[0]);
@@ -122,7 +122,6 @@ void cloud_add_device(const int index, dev_cloud_t **out, dev_data_t *local, str
     cloud_init_device_attr(index, brgDevInfo);
     cloud_add_device_attr(index, *out, brgDevInfo->sn);
 
- 
     if (local->Online)
         linkkit_subdev_online(&brgDevInfo->meta_info, &brgDevInfo->cloudDevId, local->Online);
 }
@@ -169,11 +168,11 @@ int local_tohilink(dev_data_t *src, const int index, struct list_head *cloudNode
     if (out == NULL)
     {
         cloud_add_device(index, &out, src, cloudNode);
-    }
-
-    if (strlen(src->Version) > 0 && strcmp(out->brgDevInfo.fwv, src->Version))
-    {
-        strcpy(out->brgDevInfo.fwv, src->Version);
+        strcpy(out->brgDevInfo.mac, src->GatewayId);
+        if (strlen(src->Version) > 0 && strcmp(out->brgDevInfo.fwv, src->Version))
+        {
+            strcpy(out->brgDevInfo.fwv, src->Version);
+        }
     }
 
     cJSON *root = cJSON_CreateObject();

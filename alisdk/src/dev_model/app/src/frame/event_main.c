@@ -13,6 +13,7 @@
 
 #include "event_main.h"
 #include "local_send.h"
+#include "local_callback.h"
 #include "cloud_receive.h"
 
 struct ev_app_t
@@ -29,11 +30,12 @@ struct ev_app_t
 
 struct ev_app_t ev_app;
 
-int event_connect_timer();
-int event_timer_open();
-void event_timer_close();
+static int event_connect_timer();
+static int event_timer_open();
+static void event_timer_close();
+
 //------------------------------------------
-int event_client_write(char *data, unsigned int len)
+static int event_client_write(char *data, unsigned int len)
 {
     // printf("event_client_write:%s\n", data);
     return bufferevent_write(ev_app.client_bufev, data, len);
@@ -42,7 +44,7 @@ static void client_write_cb(struct bufferevent *bev, void *ctx)
 {
     printf("bufferevent write\n");
 }
-
+//------------------------------------------
 static void client_read_cb(struct bufferevent *bev, void *ctx)
 {
     printf("bufferevent read\n");
@@ -124,7 +126,7 @@ static void event_client_connect_cb(evutil_socket_t fd, short event, void *arg)
     }
 }
 
-int event_connect_timer()
+static int event_connect_timer()
 {
     if (event_pending(ev_app.connect_event, EV_PERSIST, NULL) != 0)
     {
@@ -141,7 +143,7 @@ int event_connect_timer()
     return 0;
 }
 
-void event_socket_client_open()
+static void event_socket_client_open()
 {
     ev_app.client_bufev = bufferevent_socket_new(ev_app.base, -1, BEV_OPT_CLOSE_ON_FREE);
 
@@ -159,7 +161,7 @@ void event_socket_client_open()
     event_connect_timer();
 }
 
-void event_socket_client_close()
+static void event_socket_client_close()
 {
     bufferevent_free(ev_app.client_bufev);
     event_del(ev_app.connect_event);
@@ -167,13 +169,13 @@ void event_socket_client_close()
 }
 //------------------------------
 
-void event_timer_cb(evutil_socket_t fd, short event, void *arg)
+static void event_timer_cb(evutil_socket_t fd, short event, void *arg)
 {
     // printf("event_timer_cb\n");
     write_haryan(HY_HEART, strlen(HY_HEART));
 }
 
-int event_timer_open()
+static int event_timer_open()
 {
     ev_app.timer_event = event_new(ev_app.base, -1, EV_TIMEOUT | EV_PERSIST, event_timer_cb, NULL);
     struct timeval timeout = {60, 0};
@@ -186,7 +188,7 @@ int event_timer_open()
     return 0;
 }
 
-void event_timer_close()
+static void event_timer_close()
 {
     if (ev_app.timer_event)
     {
@@ -195,24 +197,20 @@ void event_timer_close()
     }
 }
 //---------------------------------------------
-
-void event_signal_cb(evutil_socket_t fd, short event, void *arg)
+static void event_signal_cb(evutil_socket_t fd, short event, void *arg)
 {
     printf("event_signal_cb:%d\n", fd);
     if (fd == SIGINT || fd == SIGQUIT || fd == SIGKILL)
     {
-        event_main_close();
-        printf("exit(0)\n");
-        exit(0);
+        cloud_restart_reFactory(INT_OFFLINE);
     }
 }
-
-void event_signal_open()
+static void event_signal_open()
 {
     ev_app.signal_event = evsignal_new(ev_app.base, SIGINT, event_signal_cb, NULL);
     evsignal_add(ev_app.signal_event, NULL);
 }
-void event_signal_close()
+static void event_signal_close()
 {
     evsignal_del(ev_app.signal_event);
     event_free(ev_app.signal_event);
@@ -220,14 +218,16 @@ void event_signal_close()
 //--------------------------------------------------
 void event_main_close()
 {
-    cloud_restart_reFactory(INT_RESTART);
     event_signal_close();
     event_timer_close();
     event_socket_client_close();
 }
 
-int event_main()
+int event_main_open()
 {
+    register_closeCallback(event_main_close);
+    register_writeCallback(event_client_write);
+
     evthread_use_pthreads();
     ev_app.base = event_base_new();
 

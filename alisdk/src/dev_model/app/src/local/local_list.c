@@ -11,6 +11,8 @@ dev_data_t *list_get_by_id(const char *id, struct list_head *head)
     {
         return NULL;
     }
+    if (strcmp(id, STR_HOST_GATEWAYID) == 0)
+        return local_get_gateway();
     list_for_each_entry(ptr, head, node)
     {
         if (strcmp(ptr->DeviceId, id) == 0)
