@@ -8,10 +8,9 @@
 #include "local_send.h"
 #include "local_list.h"
 #include "local_device.h"
+#include "local_send.h"
 
 #include "tool.h"
-
-
 
 static char *g_sCloudModel[] = {"2AP1", "2AP0", "2AN9", "2AN7", "2AOZ", "2AOY", "2ANO", "2AN8", "2ANF", "2ANK", "2ANJ", "2ANI"};
 //单键智能开关 双键智能开关 三键智能开关 DLT液晶调光器 1路智能开关模块 2路智能开关模块 3路智能开关模块 门磁传感器  智镜:场景面板 地暖 空调 新风
@@ -37,7 +36,7 @@ static int getValue_FromJson(cJSON *val, char *dst)
 //cloud转换成hanyar的json格式
 int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
 {
-    dev_cloud_t *in = list_get_by_id_cloud(sn, cloud_get_list_head());
+    dev_cloud_t *in = list_get_by_id_cloud(sn);
     if (in == NULL)
         return -1;
 
@@ -213,7 +212,9 @@ int cloud_delete_device(const char *sn)
     local_dev_t out = {0};
     char ssn[32] = {0};
 
-    dev_cloud_t *dev_cloud = list_get_by_id_cloud(sn, cloud_get_list_head());
+    dev_cloud_t *dev_cloud = list_get_by_id_cloud(sn);
+    if (dev_cloud == NULL)
+        return -1;
     int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
 
     stpcpy(ssn, sn);
@@ -226,7 +227,7 @@ int cloud_delete_device(const char *sn)
         for (int j = 0; j < 3; j++)
         {
             ssn[p] = j + '0';
-            list_del_by_id_cloud(ssn, cloud_get_list_head());
+            list_del_by_id_cloud(ssn);
             HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
         }
         ssn[p] = 0;
@@ -242,7 +243,7 @@ int cloud_delete_device(const char *sn)
         for (int j = 0; j < 3; j++)
         {
             ssn[p] = j + '0';
-            list_del_by_id_cloud(ssn, cloud_get_list_head());
+            list_del_by_id_cloud(ssn);
             HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
         }
         ssn[p] = 0;
@@ -252,15 +253,45 @@ int cloud_delete_device(const char *sn)
         break;
     }
 
-    list_del_by_id_cloud(ssn, cloud_get_list_head());
+    list_del_by_id_cloud(ssn);
 
     HilinkSyncBrgDevStatus(ssn, DEV_RESTORE);
-    list_del_by_id(ssn, local_get_list_head());
+    list_del_by_id_local(ssn);
 
-    out.FrameNumber = g_iFrameNumber++;
-    strcpy(out.Type, STR_DELETE);
-    strcpy(out.Data.DeviceId, ssn);
-
-    return write_to_local(&out);
+    return write_delete_dev(ssn);
 }
 
+int cloud_singleDevice_offlink(const char *sn)
+{
+    local_dev_t out = {0};
+    char ssn[32] = {0};
+
+    dev_cloud_t *dev_cloud = list_get_by_id_cloud(sn);
+    if (dev_cloud == NULL)
+        return -1;
+    int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
+
+    stpcpy(ssn, sn);
+    dev_local_t *local;
+    switch (index)
+    {
+    case 9:
+    case 10:
+    case 11:
+    {
+        int p = strlen(sn);
+        --p;
+        ssn[p] = 0;
+    }
+    default:
+        local = list_get_by_id_local(ssn);
+        break;
+    }
+
+    if (local != NULL && local->Online == 0)
+    {
+        HilinkSyncBrgDevStatus(sn, 0);
+    }
+
+    return 0;
+}

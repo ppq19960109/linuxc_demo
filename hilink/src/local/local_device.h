@@ -83,6 +83,8 @@ extern "C"
         char BatteryPercentage;
         char LowBatteryAlarm;
         char TamperAlarm;
+        char init_ContactAlarm;
+        char door_event;
     } dev_HY0093_t; //门磁传感器（HY0093，型号IHG5201）
 
     typedef struct
@@ -96,7 +98,9 @@ extern "C"
         char TargetTemperature[3];
         char WorkMode_1;
         char WindSpeed[2];
+
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+
 
     extern const SAttrInfo g_SLocalModel;
     extern const SAttrInfo g_SLocalAttr[];
@@ -109,6 +113,7 @@ extern "C"
 #define INT_REBOOT 0
 #define INT_REFACTORY 1
 #define INT_OFFLINE 2
+
     void local_system_restartOrReFactory(int index);
 #ifdef __cplusplus
 }

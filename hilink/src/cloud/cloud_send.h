@@ -31,8 +31,19 @@ typedef struct
     struct list_head node;
 } dev_cloud_t;
 
+typedef enum
+{
+    CLOUD_OFFLINE = 0,      /* 下线 */
+    CLOUD_ONLINE = 1,       /* 上线 */
+    CLOUD_REGISTERED = 2,   /* 注册 */
+    CLOUD_UNREGISTERED = 3, /* 被解绑 */
+} CloudStatus;
+
 typedef struct
 {
+    pid_t pid;
+    CloudStatus cloud_status;
+    int registerFlag;
     struct list_head head;
 } CloudControl_t;
 
@@ -41,8 +52,10 @@ extern const SAttrInfo g_SCloudAttr[];
 void cloud_control_init();
 void cloud_control_destory();
 struct list_head *cloud_get_list_head();
-
-
-int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode);
+CloudStatus get_cloud_status(void);
+void set_cloud_status(CloudStatus status);
+int get_registerFlag(void);
+void set_registerFlag(void);
+int local_tocloud(dev_local_t *src, const int index);
 
 #endif

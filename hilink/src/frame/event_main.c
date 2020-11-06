@@ -172,7 +172,7 @@ static void event_socket_client_close()
 static void event_timer_cb(evutil_socket_t fd, short event, void *arg)
 {
     // printf("event_timer_cb\n");
-    write_haryan(HY_HEART, strlen(HY_HEART));
+    write_heart();
 }
 
 static int event_timer_open()
@@ -223,7 +223,7 @@ void event_main_close()
     event_socket_client_close();
 }
 
-int event_main_open()
+void event_main_open()
 {
     register_closeCallback(event_main_close);
     register_writeCallback(event_client_write);
@@ -237,6 +237,5 @@ int event_main_open()
     event_base_loop(ev_app.base, EVLOOP_NO_EXIT_ON_EMPTY);
     event_base_free(ev_app.base);
     event_main_close();
-    return 0;
 }
 #endif

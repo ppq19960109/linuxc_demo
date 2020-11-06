@@ -11,7 +11,7 @@
 
 #include "hilink_profile_bridge.h"
 #include "hilink_profile_adapter.h"
-
+#include "cloud_send.h"
 #include "cloud_receive.h"
 #include "cloud_list.h"
 #include "local_list.h"
@@ -37,7 +37,7 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
     {
         return -1;
     }
-    dev_cloud_t *dev = list_get_by_id_cloud(sn, cloud_get_list_head());
+    dev_cloud_t *dev = list_get_by_id_cloud(sn);
     if (dev == NULL)
     {
         return -1;
@@ -65,7 +65,7 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         return -1;
     }
 
-    dev_cloud_t *dev = list_get_by_id_cloud(sn, cloud_get_list_head());
+    dev_cloud_t *dev = list_get_by_id_cloud(sn);
     if (dev == NULL)
     {
         log_debug("HilinkGetBrgSvcInfo err\n");
@@ -126,7 +126,8 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
         return -1;
     }
 
-    dev_cloud_t *dev = list_get_by_id_cloud(sn, cloud_get_list_head());
+    dev_cloud_t *dev = list_get_by_id_cloud(sn);
+
     if (dev == NULL)
     {
         return -1;
@@ -145,7 +146,11 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
             break;
         }
     }
-
+    if (get_registerFlag())
+    {
+        log_debug("cloud_singleDevice_offlink\n");
+        // cloud_singleDevice_offlink(sn);
+    }
     return 0;
 }
 
@@ -171,7 +176,7 @@ int HILINK_GetBrgSubDevRoomInfo(const char *sn, char *roomId, unsigned int *room
         return -1;
     }
 
-    return 0;
+    return -1;
 }
 
 /*
@@ -305,7 +310,7 @@ int HILINK_NotifyBrgSubDevCloudCfmResult(const char *sn, int result)
 unsigned int HILINK_GetBrgSubDevMaxNum()
 {
     /* 厂商实现此接口 */
-    unsigned int maxNum = 100;
+    unsigned int maxNum = 80;
 
     return maxNum;
 }

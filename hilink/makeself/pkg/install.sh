@@ -43,8 +43,12 @@ cp -a $OEM_PATH/* $TARGET_OEM_PATH
 #delete files
 rm -rf *
 
+
 UPDATE_FILE="/userdata/update/upgrade.bin"
 UPDATE_BACKUP_FILE="/userdata/update/upgrade_backup.bin"
+
+# UPDATE_PKG_PATH="/userdata/update/pkg"
+# rm -rf $UPDATE_PKG_PATH
 
 if [ -e "$UPDATE_FILE" ]; then
     mv -f $UPDATE_FILE $UPDATE_BACKUP_FILE

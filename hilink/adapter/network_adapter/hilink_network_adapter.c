@@ -71,7 +71,7 @@ int HILINK_GetMacAddr(unsigned char *mac, unsigned char len)
 
     splitToInt(str, mac, len);
 
-    log_info("HILINK_GetMacAddr mac:%s,len:%d\n", mac, len);
+    // log_info("HILINK_GetMacAddr mac:%s,len:%d\n", mac, len);
     return ret;
 }
 

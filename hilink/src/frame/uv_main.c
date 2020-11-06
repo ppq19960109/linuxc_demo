@@ -27,12 +27,15 @@ struct uv_app_t
 
 static struct uv_app_t uv_app;
 
+static int timer_open();
+static void timer_close();
 static void client_timer();
 
 static void client_close(uv_handle_t *handle)
 {
     printf("client_close\n");
     uv_app.s_isConnect = 0;
+    timer_close();
     uv_tcp_init(uv_default_loop(), uv_app.tcp_client);
     client_timer();
 }
@@ -67,7 +70,7 @@ static void client_alloc_buf(uv_handle_t *handle,
                              uv_buf_t *buf)
 {
     // *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
-    *buf = uv_buf_init(tcpBuf, RECVLEN);
+    *buf = uv_buf_init(uv_app.tcpBuf, RECVLEN);
 }
 
 static void client_read(uv_stream_t *stream,
@@ -125,6 +128,7 @@ static void on_connect(uv_connect_t *req, int status)
         printf("get socket fail!\n");
     //-----------------------------------------------
     uv_read_start(req->handle, client_alloc_buf, client_read);
+    timer_open();
 }
 
 static void client_timer_callback(uv_timer_t *timer)
@@ -178,7 +182,7 @@ static void net_client_close()
 static void timer_callback(uv_timer_t *timer)
 {
     printf("HY_HEART timer_callback\n");
-    write_haryan(HY_HEART, strlen(HY_HEART));
+    write_heart();
 }
 
 static int timer_open()
@@ -195,12 +199,11 @@ static void timer_close()
 
 static void signal_handler(uv_signal_t *handle, int signum)
 {
-
+    printf("signal received: %d\n", signum);
     if (signum == SIGINT || signum == SIGQUIT || signum == SIGKILL)
     {
         local_system_restartOrReFactory(INT_OFFLINE);
     }
-    printf("signal received: %d\n", signum);
 }
 
 static void signal_open()
@@ -226,20 +229,20 @@ void uv_idle_task(uv_idle_t *handle)
 {
     // printf("uv_idle_task\n");
 }
-int uv_main_open()
+void uv_main_open()
 {
-    register_closeCallback(main_close);
+    register_closeCallback(uv_main_close);
     register_writeCallback(client_write);
+
     signal_open();
     net_client_open();
-    timer_open();
 
     // uv_idle_t idler;
     // uv_idle_init(uv_default_loop(), &idler);
     // uv_idle_start(&idler, uv_idle_task);
     uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     // uv_idle_stop(&idler);
-    main_close();
-    return 0;
+    uv_main_close();
+  
 }
 #endif

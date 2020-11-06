@@ -10,6 +10,9 @@
 #include "hilink.h"
 
 #include "local_device.h"
+#include "local_send.h"
+#include "local_tcp_client.h"
+#include "cloud_send.h"
 #include "tool.h"
 #include "rk_driver.h"
 
@@ -17,15 +20,28 @@ void hlink_online_ledStatus(void)
 {
     if (HILINK_IsRegister())
     {
-        log_info("HILINK_M2M_CONNECTTING_CLOUD:Register\n");
+        log_info("hlink_online_ledStatus:Register\n");
         driver_deviceRegister();
     }
-    else
+}
+void hlink_offline_ledStatus(void)
+{
+    if (HILINK_IsRegister())
     {
-        log_info("HILINK_M2M_CONNECTTING_CLOUD:UnRegister\n");
+        log_info("hlink_offline_ledStatus:Register\n");
+        driver_deviceCloudOffline();
+    }
+}
+void hlink_UnRegister_ledStatus(void)
+{
+    if (!HILINK_IsRegister())
+    {
+        set_cloud_status(CLOUD_UNREGISTERED);
+        log_info("hlink_UnRegister_ledStatus:UnRegister\n");
         driver_deviceUnRegister();
     }
 }
+
 /*
  * 通知设备的状态
  * status表示设备当前的状态
@@ -38,14 +54,19 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CLOUD_OFFLINE:
         log_info("HILINK_M2M_CLOUD_OFFLINE\n");
         /* 设备与云端连接断开，请在此处添加实现 */
-        driver_deviceCloudOffline();
-        local_allDevice_onlineStatus(0, DEV_OFFLINE);
+        hlink_offline_ledStatus();
+        if (CLOUD_UNREGISTERED != get_cloud_status())
+            local_allDevice_onlineStatus(0, DEV_OFFLINE);
+
+        set_cloud_status(CLOUD_OFFLINE);
         break;
     case HILINK_M2M_CLOUD_ONLINE:
         log_info("HILINK_M2M_CLOUD_ONLINE\n");
         /* 设备连接云端成功，请在此处添加实现 */
         hlink_online_ledStatus();
-        local_allDevice_onlineStatus(1, DEV_ONLINE);
+        if (CLOUD_REGISTERED != get_cloud_status())
+            local_allDevice_onlineStatus(1, DEV_ONLINE);
+        set_cloud_status(CLOUD_ONLINE);
         break;
     case HILINK_M2M_LONG_OFFLINE:
         log_info("HILINK_M2M_LONG_OFFLINE\n");
@@ -80,7 +101,7 @@ void hilink_notify_devstatus(int status)
     case HILINK_M2M_CONNECTTING_CLOUD:
         log_info("HILINK_M2M_CONNECTTING_CLOUD\n");
         /* 设备正在连接云端，请在此处添加实现 */
-
+        hlink_UnRegister_ledStatus();
         break;
     case HILINK_M2M_CLOUD_DISCONNECT:
         log_info("HILINK_M2M_CLOUD_DISCONNECT\n");
@@ -89,17 +110,24 @@ void hilink_notify_devstatus(int status)
     case HILINK_DEVICE_REGISTERED:
         log_info("HILINK_DEVICE_REGISTERED\n");
         /* 设备被注册，请在此处添加实现 */
-        driver_deviceRegister();
+        set_registerFlag();
+        reset_devList();
+        local_allDevice_onlineStatus(1, DEV_ADD);
+
+        set_cloud_status(CLOUD_REGISTERED);
         break;
     case HILINK_DEVICE_UNREGISTER:
         log_info("HILINK_DEVICE_UNREGISTER\n");
         /* 设备被解绑，请在此处添加实现 */
         driver_deviceUnRegister();
-        local_system_restartOrReFactory(INT_REFACTORY);
+        local_allDevice_onlineStatus(0, DEV_RESTORE);
+        
+        set_cloud_status(CLOUD_UNREGISTERED);
         break;
     case HILINK_REVOKE_FLAG_SET:
         log_info("HILINK_REVOKE_FLAG_SET\n");
         /* 设备复位标记置位，请在此处添加实现 */
+
         break;
     case HILINK_NEGO_REG_INFO_FAIL:
         log_info("HILINK_NEGO_REG_INFO_FAIL\n");
@@ -123,13 +151,12 @@ int hilink_process_before_restart(int flag)
 {
     log_info("hilink_process_before_restart\n");
 
-    local_system_restartOrReFactory(INT_OFFLINE);
     /* HiLink SDK线程看门狗超时触发模组重启 */
     if (flag == HILINK_REBOOT_WATCHDOG)
     {
 
         /* 实现模组重启前的操作(如:保存系统状态等) */
-        return 1;
+        return 0;
     }
 
     /* APP删除设备触发模组重启 */
@@ -137,7 +164,7 @@ int hilink_process_before_restart(int flag)
     {
 
         /* 实现模组重启前的操作(如:保存系统状态等) */
-        return 1;
+        return 0;
     }
 
     return -1;

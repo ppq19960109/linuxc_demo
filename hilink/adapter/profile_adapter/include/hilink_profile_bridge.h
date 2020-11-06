@@ -239,12 +239,21 @@ int HILINK_NotifyBrgSubDevCloudCfmAndRnd(const char *sn, const char *cloudConfir
 int HILINK_NotifyBrgSubDevCloudCfmResult(const char *sn, int result);
 
 /*
- * 获取子设备的最大数目,最大数目不超过500,不小于64,超出该范围
- * 默认使用64.
+ * 获取子设备的最大数目,最大数目不超过500,不小于64,超出该范围默认
+ * 使用64个子设备。注意:APP和云端支持的最大设备数目为500,因此实
+ * 际上最大的子设备数目要排除已经添加的设备数。
  * 该函数由设备开发者或厂商实现
  * 返回值：设备开发者设置的下挂设备的最大数目
  */
 unsigned int HILINK_GetBrgSubDevMaxNum();
+
+/*
+ * 设置HiLink SDK主任务调度时间间隔，默认50ms
+ * 如果设置失败返回-1，成功返回0
+ * 该函数由设备开发者或厂商调用
+ * interval: HiLink SDK主任务调度时间间隔，单位为毫秒，取值范围[5,100]
+ */
+int HILINK_SetScheduleInterval(unsigned long interval);
 
 #ifdef __cplusplus
 }

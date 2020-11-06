@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "local_tcp_client.h"
 #include "local_device.h"
@@ -19,7 +21,9 @@ typedef struct
     char flip;
     int fd;
     int keyfd;
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
     timer_t timerid;
+#endif
 } rk_driver_t;
 
 rk_driver_t rk_driver;
@@ -98,15 +102,33 @@ static void driver_timer_thread_handler(union sigval v)
         led_driver_write(rk_driver.fd, rk_driver.flip);
     }
 }
-
-void driver_deviceRegister()
+void rk_timer_start(void)
 {
-    log_info("driver_deviceRegister\n");
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
+    if (rk_driver.timerid != NULL)
+    {
+        return;
+    }
+    rk_driver.timerid = start_timer(0, driver_timer_thread_handler, 1, 1);
+#endif
+}
+void rk_timer_delete(void)
+{
+#if USE_LIBUV == 0 && USE_LIBEVENT == 0
     if (rk_driver.timerid != NULL)
     {
         timer_delete(rk_driver.timerid);
         rk_driver.timerid = NULL;
     }
+#endif
+}
+
+void driver_deviceRegister()
+{
+    log_info("driver_deviceRegister\n");
+
+    rk_timer_delete();
+
     if (rk_driver.fd <= 0)
         rk_driver.fd = led_driver_open();
     led_driver_write(rk_driver.fd, 0);
@@ -116,11 +138,9 @@ void driver_deviceRegister()
 void driver_deviceCloudOffline()
 {
     log_info("driver_deviceCloudOffline\n");
-    if (rk_driver.timerid != NULL)
-    {
-        timer_delete(rk_driver.timerid);
-        rk_driver.timerid = NULL;
-    }
+
+    rk_timer_delete();
+
     if (rk_driver.fd <= 0)
         rk_driver.fd = led_driver_open();
     led_driver_write(rk_driver.fd, 1);
@@ -131,13 +151,10 @@ void driver_deviceCloudOffline()
 void driver_deviceUnRegister()
 {
     log_info("driver_deviceUnRegister\n");
-    if (rk_driver.timerid != NULL)
-    {
-        return;
-    }
+    rk_timer_start();
+
     if (rk_driver.fd <= 0)
         rk_driver.fd = led_driver_open();
-    rk_driver.timerid = start_timer(0, driver_timer_thread_handler, 1, 1);
 }
 //------------------------------------------
 
@@ -196,11 +213,7 @@ int driver_keyOpen()
 
 void driver_exit()
 {
-    if (rk_driver.timerid != NULL)
-    {
-        timer_delete(rk_driver.timerid);
-        rk_driver.timerid = NULL;
-    }
+    driver_deviceCloudOffline();
     driver_close(rk_driver.fd);
     driver_close(rk_driver.keyfd);
 }

@@ -3,7 +3,7 @@
 
 #if USE_LIBUV
 
-int uv_main_open();
+void uv_main_open();
 void uv_main_close();
 
 #endif

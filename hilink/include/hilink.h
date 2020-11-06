@@ -211,7 +211,7 @@ void HILINK_SetNanIdentifyStatus(int enable);
 
 /*
  * 设置WIFI安全距离的功率
- * 参数power:表示安全距离对应的发射通道功率,默认-52,范围为[-70, -40];
+ * 参数power:表示安全距离对应的发射通道功率,默认-52,范围为[-70, -42];
  * 需要保证空口功率小于等于-65dBm,根据真实设备来调整.
  * 返回值:0表示设置成功,-1表示设置失败.
  * 注意: 函数由设备开发者或厂商调用，仅在hi3861模组使用.
@@ -232,6 +232,25 @@ void HILINK_EnablePkiVerify(int enable);
  * 注意: 函数由设备开发者或厂商调用,仅在hi3861模组使用.
  */
 int HILINK_EnableFactoryPkiMode(void);
+
+/*
+ * 获取设备的子型号，长度固定两个字节
+ * subProdId为保存子型号的缓冲区，len为缓冲区的长度
+ * 如果产品定义有子型号，则填入两字节子型号，并以'\0'结束, 返回0
+ * 没有定义子型号，则返回-1
+ * 该接口需设备开发者实现
+ */
+int HILINK_GetSubProdId(char *subProdId, int len);
+
+/*
+ * 获取设备表面的最强点信号发射功率强度，最强点位置的确定以及功率测试方
+ * 法，参照hilink认证wifi靠近发现功率设置及测试方法指导文档，power为出参
+ * ，单位dbm，返回设备表面的最强信号强度值，如果厂商不想使用wifi靠近发现功
+ * 能，接口直接返-1，sdk就不做wifi靠近发现的初始化，如果需要使用wifi靠近
+ * 发现，则接口返回0，power返回对应的功率值，power的有效值必须<=20dbm，如
+ * 果接口返回0，但power大于20，则也不做wifi靠近发现的初始化，功能不可用
+ */
+int HILINK_GetDevSurfacePower(char *power);
 
 #ifdef __cplusplus
 #if __cplusplus

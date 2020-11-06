@@ -12,6 +12,7 @@
 #include "hilink.h"
 
 #include "local_send.h"
+#include "cloud_send.h"
 #include "cJSON.h"
 /* 设备类型定义 */
 typedef struct
@@ -177,7 +178,6 @@ void HilinkGetDeviceSn(unsigned int len, char *sn)
 {
     /* 在此处添加实现代码, 将sn赋值给*sn回传 */
     log_debug("HilinkGetDeviceSn:%d\n", len);
-    // strcpy(sn, "346339313700");
     return;
 }
 
@@ -212,5 +212,26 @@ int HiLinkGetPinCode(void)
  */
 int HILINK_IsSensitiveDevice(void)
 {
-    return 1;
+    return 0;
 }
+
+/*
+ * 厂家需要实现此接口实现license的写入，写入flash位置或者写入文件由厂家决定。
+ * 厂家需要保证备份机制，防止突然断电导致license信息丢失，如果license信息丢失，将
+ * 无法继续绑定设备，设备将不能再使用。
+ * 执行成功返回0，执行失败返回-1
+ */
+int HILINK_WriteLicense(const unsigned char *license, unsigned int len)
+{
+    return 0;
+}
+
+/*
+ * 厂家需要实现此接口实现license读取，读取flash位置或者写入文件由厂家决定。
+ * 执行成功返回0，执行失败返回-1
+ */
+int HILINK_ReadLicense(unsigned char *license, unsigned int len)
+{
+    return 0;
+}
+

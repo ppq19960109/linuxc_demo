@@ -6,7 +6,7 @@ HYAPP_PATH="/userdata/hyapp"
 HYAPP="hydevapp"
 IOTAPP_PATH="/userdata/iotapp"
 IOTAPP="hy_server_iot"
-
+UPGRADE_BACKUP="/userdata/update/upgrade_backup.bin"
 
 function check_process()
 {
@@ -15,9 +15,9 @@ function check_process()
         # echo $1" process not exist"
         cd $2
         if [ ! -e $1 ]; then
-            cd /userdata/update/
-            chmod 777 upgrade_backup.bin
-            ./upgrade_backup.bin
+            cd /tmp
+            chmod 777 $UPGRADE_BACKUP
+            $UPGRADE_BACKUP
         fi 
         chmod 777 $1
         ./$1 &

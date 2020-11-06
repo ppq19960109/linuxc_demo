@@ -8,7 +8,7 @@ extern "C"
 
     int cloud_tolocal(const char *sn, const char *svcId, const char *payload);
     int cloud_delete_device(const char *sn);
-
+    int cloud_singleDevice_offlink(const char *sn);
 #ifdef __cplusplus
 }
 #endif

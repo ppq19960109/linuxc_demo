@@ -4,12 +4,13 @@
 #include <errno.h>
 
 #include "local_send.h"
+#include "local_device.h"
 #include "local_receive.h"
 #include "local_callback.h"
 
+
 #include "socket.h"
 #include "tool.h"
-
 
 static char *s_hanyarCmd[] = {STR_ADD, STR_DEVSINFO, STR_DEVATTRI, STR_REFACTORY};
 const SAttrInfo g_SHamyarCmd = {
@@ -67,6 +68,7 @@ int write_hanyar_cmd(char *cmd, char *DeviceId, char *Value)
 
 int write_haryan(const char *data, int dataLen)
 {
+    pthread_mutex_lock(local_get_mutex());
     int ret = 0;
     char *sendBuf = local_get_sendData();
     if (dataLen + 3 <= SENDTOLOCAL_SIZE)
@@ -84,8 +86,10 @@ int write_haryan(const char *data, int dataLen)
         // }
         // printf("\n");
         // log_info("write ret:%d\n", ret);
+        pthread_mutex_unlock(local_get_mutex());
         return ret;
     }
+    pthread_mutex_unlock(local_get_mutex());
     return -1;
 }
 
@@ -131,4 +135,20 @@ int write_to_local(void *ptr)
 fail:
     cJSON_Delete(root);
     return -1;
+}
+
+int write_delete_dev(const char *sn)
+{
+    if (sn == NULL)
+        return -1;
+    local_dev_t out = {0};
+    out.FrameNumber = 0;
+    strcpy(out.Type, STR_DELETE);
+    strcpy(out.Data.DeviceId, sn);
+    return write_to_local(&out);
+}
+
+int write_heart(void)
+{
+    return write_haryan(HY_HEART, strlen(HY_HEART));
 }

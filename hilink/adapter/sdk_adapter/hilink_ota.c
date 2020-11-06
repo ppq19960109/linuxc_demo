@@ -8,19 +8,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <pthread.h>
 
 #include "hilink_ota.h"
-#include "hilink.h"
-#include "hilink_sdk_adapter.h"
 
-#include "local_receive.h"
-#include "cJSON.h"
+#include "tool.h"
 
-#define UPDATE_PATH "/userdata/update/"
-#define UPDATE_FILE "upgrade.bin"
 #define UPDATE_PATH_ALL "/userdata/update/upgrade.bin"
-#define OTA_VERSION "1.0.7"
+
 /*
  * 获取MCU当前版本
  * version表示版本字符串
@@ -36,12 +30,9 @@
 
 int HilinkGetMcuVersion(char *version, unsigned int inLen, unsigned int *outLen)
 {
-
-    strncpy(version, OTA_VERSION, inLen);
-    *outLen = strlen(OTA_VERSION) + 1;
-    log_debug("HilinkGetMcuVersion %s ,%d\n", version, *outLen);
     /* 厂商实现此接口 */
-    return RETURN_OK;
+    // return RETURN_OK;
+    return RETURN_ERROR_NO_MCU;
 }
 
 /*
@@ -212,11 +203,8 @@ int HILINK_StartSoftwareIntall(void)
 {
     log_debug("HILINK_StartSoftwareIntall\n");
     system("chmod 777 "UPDATE_PATH_ALL);
-    //test
-    // system("cp -rf /userdata/nfs/upgrade.bin " UPDATE_PATH);
 
-    hilink_process_before_restart(1);
-    system("cd "UPDATE_PATH";./"UPDATE_FILE" &");
+    system("cd /tmp;"UPDATE_PATH_ALL" &");
     /* 厂商实现此接口 */
     return RETURN_OK;
 }

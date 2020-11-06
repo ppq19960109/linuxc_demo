@@ -38,6 +38,8 @@ typedef enum {
     SUB_DEV_UPDATE_FAIL
 } SubDevUpdateStatus;
 
+typedef void (*GetOtaVerCb)(const char *version);
+
 /*
  * 获取MCU当前版本
  * version表示版本字符串
@@ -202,6 +204,14 @@ void HILINK_ReportBrgSubDevUpdateProgress(const char *proId, unsigned int proIdL
  */
 void HILINK_ReportBrgSubDevUpdateStatus(const char *proId, unsigned int proIdLen, SubDevUpdateStatus status);
 
+/*
+ * 触发设备的ota新版本检测
+ * 检测到的版本，sdk将通过cb回调函数上报。如果不需要获取版本号，则可将cb置空。
+ * 上报的version如果为空，则未成功获取到新版本。
+ * 注意:1、建议调用频次最多一天一次
+ * 2、首次通过手机配网成功后不能调用，建议连云成功后至少5s后调用
+ */
+void HILINK_TrigOtaVersionCheck(GetOtaVerCb cb);
 
 #ifdef __cplusplus
 }

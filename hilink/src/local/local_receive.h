@@ -10,7 +10,6 @@ extern "C"
 #include "tool.h"
 
 #define SERVER_PORT 7000
-#define HY_HEART "{\"Command\":\"TcpBeatHeart\",\"Period\":\"60\"}"
 
 #define STR_KEY "Key"
 #define STR_VALUE "Value"
@@ -72,6 +71,7 @@ extern "C"
 #define SENDTOLOCAL_SIZE 1024
         char sendData[SENDTOLOCAL_SIZE];
         dev_local_t gateway;
+        pthread_mutex_t mutex;
         struct list_head head;
     } LocalControl_t;
 
@@ -79,9 +79,9 @@ extern "C"
     void local_control_destory();
     struct list_head *local_get_list_head();
     char *local_get_sendData();
+    pthread_mutex_t *local_get_mutex();
     dev_local_t *local_get_gateway();
 
-    int read_from_local(const char *json, struct list_head *node);
     void recv_toLocal(char *data, int len);
 #ifdef __cplusplus
 }

@@ -12,15 +12,15 @@ extern "C" {
 #endif
 
 /* 设备版本信息 */
-#define FIRMWARE_VER  "20000"
-#define SOFTWARE_VER  "1.0.3"
+#define FIRMWARE_VER  "1.1.4"
+#define SOFTWARE_VER  "11.0.0.332"
 #define HARDWARE_VER  "20000"
 
 /* 设备产品信息 */
 #define PRODUCT_ID    "2AO8"
 #define DEVICE_TYPE   "020"
 #define MANUAFACTURER "312"
-#define DEVICE_MODEL  "IHA1221HW"
+#define DEVICE_MODEL  "IHA1214HW"
 #define HILINK_VER    "1.0.0"
 
 /* 请确保设备类型英文名和厂商英文名长度之和不超过17字节 */

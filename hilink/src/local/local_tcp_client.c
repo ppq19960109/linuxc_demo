@@ -14,13 +14,15 @@
 #include "local_device.h"
 
 #include "socket.h"
-#include "rk_driver.h"
 
+#include "cloud_send.h"
 
 typedef struct
 {
     int socketfd;
+    unsigned int getDevListFlag;
     pthread_t pid;
+    timer_t timerid;
 #define RECVLEN 16384
     char tcpBuf[RECVLEN + 1];
 } tcp_app_t;
@@ -61,14 +63,40 @@ static void timer_thread_handler(union sigval v)
 {
     if (v.sival_int == 1)
     {
-        write_haryan(HY_HEART, strlen(HY_HEART));
+        if (tcp_app.getDevListFlag < 5)
+        {
+            write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
+        }
+        else if (tcp_app.getDevListFlag % 1440 == 0)
+        {
+            write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
+        }
+        ++tcp_app.getDevListFlag;
+        write_heart();
     }
+
 }
 
 static void timer_signal_handler(int signal)
 {
     // printf("timer_signal_handler function! %s\n", HY_HEART);
-    write_haryan(HY_HEART, strlen(HY_HEART));
+    write_heart();
+}
+
+void set_timer(timer_t timerid, timer_function fun, int interval_sec, int sec)
+{
+    /* 第一次间隔it.it_value这么长,以后每次都是it.it_interval这么长,就是说it.it_value变0的时候会>装载it.it_interval的值 */
+    struct itimerspec it;
+    it.it_interval.tv_sec = interval_sec; // 回调函数执行频率为1s运行1次
+    it.it_interval.tv_nsec = 0;
+    it.it_value.tv_sec = sec; // 倒计时3秒开始调用回调函数
+    it.it_value.tv_nsec = 0;
+
+    if (timer_settime(timerid, 0, &it, NULL) == -1)
+    {
+        perror("fail to timer_settime-----------------------------");
+        return;
+    }
 }
 
 timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec)
@@ -96,20 +124,59 @@ timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec)
         return NULL;
     }
 
-    /* 第一次间隔it.it_value这么长,以后每次都是it.it_interval这么长,就是说it.it_value变0的时候会>装载it.it_interval的值 */
-    struct itimerspec it;
-    it.it_interval.tv_sec = interval_sec; // 回调函数执行频率为1s运行1次
-    it.it_interval.tv_nsec = 0;
-    it.it_value.tv_sec = sec; // 倒计时3秒开始调用回调函数
-    it.it_value.tv_nsec = 0;
+    // /* 第一次间隔it.it_value这么长,以后每次都是it.it_interval这么长,就是说it.it_value变0的时候会>装载it.it_interval的值 */
+    // struct itimerspec it;
+    // it.it_interval.tv_sec = interval_sec; // 回调函数执行频率为1s运行1次
+    // it.it_interval.tv_nsec = 0;
+    // it.it_value.tv_sec = sec; // 倒计时3秒开始调用回调函数
+    // it.it_value.tv_nsec = 0;
 
-    if (timer_settime(timerid, 0, &it, NULL) == -1)
-    {
-        perror("fail to timer_settime");
-        return NULL;
-    }
-
+    // if (timer_settime(timerid, 0, &it, NULL) == -1)
+    // {
+    //     perror("fail to timer_settime");
+    //     return NULL;
+    // }
+    set_timer(timerid, fun, interval_sec, sec);
     return timerid;
+}
+
+
+void reset_devList(void)
+{
+    printf("reset_devList---------------------------\n");
+    // write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
+    // timer_settime(tcp_app.timerid, 0, NULL, NULL);
+    if (tcp_app.timerid != NULL)
+    {
+        set_timer(tcp_app.timerid, timer_thread_handler, 60, 60);
+    }
+    tcp_app.getDevListFlag = 0;
+}
+
+static int local_get_pid(char *Name)
+{
+    char cmd[32] = {0};
+
+    int pid = 0;
+
+    sprintf(cmd, "pidof %s | awk '{print NF}'", Name);
+    FILE *pFile = popen(cmd, "r");
+    if (pFile != NULL)
+    {
+        while (fgets(cmd, sizeof(cmd), pFile))
+        {
+            pid = atoi(cmd);
+            printf("--- %s pid = %d ---\n", Name, pid);
+            break;
+        }
+    }
+    pclose(pFile);
+    return pid;
+}
+
+static int get_local_pid()
+{
+    return local_get_pid("hydevapp");
 }
 
 static int net_client_srart()
@@ -121,14 +188,18 @@ static int net_client_srart()
 
     int sockfd = Socket(AF_INET, SOCK_STREAM);
     // Bind(sockfd, (struct sockaddr *)&server, sizeof(struct sockaddr));
-    while (Connect(sockfd, (struct sockaddr *)&server, sizeof(struct sockaddr)) != 0)
-    {
-        sleep(2);
-    }
+connect:
+    sleep(2);
+    if (get_local_pid() == 0)
+        goto connect;
+    sleep(15);
+    if (Connect(sockfd, (struct sockaddr *)&server, sizeof(struct sockaddr)) != 0)
+        goto connect;
+
     return sockfd;
 }
 //---------------------------------------------------------------
-extern void hlink_online_ledStatus(void);
+
 static void *thread_hander(void *arg)
 {
     sigset_t set;
@@ -137,20 +208,18 @@ static void *thread_hander(void *arg)
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
     int readLen = 0;
-    timer_t timerid = NULL;
     tcp_app_t *pdata = ((tcp_app_t *)arg);
     do
     {
+        pdata->getDevListFlag = 0;
         pdata->socketfd = net_client_srart();
-        hlink_online_ledStatus();
 
-        timerid = start_timer(1, timer_thread_handler, 60, 60);
-        readLen = write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
-        if (readLen < 0)
-            goto fail_write;
+        pdata->timerid = start_timer(1, timer_thread_handler, 60, 65);
+        write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
         readLen = write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
         if (readLen < 0)
             goto fail_write;
+
         while (1)
         {
             readLen = Recv(pdata->socketfd, pdata->tcpBuf, RECVLEN, 0);
@@ -175,9 +244,8 @@ static void *thread_hander(void *arg)
         Close(pdata->socketfd);
         pdata->socketfd = 0;
 
-        timer_delete(timerid);
+        timer_delete(pdata->timerid);
         local_allDevice_onlineStatus(0, DEV_OFFLINE);
-        driver_deviceCloudOffline();
     } while (1);
     pthread_exit(0);
 }

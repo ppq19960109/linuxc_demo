@@ -25,30 +25,29 @@ rfkill block all
 ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
 killall $ALL_APP
 
-UPDATE_PATH="/userdata/update"
-UPDATE_FILE="upgrade.bin"
-if [ -e "$UPDATE_PATH/$UPDATE_FILE" ]; then
+UPDATE_FILE="/userdata/update/upgrade.bin"
+
+if [ -e "$UPDATE_FILE" ]; then
     echo Power on find upgrade
-    cd $UPDATE_PATH
-    chmod -R 777 ./
-    ./$UPDATE_FILE
-    if [ $? != 0 ];then
-        echo Power on rm upgrade
-        rm $UPDATE_FILE
-        # ./upgrade_backup.bin
-    fi
+    cd /tmp
+    chmod -R 777 $UPDATE_FILE
+    $UPDATE_FILE
+    # if [ $? != 0 ];then
+    echo Power on rm upgrade
+    rm $UPDATE_FILE
+    # fi
 fi
 
 # sleep 5
 
 cd /userdata/hyapp
-./hydevapp > /dev/null &
+./hydevapp  &
 
 cd /userdata/iotapp
-./hy_server_iot > /dev/null &
+./hy_server_iot  &
 
 cd /userdata/app
-./hilinkapp &
+./hilinkapp > /tmp/daemon_hilink.log &
 
 # /oem/runing.sh &
 /userdata/app/hy_daemon

@@ -7,12 +7,17 @@ extern "C"
 #endif
 
 #include "cloud_send.h"
+    void list_init_cloud(struct list_head *head);
+    void list_add_cloud(struct list_head *node);
 
     void list_del_dev_cloud(dev_cloud_t *ptr);
-    int list_del_by_id_cloud(const char *id, struct list_head *head);
-    void list_del_all_cloud(struct list_head *head);
-    dev_cloud_t *list_get_by_id_cloud(const char *id, struct list_head *head);
-    void list_print_all_cloud(struct list_head *head);
+    int list_del_by_id_cloud(const char *devid);
+
+    void list_del_all_cloud();
+
+    dev_cloud_t *list_get_by_id_cloud(const char *devid);
+
+    void list_print_all_cloud();
 
 #ifdef __cplusplus
 }

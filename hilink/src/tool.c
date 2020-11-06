@@ -38,6 +38,8 @@ int strn_search(const char *key, char *const *pstr, const int num, const int n)
 
 char char_copy_from_json(cJSON *json, const char *src, char *dst)
 {
+    if (json == NULL || dst == NULL)
+        return -1;
     cJSON *obj = cJSON_GetObjectItem(json, src);
     if (obj != NULL)
     {
@@ -49,6 +51,8 @@ char char_copy_from_json(cJSON *json, const char *src, char *dst)
 
 int int_copy_from_json(cJSON *json, const char *src, int *dst)
 {
+    if (json == NULL || dst == NULL)
+        return -1;
     cJSON *obj = cJSON_GetObjectItem(json, src);
     if (obj != NULL)
     {
@@ -60,6 +64,8 @@ int int_copy_from_json(cJSON *json, const char *src, int *dst)
 
 int str_copy_from_json(cJSON *json, const char *src, char *dst)
 {
+    if (json == NULL || dst == NULL)
+        return -1;
     cJSON *obj = cJSON_GetObjectItem(json, src);
     if (obj != NULL)
     {

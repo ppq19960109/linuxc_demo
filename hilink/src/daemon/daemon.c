@@ -10,8 +10,10 @@
 #include <syslog.h>
 
 #define DIR_OUT_FILE "/userdata/app/daemon.log"
+#define HLINK_LOG "/tmp/daemon_hilink.log"
+#define DELETE_SIZE 1048576
 
-static char cmd[80];
+static char cmd[96];
 
 int init_daemon(void)
 {
@@ -79,17 +81,49 @@ int init_daemon(void)
     return 0;
 }
 
-unsigned long get_file_size(const char *path)
+// unsigned long get_file_size(const char *path)
+// {
+//     unsigned long filesize = -1;
+//     FILE *fp;
+//     fp = fopen(path, "r");
+//     if (fp == NULL)
+//         return filesize;
+//     fseek(fp, 0L, SEEK_END);
+//     filesize = ftell(fp);
+//     fclose(fp);
+//     return filesize;
+// }
+
+long get_file_size(const char *path)
 {
-    unsigned long filesize = -1;
-    FILE *fp;
-    fp = fopen(path, "r");
-    if (fp == NULL)
+    long filesize = -1;
+    struct stat statbuff;
+    if (stat(path, &statbuff) < 0)
+    {
         return filesize;
-    fseek(fp, 0L, SEEK_END);
-    filesize = ftell(fp);
-    fclose(fp);
+    }
+    else
+    {
+        filesize = statbuff.st_size;
+    }
     return filesize;
+}
+
+void clear_file(const char *path)
+{
+    /* 打开一个文件 */
+    int fd = open(path, O_RDWR);
+    if (fd < 0)
+    {
+    }
+    else
+    {
+        /* 清空文件 */
+        ftruncate(fd, 0);
+        /* 重新设置文件偏移量 */
+        lseek(fd, 0, SEEK_SET);
+        close(fd);
+    }
 }
 
 int get_pid(char *Name)
@@ -118,18 +152,22 @@ struct pidInfo_t
 {
     char *pidName;
     char *pidPath;
+    char *logPath;
 };
 
 static const struct pidInfo_t pidInfo[] = {
-    {.pidName = "hydevapp", .pidPath = "/userdata/hyapp"},
-    {.pidName = "hy_server_iot", .pidPath = "/userdata/iotapp"},
-    {.pidName = "hilinkapp", .pidPath = "/userdata/app"},
+    {.pidName = "hydevapp", .pidPath = "/userdata/hyapp", .logPath = ""},
+    {.pidName = "hy_server_iot", .pidPath = "/userdata/iotapp", .logPath = ""},
+    {.pidName = "hilinkapp", .pidPath = "/userdata/app", .logPath = "> " HLINK_LOG},
 };
+
+static unsigned int timeCount;
+static int pidCount;
 
 int main()
 {
 
-    int i, pidCount;
+    int i;
     const int pidInfoNum = sizeof(pidInfo) / sizeof(pidInfo[0]);
 
     time_t now;
@@ -155,11 +193,13 @@ int main()
                     sprintf(cmd, "%s/%s", pidInfo[i].pidPath, pidInfo[i].pidName);
                     if ((access(cmd, F_OK)) == 0)
                     {
-                        sprintf(cmd, "cd %s;./%s &", pidInfo[i].pidPath, pidInfo[i].pidName);
+                        sprintf(cmd, "cd %s;./%s %s &", pidInfo[i].pidPath, pidInfo[i].pidName, pidInfo[i].logPath);
                     }
                     else
                     {
-                        sprintf(cmd, "cd /userdata/update/;./upgrade_backup.bin");
+                        sprintf(cmd, "chmod 777 /userdata/update/upgrade_backup.bin");
+                        system(cmd);
+                        sprintf(cmd, "cd /tmp;/userdata/update/upgrade_backup.bin");
                     }
                     system(cmd);
                 }
@@ -167,11 +207,20 @@ int main()
                 {
                     sprintf(cmd, "killall %s", pidInfo[i].pidName);
                     system(cmd);
-                    sprintf(cmd, "cd %s;./%s &", pidInfo[i].pidPath, pidInfo[i].pidName);
+                    sprintf(cmd, "cd %s;./%s %s &", pidInfo[i].pidPath, pidInfo[i].pidName, pidInfo[i].logPath);
                     system(cmd);
                 }
             }
         }
         signal(SIGCHLD, SIG_IGN);
+
+        if (timeCount % 5 == 0)
+        {
+            if (get_file_size(HLINK_LOG) > DELETE_SIZE)
+            {
+                clear_file(HLINK_LOG);
+            }
+        }
+        ++timeCount;
     }
 }

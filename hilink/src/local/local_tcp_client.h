@@ -12,5 +12,6 @@ void tcp_client_open();
 void tcp_client_close();
 
 timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec);
+void reset_devList(void);
 #endif
 #endif

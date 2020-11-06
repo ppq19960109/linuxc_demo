@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
-
+#include <sys/types.h>
 #include "cloud_send.h"
 #include "cloud_list.h"
 
@@ -80,16 +80,19 @@ static const SAttrInfo g_SCloudProdId[] = {
     {.attr = s_cloud2ANI},
 };
 
+int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out);
+
 static CloudControl_t g_SCloudControl;
 
 void cloud_control_init()
 {
-    INIT_LIST_HEAD(&g_SCloudControl.head);
+    list_init_cloud(&g_SCloudControl.head);
+    g_SCloudControl.pid = getpid();
 }
 
 void cloud_control_destory()
 {
-    list_del_all_cloud(&g_SCloudControl.head);
+    list_del_all_cloud();
 }
 
 struct list_head *cloud_get_list_head()
@@ -97,6 +100,24 @@ struct list_head *cloud_get_list_head()
     return &g_SCloudControl.head;
 }
 
+CloudStatus get_cloud_status(void)
+{
+    return g_SCloudControl.cloud_status;
+}
+
+void set_cloud_status(CloudStatus status)
+{
+    g_SCloudControl.cloud_status = status;
+}
+int get_registerFlag(void)
+{
+    return g_SCloudControl.registerFlag;
+}
+
+void set_registerFlag(void)
+{
+    g_SCloudControl.registerFlag = 1;
+}
 void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
 {
     // strcpy(brgDevInfo->prodId, PRODUCT_ID);
@@ -115,21 +136,47 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
 
 int modSvc(const char *sn, const char *svcId, char **svcVal, char *json)
 {
+    if (json == NULL)
+        return -1;
+    // if (*svcVal != NULL)
+    // {
+    // }
 
     if (*svcVal == NULL || strcmp(*svcVal, json) != 0)
     {
         if (*svcVal != NULL)
         {
             free(*svcVal);
-            HilinkUploadBrgDevCharState(sn, svcId);
+            *svcVal = json;
+            if (HilinkUploadBrgDevCharState(sn, svcId) != 0)
+            {
+                log_error("HilinkUploadBrgDevCharState error,%s,%s\n", svcId, json);
+                if (HilinkReportBrgDevCharState(sn, svcId, json, strlen(json) + 1, g_SCloudControl.pid) != 0)
+                {
+                    log_error("HilinkReportBrgDevCharState error,%d,%d,%s,%s\n", getpid(), pthread_self(), svcId, json);
+                }
+                else
+                {
+                    log_info("HilinkReportBrgDevCharState success,%s,%s\n", svcId, json);
+                }
+            }
+            else
+            {
+                log_info("HilinkUploadBrgDevCharState success,%s,%s\n", svcId, json);
+            }
         }
-        *svcVal = json;
+        else
+        {
+            *svcVal = json;
+        }
     }
     else
     {
         free(json);
     }
+    return 0;
 }
+
 void cloud_init_device_attr(const int index, BrgDevInfo *brgDevInfo)
 {
     strcpy(brgDevInfo->prodId, g_SCloudProdId[index].attr[0]);
@@ -144,19 +191,58 @@ void cloud_add_device_attr(const int index, dev_cloud_t *out, const char *sn)
     for (int i = 0; i < out->devSvcNum; ++i)
         out->devSvc[i].svcId = g_SCloudAttr[index].attr[i];
 }
-void cloud_add_device(const int index, dev_cloud_t **out, const char *sn, dev_local_t *local, struct list_head *cloudNode)
+
+void reportBrgAllSubDevState(const int index, const char *sn, dev_local_t *local, dev_cloud_t *out)
+{
+    cJSON *arrayroot = cJSON_CreateArray();
+    cJSON *obj = cJSON_CreateObject();
+    cJSON_AddItemToArray(arrayroot, obj);
+
+    cJSON_AddStringToObject(obj, "sn", sn);
+    cJSON *array = cJSON_AddArrayToObject(obj, "services");
+    cloud_get_attr(local, index, out);
+    for (int i = 0; i < out->devSvcNum; ++i)
+    {
+        cJSON *svc = cJSON_CreateObject();
+        cJSON_AddStringToObject(svc, "sid", out->devSvc[i].svcId);
+        if (out->devSvc[i].svcVal != NULL)
+        {
+            cJSON *svcVal = cJSON_Parse(out->devSvc[i].svcVal);
+            cJSON_AddItemToObject(svc, "data", svcVal);
+        }
+        cJSON_AddItemToArray(array, svc);
+    }
+    char *json = cJSON_Print(arrayroot);
+
+    log_error("reportBrgAllSubDevState:%s\n", json);
+    int ret = HILINK_ReportBrgAllSubDevState(json);
+    if (ret != 0)
+    {
+        log_error("HILINK_ReportBrgAllSubDevState error\n");
+    }
+    free(json);
+    cJSON_Delete(arrayroot);
+}
+
+int cloud_add_device(const int index, dev_cloud_t **out, const char *sn, dev_local_t *local)
 {
     *out = malloc(sizeof(dev_cloud_t));
     memset(*out, 0, sizeof(dev_cloud_t));
-    list_add(&(*out)->node, cloudNode);
+    list_add_cloud(&(*out)->node);
 
     BrgDevInfo *brgDevInfo = &(*out)->brgDevInfo;
     BrgDevInfo_init(brgDevInfo);
     strcpy(brgDevInfo->sn, sn);
+    strcpy(brgDevInfo->mac, local->GatewayId);
+    if (strlen(local->Version) > 0 && isdigit(local->Version[0]) && strcmp(brgDevInfo->fwv, local->Version))
+    {
+        strcpy(brgDevInfo->fwv, local->Version);
+    }
+
     cloud_init_device_attr(index, brgDevInfo);
     cloud_add_device_attr(index, *out, brgDevInfo->sn);
-    HilinkSyncBrgDevStatus(brgDevInfo->sn, local->Online);
-    log_info("HilinkSyncBrgDevStatus:%s,%d\n", brgDevInfo->sn, local->Online);
+
+    return 0;
 }
 void cloud_update_device_int(cJSON *root, char *key, int value, dev_cloud_t *out, int pos)
 {
@@ -191,23 +277,10 @@ void cloud_update_device_str(cJSON *root, char *key, char *value, dev_cloud_t *o
     modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &out->devSvc[pos].svcVal, json);
 }
 
-int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode)
+int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out)
 {
-    log_info("local_tocloud index:%d\n", index);
+
     int pos = 0, i;
-
-    dev_cloud_t *out = list_get_by_id_cloud(src->DeviceId, cloudNode);
-    if (out == NULL)
-    {
-        // log_info("cloud_add_device %s,%d\n",src->DeviceId,src->Online);
-        cloud_add_device(index, &out, src->DeviceId, src, cloudNode);
-        strcpy(out->brgDevInfo.mac, src->GatewayId);
-        if (strlen(src->Version) > 0 && isdigit(src->Version[0]) && strcmp(out->brgDevInfo.fwv, src->Version))
-        {
-            strcpy(out->brgDevInfo.fwv, src->Version);
-        }
-    }
-
     cJSON *root = cJSON_CreateObject();
 
     switch (index)
@@ -307,19 +380,67 @@ int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode
     case 7: //门窗传感器
     {
         dev_HY0093_t *dev_sub = (dev_HY0093_t *)src->private;
-        char buf = dev_sub->ContactAlarm;
+
         //doorEvent
         if (out->devSvc[pos].svcVal == NULL)
-            buf = 0xff;
-        cloud_update_device_int(root, STR_ON, buf, out, pos++);
+        {
+            dev_sub->init_ContactAlarm = dev_sub->ContactAlarm;
+            dev_sub->door_event = 0xff;
+        }
+        else if (dev_sub->door_event == 0xff)
+        {
+
+            if (dev_sub->init_ContactAlarm != dev_sub->ContactAlarm)
+            {
+                dev_sub->door_event = dev_sub->ContactAlarm;
+            }
+        }
+        else
+        {
+            dev_sub->door_event = dev_sub->ContactAlarm;
+        }
+
+        cloud_update_device_int(root, STR_ON, dev_sub->door_event, out, pos++);
 
         //status
         cloud_update_device_int(root, STR_STATUS, dev_sub->ContactAlarm, out, pos++);
     }
     break;
     case 8: //U2/天际系列：智镜/全面屏/触控屏（HY0134）
+    case 9:
+    case 10:
+    case 11:
     {
         dev_HY0134_t *dev_sub = (dev_HY0134_t *)src->private;
+        //-------------------------------------------------------------
+        //场景面板
+
+        // if (out->devSvc[pos].svcVal == NULL)
+        // {
+        //     dev_sub->KeyFobValue = 0xff;
+        // }
+
+        // if (dev_sub->KeyFobValue != 0xff)
+        // {
+        //     free(out->devSvc[pos].svcVal);
+        //     out->devSvc[pos].svcVal = malloc(1);
+        //     out->devSvc[pos].svcVal[0] = 0;
+        // }
+
+        cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
+        dev_sub->KeyFobValue = 0;
+
+        // const char name[] = {0xe5, 0x9b, 0x9e, 0xe5, 0xae, 0xb6, 0x00};
+
+        for (i = 0; i < 6; ++i)
+        {
+            if (strlen(dev_sub->SceName[i]) == 0)
+                sprintf(dev_sub->SceName[i], "场景%d", i + 1);
+
+            cloud_update_device_str(root, STR_NAME, dev_sub->SceName[i], out, pos++);
+        }
+        //-------------------------------------------------------------
+
         dev_cloud_t *out_sub[3] = {0};
         char sn[32] = {0};
         stpcpy(sn, src->DeviceId);
@@ -327,17 +448,12 @@ int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode
         for (int j = 0; j < 3; j++)
         {
             sn[p] = j + '0';
-            out_sub[j] = list_get_by_id_cloud(sn, cloudNode);
+            out_sub[j] = list_get_by_id_cloud(sn);
 
             if (out_sub[j] == NULL)
             {
-                cloud_add_device(index + j + 1, &out_sub[j], sn, src, cloudNode);
-                strcpy(out_sub[j]->brgDevInfo.mac, src->GatewayId);
+                cloud_add_device(index + j + 1, &out_sub[j], sn, src);
             }
-            // else
-            // {
-            //     log_error("HY0134 out_sub exist\n");
-            // }
 
             pos = 0;
             switch (j)
@@ -371,46 +487,61 @@ int local_tocloud(dev_local_t *src, const int index, struct list_head *cloudNode
                 break;
             }
         }
-        //场景面板
-        pos = 0;
-
-        if (out->devSvc[pos].svcVal == NULL)
-            dev_sub->KeyFobValue = 0xff;
-        else
-        {
-            free(out->devSvc[pos].svcVal);
-            out->devSvc[pos].svcVal = malloc(1);
-            out->devSvc[pos].svcVal[0] = 0;
-            // out->devSvc[pos].svcVal = NULL;
-        }
-
-        cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
-        // const char name[] = {0xe5, 0x9b, 0x9e, 0xe5, 0xae, 0xb6, 0x00};
-
-        for (i = 0; i < 6; ++i)
-        {
-            if (strlen(dev_sub->SceName[i]) == 0)
-                sprintf(dev_sub->SceName[i], "场景%d", i + 1);
-
-            cloud_update_device_str(root, STR_NAME, dev_sub->SceName[i], out, pos++);
-        }
+        //-------------------------------------------------------------
     }
     break;
     default:
         goto fail;
     }
-    // list_print_all_cloud(cloudNode);
+    // list_print_all_cloud();
 
     cJSON_Delete(root);
 
     return 0;
 fail:
-    log_error("hilink modelId not exist\n");
-    if (out != NULL)
-    {
-        list_del_dev_cloud(out);
-    }
+    log_error("hilink modelId not exist:%d\n", index);
+
     cJSON_Delete(root);
     return -1;
 }
 
+int local_tocloud(dev_local_t *src, const int index)
+{
+
+    log_info("local_tocloud index:%d\n", index);
+    char addFlag = 0;
+    dev_cloud_t *out = list_get_by_id_cloud(src->DeviceId);
+    if (out == NULL)
+    {
+        addFlag = 1;
+        // log_info("cloud_add_device %s,%d\n",src->DeviceId,src->Online);
+        cloud_add_device(index, &out, src->DeviceId, src);
+    }
+    int ret = cloud_get_attr(src, index, out);
+    if (ret < 0)
+    {
+        if (out != NULL)
+        {
+            list_del_dev_cloud(out);
+        }
+    }
+    else
+    {
+        if (addFlag)
+        {
+            if (src->Online)
+            {
+                local_singleDevice_onlineStatus(src, DEV_ONLINE);
+            }
+            else
+            {
+                if (get_registerFlag())
+                {
+                    // local_singleDevice_onlineStatus(src, DEV_ONLINE);
+                }
+            }
+            log_info("local_tocloud HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, src->Online);
+        }
+    }
+    return ret;
+}

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -7,17 +8,14 @@
 #include "local_tcp_client.h"
 #include "local_send.h"
 #include "local_callback.h"
+#include "local_list.h"
 
-
-#include "cloud_send.h"
 #include "cloud_list.h"
 
 #include "rk_driver.h"
 
 #include "hilink.h"
 #include "hilink_softap_adapter.h"
-
-
 
 #define HY0134_INDEX 8
 #define HY0134 "_TZE200_twuagcv5"
@@ -82,12 +80,13 @@ static const SAttrInfo s_SLocalAttrSize[] = {
 
 int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
 {
-
+    int res = -1;
+    // pthread_mutex_lock(local_get_mutex());
     int index = str_search(dev_data->ModelId, g_SLocalModel.attr, g_SLocalModel.attrLen);
     if (index < 0)
     {
         log_error("local ModelId not exist:%s\n", dev_data->ModelId);
-        return -1;
+        goto fail;
     }
 
     log_debug("local_attribute_update:%d\n", index);
@@ -97,7 +96,7 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
         memset(dev_data->private, 0, s_SLocalAttrSize[index].attrLen);
     }
     if (Data == NULL)
-        goto cloud;
+        goto dev_register; // goto cloud;
 
     cJSON *Key, *array_sub;
     int array_size, cnt, index_sub;
@@ -360,7 +359,7 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
         default:
             free(dev_data->private);
             log_error("hanyar modelId not exist\n");
-            return -1;
+            goto fail;
         }
         if (out)
         {
@@ -368,12 +367,22 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
         }
     }
 cloud:
-    return local_tocloud(dev_data, index, cloud_get_list_head());
+    res = local_tocloud(dev_data, index);
+    // pthread_mutex_unlock(local_get_mutex());
+    return res;
+dev_register:
+    return 0;
+fail:
+    // pthread_mutex_unlock(local_get_mutex());
+    return -1;
 }
 
 void local_singleDevice_onlineStatus(dev_local_t *src, int status)
 {
+    if (src == NULL)
+        return;
     HilinkSyncBrgDevStatus(src->DeviceId, status);
+
     log_info("HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, status);
     if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
     {
@@ -384,26 +393,23 @@ void local_singleDevice_onlineStatus(dev_local_t *src, int status)
         {
             sn[p] = j + '0';
             HilinkSyncBrgDevStatus(sn, status);
-            if (status == DEV_RESTORE)
-            {
-                list_del_by_id_cloud(sn, cloud_get_list_head());
-            }
         }
     }
 }
 
 void local_allDevice_onlineStatus(int online, int status)
 {
-    log_info("local_allDevice_onlineStatus!\n");
+    log_info("local_allDevice_onlineStatus!,%d\n", status);
+
+    dev_local_t *ptr;
+    struct list_head *head = local_get_list_head();
+    if (head == NULL)
+    {
+        return;
+    }
+
     if (online)
     {
-        dev_local_t *ptr;
-        struct list_head *head = local_get_list_head();
-        if (head == NULL)
-        {
-            return;
-        }
-
         list_for_each_entry(ptr, head, node)
         {
             local_singleDevice_onlineStatus(ptr, ptr->Online);
@@ -411,16 +417,9 @@ void local_allDevice_onlineStatus(int online, int status)
     }
     else
     {
-        dev_cloud_t *ptr;
-        struct list_head *head = cloud_get_list_head();
-        if (head == NULL)
-        {
-            return;
-        }
-
         list_for_each_entry(ptr, head, node)
         {
-            HilinkSyncBrgDevStatus(ptr->brgDevInfo.sn, status);
+            local_singleDevice_onlineStatus(ptr, status);
         }
         sleep(4);
     }
@@ -434,27 +433,32 @@ void local_system_restartOrReFactory(int index)
 
     if (index == INT_REFACTORY)
     {
-        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
-
         local_allDevice_onlineStatus(0, DEV_RESTORE);
+        local_delete_all_dev();
+        sleep(1);
+        write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
+        sleep(1);
+        run_closeCallback();
         cloud_control_destory();
         local_control_destory();
         sync();
-        run_closeCallback();
         driver_exit();
         hilink_restore_factory_settings();
 
-        sleep(2);
+        sleep(1);
         system("sh /userdata/app/restore.sh &");
     }
     else
     {
+
         local_allDevice_onlineStatus(0, DEV_OFFLINE);
+
+        run_closeCallback();
         cloud_control_destory();
         local_control_destory();
         sync();
-        run_closeCallback();
         driver_exit();
+
         if (INT_REBOOT == index)
         {
             reboot(RB_AUTOBOOT);
