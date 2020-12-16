@@ -72,12 +72,10 @@ svc_info_t gSvcInfo[] = {
 unsigned char A_C[48] = {
     0x49, 0x3F, 0x45, 0x4A, 0x3A, 0x72, 0x38, 0x7B, 0x36, 0x32, 0x50, 0x3C, 0x49, 0x39, 0x62, 0x38,
     0x72, 0xCB, 0x6D, 0xC5, 0xAE, 0xE5, 0x4A, 0x82, 0xD3, 0xE5, 0x6D, 0xF5, 0x36, 0x82, 0x62, 0xEB,
-    0x89, 0x30, 0x6C, 0x88, 0x32, 0x56, 0x23, 0xFD, 0xB8, 0x67, 0x90, 0xA7, 0x7B, 0x61, 0x1E, 0xAE
-};
+    0x89, 0x30, 0x6C, 0x88, 0x32, 0x56, 0x23, 0xFD, 0xB8, 0x67, 0x90, 0xA7, 0x7B, 0x61, 0x1E, 0xAE};
 
 /* BI信息 */
 char *bi_rsacipher = "";
-
 
 static int discover_switch = 0;
 
@@ -106,6 +104,9 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
 {
     log_debug("hilink_put_char_state svcId:%s payload:%s,len:%d\n", svcId, payload, len);
 
+    if (svcId == NULL)
+        return -1;
+        
     if (strcmp("switch", svcId) == 0)
     {
         if (payload != NULL)
@@ -119,10 +120,8 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
             }
             else
             {
-                // write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
             }
-
-            free(root);
+            cJSON_Delete(root);
         }
     }
 
@@ -155,7 +154,6 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
         return -1;
     }
     char *json = cJSON_PrintUnformatted(root);
-    log_info("hilink_get_char_state %s\n", json);
     if (json == NULL)
     {
         cJSON_Delete(root);
@@ -164,9 +162,8 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
 
     *out = json;
     *outLen = strlen(json) + 1;
-
+    log_info("hilink_get_char_state %s\n", json);
     cJSON_Delete(root);
-
     return 0;
 }
 
@@ -234,4 +231,3 @@ int HILINK_ReadLicense(unsigned char *license, unsigned int len)
 {
     return 0;
 }
-

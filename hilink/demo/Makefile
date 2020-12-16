@@ -2,7 +2,7 @@
 PWD := .
 BASE_PATH := $(PWD)/..
 
-CROSS = /home/ppq/arm-rk/bin/arm-rockchip-linux-gnueabihf-
+CROSS = /home/ppq/arm32-rk3308/bin/arm-rockchip-linux-gnueabihf-
 # CROSS = armv8l-linux-gnueabihf-
 # CROSS = arm-linux-gnueabihf-
 # CC := /opt/toolchains/mips-mti-linux-gnu/2019.09-01/bin/mips-mti-linux-gnu-gcc
@@ -68,7 +68,7 @@ hilinkapp: $(OBJECTS)
 
 daemon: 
 	make -C $(DAEMON_PATH)
-	cp $(DAEMON_PATH)/hy_daemon .
+	cp $(DAEMON_PATH)/hyDaemon .
 
 daemon_clean:
 	make -C $(DAEMON_PATH) clean
@@ -80,4 +80,4 @@ $(OBJECTS):%.o : %.c
 
 #清理
 clean: daemon_clean
-	rm -f $(OBJECTS) hilinkapp hy_daemon
+	rm -f $(OBJECTS) hilinkapp hyDaemon

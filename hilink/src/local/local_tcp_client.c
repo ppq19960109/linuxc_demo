@@ -12,7 +12,7 @@
 #include "local_send.h"
 #include "local_callback.h"
 #include "local_device.h"
-
+#include "local_receive.h"
 #include "socket.h"
 
 #include "cloud_send.h"
@@ -27,7 +27,7 @@ typedef struct
     char tcpBuf[RECVLEN + 1];
 } tcp_app_t;
 
-static tcp_app_t tcp_app;
+tcp_app_t tcp_app;
 
 static void main_thread_signal_handler(int signal)
 {
@@ -35,9 +35,9 @@ static void main_thread_signal_handler(int signal)
     if (signal == SIGHUP || signal == SIGINT || signal == SIGQUIT || signal == SIGKILL || signal == SIGTERM)
     {
         if (signal == SIGQUIT)
-            local_system_restartOrReFactory(INT_REBOOT);
+            hyLinkSystem(INT_REBOOT);
         else
-            local_system_restartOrReFactory(INT_OFFLINE);
+            hyLinkSystem(INT_OFFLINE);
     }
 }
 
@@ -63,16 +63,34 @@ static void timer_thread_handler(union sigval v)
 {
     if (v.sival_int == 1)
     {
-        if (tcp_app.getDevListFlag < 5)
+        if (tcp_app.getDevListFlag < 3)
         {
             write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
         }
-        else if (tcp_app.getDevListFlag % 1440 == 0)
+        else if (tcp_app.getDevListFlag % 720 == 0)
         {
             write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
         }
         ++tcp_app.getDevListFlag;
         write_heart();
+    }
+}
+
+void recv_toLocal(char *data, int len)
+{
+    int ret = 0;
+
+    for (int i = 0; i < len; ++i)
+    {
+        if (data[i] == 0x02)
+        {
+            log_debug("recv_toLocal:%d,%s\n", len, &data[i + 1]);
+            ret = read_from_local(&data[i + 1]);
+            if (ret == 0 && tcp_app.getDevListFlag >= 3)
+            {
+                return;
+            }
+        }
     }
 
 }
@@ -141,18 +159,6 @@ timer_t start_timer(int sival, timer_function fun, int interval_sec, int sec)
 }
 
 
-void reset_devList(void)
-{
-    printf("reset_devList---------------------------\n");
-    // write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
-    // timer_settime(tcp_app.timerid, 0, NULL, NULL);
-    if (tcp_app.timerid != NULL)
-    {
-        set_timer(tcp_app.timerid, timer_thread_handler, 60, 60);
-    }
-    tcp_app.getDevListFlag = 0;
-}
-
 static int local_get_pid(char *Name)
 {
     char cmd[32] = {0};
@@ -192,7 +198,7 @@ connect:
     sleep(2);
     if (get_local_pid() == 0)
         goto connect;
-    sleep(15);
+    sleep(20);
     if (Connect(sockfd, (struct sockaddr *)&server, sizeof(struct sockaddr)) != 0)
         goto connect;
 
@@ -214,7 +220,7 @@ static void *thread_hander(void *arg)
         pdata->getDevListFlag = 0;
         pdata->socketfd = net_client_srart();
 
-        pdata->timerid = start_timer(1, timer_thread_handler, 60, 65);
+        pdata->timerid = start_timer(1, timer_thread_handler, 60, 60);
         write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
         readLen = write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
         if (readLen < 0)
@@ -245,7 +251,7 @@ static void *thread_hander(void *arg)
         pdata->socketfd = 0;
 
         timer_delete(pdata->timerid);
-        local_allDevice_onlineStatus(0, DEV_OFFLINE);
+        hyLinkStatus(0, DEV_OFFLINE);
     } while (1);
     pthread_exit(0);
 }

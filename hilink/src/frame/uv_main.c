@@ -202,7 +202,7 @@ static void signal_handler(uv_signal_t *handle, int signum)
     printf("signal received: %d\n", signum);
     if (signum == SIGINT || signum == SIGQUIT || signum == SIGKILL)
     {
-        local_system_restartOrReFactory(INT_OFFLINE);
+        hyLinkSystem(INT_OFFLINE);
     }
 }
 

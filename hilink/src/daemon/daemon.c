@@ -10,8 +10,6 @@
 #include <syslog.h>
 
 #define DIR_OUT_FILE "/userdata/app/daemon.log"
-#define HLINK_LOG "/tmp/daemon_hilink.log"
-#define DELETE_SIZE 1048576
 
 static char cmd[96];
 
@@ -112,12 +110,16 @@ long get_file_size(const char *path)
 void clear_file(const char *path)
 {
     /* 打开一个文件 */
-    int fd = open(path, O_RDWR);
+    int fd = open(path, O_RDWR, 0777);
     if (fd < 0)
     {
+        syslog(LOG_USER | LOG_INFO, "clearFile open fail\n");
+        sprintf(cmd, "rm -f %s", path);
+        system(cmd);
     }
     else
     {
+        syslog(LOG_USER | LOG_INFO, "clearFile\n");
         /* 清空文件 */
         ftruncate(fd, 0);
         /* 重新设置文件偏移量 */
@@ -152,16 +154,14 @@ struct pidInfo_t
 {
     char *pidName;
     char *pidPath;
-    char *logPath;
 };
 
 static const struct pidInfo_t pidInfo[] = {
-    {.pidName = "hydevapp", .pidPath = "/userdata/hyapp", .logPath = ""},
-    {.pidName = "hy_server_iot", .pidPath = "/userdata/iotapp", .logPath = ""},
-    {.pidName = "hilinkapp", .pidPath = "/userdata/app", .logPath = "> " HLINK_LOG},
+    {.pidName = "hydevapp", .pidPath = "/userdata/hyapp"},
+    {.pidName = "hy_server_iot", .pidPath = "/userdata/iotapp"},
+    {.pidName = "hilinkapp", .pidPath = "/userdata/app"},
 };
 
-static unsigned int timeCount;
 static int pidCount;
 
 int main()
@@ -178,7 +178,7 @@ int main()
     {
         sleep(60);
 
-        signal(SIGCHLD, SIG_DFL);
+        // signal(SIGCHLD, SIG_DFL);
         for (i = 0; i < pidInfoNum; i++)
         {
             pidCount = get_pid(pidInfo[i].pidName);
@@ -193,7 +193,7 @@ int main()
                     sprintf(cmd, "%s/%s", pidInfo[i].pidPath, pidInfo[i].pidName);
                     if ((access(cmd, F_OK)) == 0)
                     {
-                        sprintf(cmd, "cd %s;./%s %s &", pidInfo[i].pidPath, pidInfo[i].pidName, pidInfo[i].logPath);
+                        sprintf(cmd, "cd %s;./%s &", pidInfo[i].pidPath, pidInfo[i].pidName);
                     }
                     else
                     {
@@ -207,20 +207,11 @@ int main()
                 {
                     sprintf(cmd, "killall %s", pidInfo[i].pidName);
                     system(cmd);
-                    sprintf(cmd, "cd %s;./%s %s &", pidInfo[i].pidPath, pidInfo[i].pidName, pidInfo[i].logPath);
+                    sprintf(cmd, "cd %s;./%s &", pidInfo[i].pidPath, pidInfo[i].pidName);
                     system(cmd);
                 }
             }
         }
-        signal(SIGCHLD, SIG_IGN);
-
-        if (timeCount % 5 == 0)
-        {
-            if (get_file_size(HLINK_LOG) > DELETE_SIZE)
-            {
-                clear_file(HLINK_LOG);
-            }
-        }
-        ++timeCount;
+        // signal(SIGCHLD, SIG_IGN);
     }
 }

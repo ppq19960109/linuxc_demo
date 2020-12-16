@@ -169,7 +169,7 @@ void local_load_device_info(cJSON *root, cJSON *Data, const char *Params)
             if (local_attr_gateway(dev_buf, cJSON_GetObjectItem(array_sub, Params)) != 0)
             {
                 if (dev_buf->Online == 1 || online != dev_buf->Online)
-                    local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
+                    hyLinkDevStatus(dev_buf, dev_buf->Online);
                 local_attribute_update(dev_buf, cJSON_GetObjectItem(array_sub, Params));
             }
         }
@@ -254,13 +254,14 @@ int read_from_local(const char *json)
             str_copy_from_json(array_sub, STR_DEVICEID, dev_buf->DeviceId);
             str_copy_from_json(array_sub, STR_MODELID, dev_buf->ModelId);
             dev_buf->Online = INT_ONLINK;
+            list_add_local(&dev_buf->node);
             if (local_attribute_update(dev_buf, NULL) != 0)
             {
                 log_error("local_attribute_update error\n");
-                free(dev_buf);
+                list_del_dev_local(dev_buf);
                 break;
             }
-            list_add_local(&dev_buf->node);
+            
         }
     }
     break;
@@ -269,7 +270,8 @@ int read_from_local(const char *json)
         dev_buf = list_get_by_id_local(dev_data.DeviceId);
         if (dev_buf != NULL)
         {
-            local_singleDevice_onlineStatus(dev_buf, DEV_RESTORE);
+            write_delete_dev(dev_buf->DeviceId);
+            hyLinkDevStatus(dev_buf, DEV_RESTORE);
             list_del_by_id_cloud(dev_data.DeviceId);
             list_del_dev_local(dev_buf);
         }
@@ -288,7 +290,7 @@ int read_from_local(const char *json)
         if (dev_buf != NULL && Key != NULL && strcmp(Key->valuestring, STR_ONLINE) == 0)
         {
             char_copy_from_json(array_sub, STR_VALUE, &dev_buf->Online);
-            local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
+            hyLinkDevStatus(dev_buf, dev_buf->Online);
 
             // time_t now;
             // time(&now);
@@ -306,10 +308,11 @@ int read_from_local(const char *json)
             if (dev_buf->Online == INT_OFFLINK)
             {
                 dev_buf->Online = INT_ONLINK;
-                local_singleDevice_onlineStatus(dev_buf, dev_buf->Online);
+                hyLinkDevStatus(dev_buf, dev_buf->Online);
             }
             if (local_attr_gateway(dev_buf, Data) != 0)
                 local_attribute_update(dev_buf, Data);
+
         }
         else
         {
@@ -329,7 +332,7 @@ int read_from_local(const char *json)
     break;
     case 8: //恢复出厂设置上报：”ReFactory”；
     {
-        local_system_restartOrReFactory(INT_REFACTORY);
+        hyLinkSystem(INT_REFACTORY);
     }
     break;
     case 9: //COO网络信息上报：”CooInfo”；
@@ -370,34 +373,4 @@ fail:
     cJSON_Delete(root);
     log_error("json error\n");
     return -1;
-}
-
-void recv_toLocal(char *data, int len)
-{
-    int ret = 0;
-    // for (int i = 0; i < len; ++i)
-    // {
-    //     printf("%x,", data[i]);
-    // }
-    // printf("\n");
-    // if (data[0] == 0x02)
-    // {
-    for (int i = 0; i < len; ++i)
-    {
-        if (data[i] == 0x02)
-        {
-            log_debug("recv_toLocal:%d,%s\n", len, &data[i + 1]);
-            ret = read_from_local(&data[i + 1]);
-            if (ret == 0)
-            {
-                i += 2;
-            }
-        }
-    }
-    // }
-    // else
-    // {
-    //     log_debug("recv_toLocal:%d,%s\n", len, data);
-    //     read_from_local(data);
-    // }
 }

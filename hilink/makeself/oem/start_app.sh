@@ -13,16 +13,18 @@ echo "start app..."
 #     sleep 1
 # done
 
+killall dnsmasq dhcpcd 
+rfkill block wifi
+dhclient -cf /userdata/app/dhclient.conf -nw
+
 rmmod rkled
 rmmod rkkeyasync
 
 insmod /oem/rkled.ko
 insmod /oem/rkkeyasync.ko
 
-killall dnsmasq
-rfkill block all
 
-ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
+ALL_APP="runing.sh hyDaemon hilinkapp hy_server_iot hydevapp"
 killall $ALL_APP
 
 UPDATE_FILE="/userdata/update/upgrade.bin"
@@ -38,16 +40,17 @@ if [ -e "$UPDATE_FILE" ]; then
     # fi
 fi
 
-# sleep 5
+sleep 1
 
 cd /userdata/hyapp
-./hydevapp  &
+./hydevapp &
 
 cd /userdata/iotapp
-./hy_server_iot  &
+./hy_server_iot &
 
 cd /userdata/app
-./hilinkapp > /tmp/daemon_hilink.log &
+./hilinkapp &
 
 # /oem/runing.sh &
-/userdata/app/hy_daemon
+/userdata/app/hyDaemon
+

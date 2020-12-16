@@ -19,12 +19,12 @@ void list_add_cloud(struct list_head *node)
 
 dev_cloud_t *list_get_by_id_cloud(const char *devid)
 {
-    dev_cloud_t *ptr, *next;
+    dev_cloud_t *ptr;
     if (cloud_head == NULL)
     {
         return NULL;
     }
-    list_for_each_entry_safe(ptr, next, cloud_head, node)
+    list_for_each_entry(ptr, cloud_head, node)
     {
         if (strcmp(ptr->brgDevInfo.sn, devid) == 0)
         {

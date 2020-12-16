@@ -1,5 +1,5 @@
 
-CROSS_COMPILE =/home/ppq/arm-rk/bin/arm-rockchip-linux-gnueabihf-
+CROSS_COMPILE =/home/ppq/arm32-rk3308/bin/arm-rockchip-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -25,7 +25,7 @@ OBJ += $(SRC:%.c=%.o)
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-TARGET := hy_daemon
+TARGET := hyDaemon
 .PHONY : clean all
 
 all: $(TARGET)

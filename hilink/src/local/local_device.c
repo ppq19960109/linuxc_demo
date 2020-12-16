@@ -32,7 +32,8 @@ static char *s_sHY0121[] = {"Switch", "LedEnable", "PowerOffProtection", "KeyMod
 static char *s_sHY0122[] = {"Switch_1", "Switch_2", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 static char *s_sHY0107[] = {"Switch_1", "Switch_2", "Switch_3", "LedEnable", "Switch_All", "PowerOffProtection", "KeyMode"};
 static char *s_sHY0093[] = {"ContactAlarm", "BatteryPercentage", "LowBatteryAlarm", "TamperAlarm"};
-static char *s_sHY0134[] = {"CurrentTemperature_1", "Switch_", "WindSpeed_", "TargetTemperature_", "WorkMode_1", "Enable_", "KeyFobValue", "SceName_", "ScePhoto_"};
+static char *s_sHY0134[] = {"CurrentTemperature_1", "Switch_1", "Switch_2", "Switch_3", "WindSpeed_1", "WindSpeed_2",
+                            "TargetTemperature_1", "TargetTemperature_3", "WorkMode_1", "Enable_1", "Enable_2", "Enable_3", "KeyFobValue", "SceName_", "ScePhoto_"};
 static char *s_sHY0134_0[] = {"Switch_3", "TargetTemperature_3"};
 static char *s_sHY0134_1[] = {"Switch_1", "TargetTemperature_1", "WorkMode_1", "WindSpeed_1"};
 static char *s_sHY0134_2[] = {"Switch_2", "WindSpeed_2"};
@@ -106,14 +107,14 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
     {
         array_sub = cJSON_GetArrayItem(Data, cnt);
         Key = cJSON_GetObjectItem(array_sub, STR_KEY);
+
+        index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
         if (index == HY0134_INDEX)
         {
-            index_sub = strn_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen, 7);
+            if (index_sub < 0)
+                index_sub = strn_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen, 8);
         }
-        else
-        {
-            index_sub = str_search(Key->valuestring, g_SLocalAttr[index].attr, g_SLocalAttr[index].attrLen);
-        }
+
         out = NULL;
         if (index_sub < 0)
         {
@@ -130,7 +131,7 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
             switch (index_sub)
             {
             case 0:
-                out = &dev->Switch[0];
+                out = &dev->Switch;
                 break;
             case 1:
                 out = &dev->LedEnable;
@@ -308,36 +309,45 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
             switch (index_sub)
             {
             case 0:
-                out = &dev->CurrentTemperature_1;
+                out = &dev->CurrentTemperature;
                 break;
             case 1: //Switch_
-                pos = atoi(&Key->valuestring[num_pos]) - 1;
-                if (pos < sizeof(dev->Switch))
-                    out = &dev->Switch[pos];
+                out = &dev->Switch[0];
                 break;
-            case 2: //WindSpeed_
-                pos = atoi(&Key->valuestring[num_pos]) - 1;
-                if (pos < sizeof(dev->WindSpeed))
-                    out = &dev->WindSpeed[pos];
+            case 2: //Switch_
+                out = &dev->Switch[1];
                 break;
-
-            case 3: //TargetTemperature_
-                pos = atoi(&Key->valuestring[num_pos]) - 1;
-                if (pos < sizeof(dev->TargetTemperature))
-                    out = &dev->TargetTemperature[pos];
+            case 3: //Switch_
+                out = &dev->Switch[2];
                 break;
-            case 4:
-                out = &dev->WorkMode_1;
+            case 4: //WindSpeed_
+                out = &dev->WindSpeed[0];
                 break;
-            case 5:
-                pos = atoi(&Key->valuestring[num_pos]) - 1;
-                if (pos < sizeof(dev->Enable))
-                    out = &dev->Enable[pos];
+            case 5: //WindSpeed_
+                out = &dev->WindSpeed[1];
                 break;
-            case 6:
+            case 6: //TargetTemperature_
+                out = &dev->TargetTemperature[0];
+                break;
+            case 7: //TargetTemperature_
+                out = &dev->TargetTemperature[1];
+                break;
+            case 8:
+                out = &dev->WorkMode;
+                break;
+            case 9:
+                out = &dev->Enable[0];
+                break;
+            case 10:
+                out = &dev->Enable[1];
+                break;
+            case 11:
+                out = &dev->Enable[2];
+                break;
+            case 12:
                 out = &dev->KeyFobValue;
                 break;
-            case 7: //SceName_
+            case 13: //SceName_
                 pos = atoi(&Key->valuestring[num_pos]) - 1;
 
                 if (pos < sizeof(dev->SceName) / sizeof(dev->SceName[0]))
@@ -347,7 +357,7 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
                     dev->SceName[pos][sizeof(dev->SceName[0]) - 1] = '\0';
                 }
                 continue;
-            case 8: //ScePhoto_
+            case 14: //ScePhoto_
                 pos = atoi(&Key->valuestring[num_pos]) - 1;
                 if (pos < sizeof(dev->ScePhoto))
                     out = &dev->ScePhoto[pos];
@@ -367,7 +377,9 @@ int local_attribute_update(dev_local_t *dev_data, cJSON *Data)
         }
     }
 cloud:
-    res = local_tocloud(dev_data, index);
+    if (array_size != 1)
+        index_sub = -1;
+    res = local_tocloud(dev_data, index, index_sub);
     // pthread_mutex_unlock(local_get_mutex());
     return res;
 dev_register:
@@ -377,7 +389,7 @@ fail:
     return -1;
 }
 
-void local_singleDevice_onlineStatus(dev_local_t *src, int status)
+void hyLinkDevStatus(dev_local_t *src, int status)
 {
     if (src == NULL)
         return;
@@ -387,7 +399,7 @@ void local_singleDevice_onlineStatus(dev_local_t *src, int status)
     if (strcmp(src->ModelId, g_SLocalModel.attr[HY0134_INDEX]) == 0)
     {
         char sn[32] = {0};
-        stpcpy(sn, src->DeviceId);
+        strcpy(sn, src->DeviceId);
         int p = strlen(src->DeviceId);
         for (int j = 0; j < 3; j++)
         {
@@ -397,9 +409,9 @@ void local_singleDevice_onlineStatus(dev_local_t *src, int status)
     }
 }
 
-void local_allDevice_onlineStatus(int online, int status)
+void hyLinkStatus(int online, int status)
 {
-    log_info("local_allDevice_onlineStatus!,%d\n", status);
+    log_info("hyLinkStatus,%d\n", status);
 
     dev_local_t *ptr;
     struct list_head *head = local_get_list_head();
@@ -412,32 +424,32 @@ void local_allDevice_onlineStatus(int online, int status)
     {
         list_for_each_entry(ptr, head, node)
         {
-            local_singleDevice_onlineStatus(ptr, ptr->Online);
+            hyLinkDevStatus(ptr, ptr->Online);
         }
     }
     else
     {
         list_for_each_entry(ptr, head, node)
         {
-            local_singleDevice_onlineStatus(ptr, status);
+            hyLinkDevStatus(ptr, status);
         }
         sleep(4);
     }
 }
 
-void local_system_restartOrReFactory(int index)
+void hyLinkSystem(int index)
 {
-    log_info("local_system_restartOrReFactory:%d\n", index);
+    log_info("hyLinkSystem:%d\n", index);
     write_hanyar_cmd(STR_ADD, NULL, STR_NET_CLOSE);
     HILINK_StopSoftAp();
 
     if (index == INT_REFACTORY)
     {
-        local_allDevice_onlineStatus(0, DEV_RESTORE);
+        hyLinkStatus(0, DEV_RESTORE);
         local_delete_all_dev();
         sleep(1);
         write_hanyar_cmd(STR_REFACTORY, NULL, NULL);
-        sleep(1);
+
         run_closeCallback();
         cloud_control_destory();
         local_control_destory();
@@ -450,8 +462,7 @@ void local_system_restartOrReFactory(int index)
     }
     else
     {
-
-        local_allDevice_onlineStatus(0, DEV_OFFLINE);
+        hyLinkStatus(0, DEV_OFFLINE);
 
         run_closeCallback();
         cloud_control_destory();

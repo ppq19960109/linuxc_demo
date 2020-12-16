@@ -1,0 +1,49 @@
+{
+    "modelId": "TS0002",
+    "manuName": "_TYZB01_i8yav3hg",
+    "devName": "二键智能开关U2",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Version",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 0,
+            "AttributeId": 1
+        },
+        {
+            "hyKey": "Switch_1",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 6,
+            "AttributeId": 0,
+            "z3CtrlCmdType": 2,
+            "z3PrivateCluster": 0,
+            "dataType": 16
+        },
+        {
+            "hyKey": "Switch_2",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 2,
+            "ClusterId": 6,
+            "AttributeId": 0,
+            "z3CtrlCmdType": 2,
+            "z3PrivateCluster": 0,
+            "dataType": 16
+        },
+        {
+            "hyKey": "LedEnable",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 6,
+            "AttributeId": 32769,
+            "z3CtrlCmdType": 1,
+            "z3PrivateCluster": 0,
+            "dataType": 48
+        }
+    ]
+}

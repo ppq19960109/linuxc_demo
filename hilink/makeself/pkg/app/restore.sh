@@ -8,7 +8,7 @@ HYAPP_PATH="/userdata/hyapp"
 IOTAPP_PATH="/userdata/iotapp"
 
 APP_HILINK_CONFIG_FILE="/userdata/app/hilink*.cfg"
-ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
+ALL_APP="runing.sh hyDaemon hilinkapp hy_server_iot hydevapp"
 #kill app
 
 killall $ALL_APP

@@ -1,6 +1,6 @@
 #ifndef _CLOUD_SEND_H_
 #define _CLOUD_SEND_H_
-
+#include <pthread.h>
 #include "local_device.h"
 #include "list.h"
 
@@ -43,7 +43,7 @@ typedef struct
 {
     pid_t pid;
     CloudStatus cloud_status;
-    int registerFlag;
+    pthread_mutex_t mutex;
     struct list_head head;
 } CloudControl_t;
 
@@ -54,8 +54,7 @@ void cloud_control_destory();
 struct list_head *cloud_get_list_head();
 CloudStatus get_cloud_status(void);
 void set_cloud_status(CloudStatus status);
-int get_registerFlag(void);
-void set_registerFlag(void);
-int local_tocloud(dev_local_t *src, const int index);
 
+int local_tocloud(dev_local_t *src, const int index, int devAttr);
+int cloud_get_attr(dev_local_t *src, int index, const int index_sub, dev_cloud_t *out);
 #endif

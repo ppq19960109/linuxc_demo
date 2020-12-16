@@ -1,0 +1,63 @@
+#!/bin/bash
+# FIXME: These tests need to check that the concatenation of archives works
+
+SUT=$(realpath $(dirname $0)/../makeself.sh)
+SOURCE=$(realpath ..)
+
+setupTests() {
+  temp=`mktemp -d -t appendtest.XXXXX`
+  cd "$temp"
+  mkdir archive
+  cp -a $SOURCE archive/
+  $SUT $* archive makeself-test.run "Test $*" echo Testing --tar-extra="--exclude .git" 
+  mkdir -p append/append_dir/
+  cp -a $SOURCE/makeself.sh append/append_dir/
+}
+
+checkFiles() {
+  ./makeself-test.run --target "$temp/extact"
+  test -f "$temp/extact/append_dir/makeself.sh"
+  assertEqual $? 0
+  test -f "$temp/extact/makeself/makeself.sh"
+  assertEqual $? 0
+}
+
+
+testGzip()
+{
+  setupTests --gzip
+
+  $SUT --append append/ makeself-test.run
+  assertEqual $? 0
+  ./makeself-test.run --check
+  assertEqual $? 0
+
+  checkFiles
+}
+
+
+testNocomp()
+{
+  setupTests --nocomp
+
+  $SUT --append append/ makeself-test.run
+  assertEqual $? 0
+  ./makeself-test.run --check
+  assertEqual $? 0
+
+  checkFiles
+}
+
+testBzip2()
+{
+  setupTests --bzip2
+
+  $SUT --append append/ makeself-test.run
+  assertEqual $? 0
+  ./makeself-test.run --check
+  assertEqual $? 0
+
+  checkFiles
+}
+
+source bashunit/bashunit.bash

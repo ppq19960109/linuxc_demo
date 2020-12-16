@@ -11,7 +11,7 @@ extern "C"
     typedef struct
     {
         char *const *attr;
-        char attrLen;
+        unsigned short attrLen;
     } SAttrInfo;
 
     typedef struct
@@ -23,10 +23,9 @@ extern "C"
 
     typedef struct
     {
-        char Switch[1];
+        char Switch;
         char LedEnable;
         char PowerOffProtection;
-        int countdown;
     } dev_HY0095_t; //U2/天际系列：单键智能开关（HY0095）
 
     typedef struct
@@ -34,14 +33,12 @@ extern "C"
         char Switch[2];
         char LedEnable;
         char PowerOffProtection;
-        int countdown[3];
     } dev_HY0096_t; //U2/天际系列：双键智能开关（HY0096）
     typedef struct
     {
         char Switch[3];
         char LedEnable;
         char PowerOffProtection;
-        int countdown[3];
     } dev_HY0097_t; //U2/天际系列：三键智能开关（HY0097）
 
     typedef struct
@@ -57,7 +54,6 @@ extern "C"
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
-        int countdown;
     } dev_HY0121_t; //1路智能开关模块（HY0121，型号IHC1238）
     typedef struct
     {
@@ -65,7 +61,6 @@ extern "C"
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
-        int countdown[2];
     } dev_HY0122_t; //2路智能开关模块（HY0122，型号IHC1239）
     typedef struct
     {
@@ -73,7 +68,6 @@ extern "C"
         char LedEnable;
         char PowerOffProtection;
         char KeyMode;
-        int countdown[3];
     } dev_HY0107_t; //3路智能开关模块（HY0107，型号IHC1240）
 
     //----------------------------------
@@ -94,27 +88,26 @@ extern "C"
         char ScePhoto[12];
         char Enable[3];
         char Switch[3];
-        char CurrentTemperature_1;
-        char TargetTemperature[3];
-        char WorkMode_1;
+        char CurrentTemperature;
+        char TargetTemperature[2];
+        char WorkMode;
         char WindSpeed[2];
 
     } dev_HY0134_t; //U2/天际系列：智镜/全面屏/触控屏（HY0134）
-
 
     extern const SAttrInfo g_SLocalModel;
     extern const SAttrInfo g_SLocalAttr[];
 
     int local_attribute_update(dev_local_t *dev, cJSON *Data);
 
-    void local_singleDevice_onlineStatus(dev_local_t *src, int status);
-    void local_allDevice_onlineStatus(int online, int status);
+    void hyLinkDevStatus(dev_local_t *src, int status);
+    void hyLinkStatus(int online, int status);
 
 #define INT_REBOOT 0
 #define INT_REFACTORY 1
 #define INT_OFFLINE 2
 
-    void local_system_restartOrReFactory(int index);
+    void hyLinkSystem(int index);
 #ifdef __cplusplus
 }
 #endif

@@ -4,7 +4,7 @@ echo "start install......"
 #Add operation permission
 chmod -R 777 ./
 #kill app
-ALL_APP="runing.sh hy_daemon hilinkapp hy_server_iot hydevapp"
+ALL_APP="runing.sh hyDaemon hilinkapp hy_server_iot hydevapp"
 killall $ALL_APP
 # sleep 4
 

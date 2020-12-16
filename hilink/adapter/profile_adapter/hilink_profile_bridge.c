@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "hilink_profile_bridge.h"
 #include "hilink_profile_adapter.h"
@@ -15,6 +16,7 @@
 #include "cloud_receive.h"
 #include "cloud_list.h"
 #include "local_list.h"
+#include "local_send.h"
 
 #ifndef NULL
 #define NULL 0
@@ -43,7 +45,6 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
         return -1;
     }
     memcpy(devInfo, &dev->brgDevInfo, sizeof(BrgDevInfo));
-    // log_debug("HilinkGetBrgDevInfo sn:%s\n", sn);
     return 0;
 }
 
@@ -75,10 +76,9 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
     {
         strcpy(svcInfo->st[i], dev->devSvc[i].svcId);
         strcpy(svcInfo->svcId[i], dev->devSvc[i].svcId);
-        // log_debug("HilinkGetBrgSvcInfo svcInfo:%s\n", svcInfo->st[i]);
+        log_debug("HilinkGetBrgSvcInfo svcInfo:%s\n", svcInfo->st[i]);
     }
     *svcNum = dev->devSvcNum;
-
     return 0;
 }
 
@@ -104,6 +104,7 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
 
     cloud_tolocal(sn, svcId, payload);
     return -111;
+    // return 0;
 }
 
 /*
@@ -127,6 +128,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
     }
 
     dev_cloud_t *dev = list_get_by_id_cloud(sn);
+    char ret = 0;
 
     if (dev == NULL)
     {
@@ -137,8 +139,17 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
         if (strcmp(dev->devSvc[i].svcId, in->svcId) == 0)
         {
             if (dev->devSvc[i].svcVal == NULL)
-                return -1;
-
+            {
+                log_error("svcVal null svcId %s\n", dev->devSvc[i].svcId);
+                cloud_get_attr(NULL, 0, -1, dev);
+                if (dev->devSvc[i].svcVal == NULL)
+                {
+                    log_error("svcVal null\n");
+                    goto fail;
+                }
+                log_error("svcVal %s\n", dev->devSvc[i].svcVal);
+                ret = 1;
+            }
             *outLen = strlen(dev->devSvc[i].svcVal) + 1;
             *out = malloc(*outLen);
             strcpy(*out, dev->devSvc[i].svcVal);
@@ -146,12 +157,15 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
             break;
         }
     }
-    if (get_registerFlag())
+
+    if (ret)
     {
-        log_debug("cloud_singleDevice_offlink\n");
-        // cloud_singleDevice_offlink(sn);
+        write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
     }
     return 0;
+fail:
+    write_hanyar_cmd(STR_DEVSINFO, NULL, NULL);
+    return -1;
 }
 
 /*

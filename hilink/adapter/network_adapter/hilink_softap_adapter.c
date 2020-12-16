@@ -9,7 +9,6 @@
 #include "hilink_netconfig_mode_mgt.h"
 
 #include "net_info.h"
-#include "wifi.h"
 #include "tool.h"
 /*
  * 获取广播ip
@@ -21,16 +20,9 @@
 int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 {
     log_info("HILINK_GetBroadcastIp\n");
-    int ret;
-    enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
-    if (net_mode == HILINK_NETCONFIG_WIFI)
-    {
-        ret = get_local_broadcastIp("wlan0", broadcastIp, len);
-    }
-    else
-    {
-        ret = get_local_broadcastIp(ETH_NAME, broadcastIp, len);
-    }
+
+    int ret = get_local_broadcastIp(ETH_NAME, broadcastIp, len);
+
     return ret;
 }
 
@@ -43,32 +35,6 @@ int HILINK_GetBroadcastIp(char *broadcastIp, unsigned char len)
 
 int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
 {
-    log_info("HILINK_StartSoftAp ssid:%s\n", ssid);
-    char cmdline[128] = {0};
-
-    create_hostapd_file(AP_NAME, ssid, "1234567890");
-
-    HILINK_StopSoftAp();
-    system("echo \"1\" > /proc/sys/net/ipv4/ip_forward");
-
-    sprintf(cmdline, "ifconfig %s %s.1 netmask 255.255.255.0", AP_NAME, IPADDR);
-    console_run(cmdline);
-    sprintf(cmdline, "route add default gw %s %s.1", AP_NAME, IPADDR);
-    console_run(cmdline);
-
-    sprintf(cmdline, "ifconfig %s down", AP_NAME);
-    console_run(cmdline);
-    sleep(1);
-    sprintf(cmdline, "ifconfig %s up", AP_NAME);
-    console_run(cmdline);
-
-    sprintf(cmdline, "hostapd %s -B", HOSTAPD_CONF_DIR);
-    console_run(cmdline);
-
-    sprintf(cmdline, "dnsmasq -i%s  --dhcp-option=3,%s.1 --dhcp-range=%s.50,%s.200,24h", AP_NAME, IPADDR, IPADDR, IPADDR);
-    console_run(cmdline);
-    sprintf(cmdline, "iptables -t nat -A POSTROUTING -s %s.1/24 -o eth0 -j MASQUERADE", IPADDR);
-    console_run(cmdline);
     return 0;
 }
 
@@ -78,11 +44,5 @@ int HILINK_StartSoftAp(const char *ssid, unsigned int ssidLen)
  */
 int HILINK_StopSoftAp(void)
 {
-    log_info("HILINK_StopSoftAp\n");
-    if (get_hostapd_pid())
-        system("killall hostapd");
-    if (get_dnsmasq_pid())
-        system("killall dnsmasq");
-    system("iptables -t nat -F");
     return 0;
 }

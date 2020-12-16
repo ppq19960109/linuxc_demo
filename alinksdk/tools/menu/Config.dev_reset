@@ -1,0 +1,5 @@
+config DEV_RESET
+    bool
+    default y
+    select MQTT_COMM_ENABLED
+    select HAL_KV

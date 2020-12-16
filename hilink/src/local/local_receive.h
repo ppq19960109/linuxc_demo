@@ -82,7 +82,7 @@ extern "C"
     pthread_mutex_t *local_get_mutex();
     dev_local_t *local_get_gateway();
 
-    void recv_toLocal(char *data, int len);
+    int read_from_local(const char *json);
 #ifdef __cplusplus
 }
 #endif

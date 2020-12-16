@@ -7,24 +7,43 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/reboot.h>
+#include <sys/stat.h>
 
 #include "hilink_network_adapter.h"
 #include "hilink_netconfig_mode_mgt.h"
 
 #include "net_info.h"
-#include "wifi.h"
 #include "tool.h"
+static int network_online = 0;
 
-char wifi_ssid[32];
-char wifi_psk[32];
+int splitToInt(char *str, char *out, unsigned char outlen)
+{
+    char *token = strtok(str, ":");
+    // char *ptr;
+    int i = 0;
+    for (i = 0; token != NULL && i < outlen; ++i)
+    {
+        out[i] = strtol(token, NULL, 16);
+        token = strtok(NULL, ":");
+    }
 
-// char *cmd_remove = "wpa_cli -i wlan0 remove_network 0";
-// char *cmd_add = "wpa_cli -i wlan0 add_network";
-// char *cmd_disable = "wpa_cli -i wlan0 disable_network 0";
-// char *cmd_enable = "wpa_cli -i wlan0 enable_network 0";
-// char *cmd_save = "wpa_cli -i wlan0 save_config";
-// char *cmd_udhcp = "udhcpc -i wlan0";
+    return i;
+}
 
+long getFileSize(const char *path)
+{
+    long filesize = -1;
+    struct stat statbuff;
+    if (stat(path, &statbuff) < 0)
+    {
+        return filesize;
+    }
+    else
+    {
+        filesize = statbuff.st_size;
+    }
+    return filesize;
+}
 /*
  * 获取本地ip
  * localIp表示存放Ip的缓冲
@@ -34,18 +53,38 @@ char wifi_psk[32];
  */
 int HILINK_GetLocalIp(char *localIp, unsigned char len)
 {
-    int ret;
-    enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
-    if (net_mode == HILINK_NETCONFIG_WIFI)
+    int ret = get_local_ip(ETH_NAME, localIp, len);
+    if (ret < 0)
+        goto fail;
+    ret = get_link_status(ETH_NAME);
+    // log_info("HILINK_GetLocalIp:%s %d\n", localIp, len);
+    if (ret < 0)
+        goto fail;
+    if (network_online < 16)
     {
-        ret = getWiFiIp(localIp, len);
+        log_info("network online\n");
+        network_online = 16;
+        // sleep(1);
     }
-    else
+    // if (getFileSize("/userdata/resolv.conf") <= 10)
+    // {
+    //     log_info("getFileSize resolv.conf less\n");
+    //     system("echo nameserver 114.114.114.114 > /userdata/resolv.conf");
+    //     system("echo nameserver 8.8.8.8 >> /userdata/resolv.conf");
+    // }
+    return 0;
+fail:
+    if (network_online > 0)
     {
-        ret = get_local_ip(ETH_NAME, localIp, len);
+        --network_online;
+        if (network_online == 0)
+        {
+            log_info("network unonline\n");
+            system("dhclient -cf /userdata/app/dhclient.conf -r");
+            system("dhclient -cf /userdata/app/dhclient.conf -nw");
+        }
     }
-    // log_info("HILINK_GetLocalIp:%s %d,ret:%d\n", localIp, len,ret);
-    return ret;
+    return -1;
 }
 
 /*
@@ -59,15 +98,8 @@ int HILINK_GetMacAddr(unsigned char *mac, unsigned char len)
 {
     int ret;
     char str[20];
-    enum HILINK_NetConfigMode net_mode = HILINK_GetNetConfigMode();
-    if (net_mode == HILINK_NETCONFIG_WIFI)
-    {
-        ret = getWiFiMac(str, sizeof(str));
-    }
-    else
-    {
-        ret = get_local_mac(ETH_NAME, str, sizeof(str));
-    }
+
+    ret = get_local_mac(ETH_NAME, str, sizeof(str));
 
     splitToInt(str, mac, len);
 
@@ -85,15 +117,6 @@ int HILINK_GetWiFiSsid(char *ssid, unsigned int *ssidLen)
 {
     log_info("HILINK_GetWiFiSsid\n");
 
-    if (getWiFiState() == 3)
-    {
-        int ret = getWiFiSsid(ssid, ssidLen);
-        if (ret == 0)
-        {
-            strcpy(wifi_ssid, ssid);
-        }
-        return ret;
-    }
     return 0;
 }
 
@@ -115,7 +138,6 @@ int HILINK_SetWiFiInfo(const char *ssid, unsigned int ssidLen, const char *pwd, 
     {
         return -1;
     }
-    save_ssid_psk(ssid, pwd);
 
     return 0;
 }
@@ -124,10 +146,6 @@ int HILINK_SetWiFiInfo(const char *ssid, unsigned int ssidLen, const char *pwd, 
 void HILINK_ReconnectWiFi(void)
 {
     log_info("HILINK_ReconnectWiFi\n");
-    // system(cmd_disable);
-    // system(cmd_enable);
-    // system(cmd_udhcp);
-    reconnectWiFi();
     return;
 }
 
@@ -137,36 +155,9 @@ void HILINK_ReconnectWiFi(void)
  */
 int HILINK_ConnectWiFi(void)
 {
-    // int ret = get_link_status(ETH_NAME);
-    // if (ret == 0)
-    // {
-    //     return 0;
-    // }
     log_info("HILINK_ConnectWiFi\n");
-    // system(cmd_remove);
-    // system(cmd_add);
 
-    // char cmd_ssid[64] = {"wpa_cli -i wlan0 set_network 0 ssid '\""};
-    // strcpy(&cmd_ssid[strlen(cmd_ssid)], wifi_ssid);
-    // strcpy(&cmd_ssid[strlen(cmd_ssid)], "\"'");
-
-    // char cmd_psk[64] = {"wpa_cli -i wlan0 set_network 0 psk '\""};
-    // strcpy(&cmd_psk[strlen(cmd_psk)], wifi_psk);
-    // strcpy(&cmd_psk[strlen(cmd_psk)], "\"'");
-
-    // log_info("cmd_ssid %s", cmd_ssid);
-    // log_info("cmd_psk %s", cmd_psk);
-    // system(cmd_ssid);
-    // system(cmd_psk);
-
-    // system(cmd_enable);
-    // system(cmd_udhcp);
-
-    int ret = read_ssid_psk(wifi_ssid, wifi_psk);
-    if (ret != 0)
-        return -1;
-    printf("read_ssid_psk %s,%s\n", wifi_ssid, wifi_psk);
-    return connectWiFi(wifi_ssid, wifi_psk);
+    return 0;
 }
 
 /*
@@ -177,7 +168,7 @@ int HILINK_ConnectWiFi(void)
 
 int HILINK_GetNetworkState(int *state)
 {
-    char ip[16];
+    char ip[18];
     if (HILINK_GetLocalIp(ip, sizeof(ip)) != 0)
     {
         *state = 0;
@@ -205,15 +196,7 @@ int HILINK_GetNetworkState(int *state)
 int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
 {
     log_info("HILINK_GetWiFiBssid %s,%d\n", bssid, *bssidLen);
-    if (getWiFiState() == 3)
-    {
-        char str[20];
-        int ret = getWiFiBssid(str, sizeof(str));
-        *bssidLen = splitToInt(str, bssid, 6);
 
-        return ret;
-    }
-    *bssidLen = 0;
     return 0;
 }
 
@@ -224,19 +207,8 @@ int HILINK_GetWiFiBssid(unsigned char *bssid, unsigned char *bssidLen)
  */
 int HILINK_GetWiFiRssi(signed char *rssi)
 {
-    // log_info("HILINK_GetWiFiRssi");
-    // FILE *pFile = popen("iwconfig wlan0| grep Signal level -Eo '[\-][0-9][0-9]*' | awk 'NR==1{print $1}'iwconfig wlan0| grep Signal level -Eo \'[\\-][0-9][0-9]*\' | awk \'NR==1{print $1}\'", "r");
+    log_info("HILINK_GetWiFiRssi\n");
 
-    // char szBuf[8] = {0};
-    // char cmd[100] = {0};
-    // sprintf(cmd, "wpa_cli scan_results | grep %s |awk \'{print $3}\'", wifi_ssid);
-    // popen_cmd(cmd, "r", szBuf, sizeof(szBuf));
-    // *rssi = atoi(szBuf);
-    // log_info("HILINK_GetWiFiRssi:%s,%d\n", szBuf, *rssi);
-    if (getWiFiState() == 3)
-    {
-        return getWiFiRssi(rssi, wifi_ssid);
-    }
     return 0;
 }
 
@@ -256,24 +228,11 @@ int HILINK_Restart(void)
 /* 限制最多同时接入两个station */
 void HILINK_SetStationNumLimit(void)
 {
-    log_info("HILINK_SetStationNumLimit\n");
-    system("hostapd_cli -iwlan0 set max_num_sta 2");
-    system("hostapd_cli -iwlan0 reload");
     return;
 }
 
 /* SoftAp配网过程中，根据IP踢除对应的station */
 void HILINK_DisconnectStation(const char *ip)
 {
-    log_info("HILINK_DisconnectStation\n");
-    char cmdline[128] = {0};
-    sprintf(cmdline, "arp %s | grep -Eo '([0-9a-fA-F]{2})(([\\s:-][0-9a-fA-F]{2}){5})'", ip);
-    char buf[20];
-
-    popen_cmd(cmdline, "r", buf, sizeof(buf));
-    printf("arp ret:%s\n", buf);
-    sprintf(cmdline, "hostapd_cli  disassociate %s", buf);
-
-    console_run(cmdline);
     return;
 }

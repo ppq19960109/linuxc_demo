@@ -6,26 +6,27 @@
 #include <sys/types.h>
 #include "cloud_send.h"
 #include "cloud_list.h"
-
+#include "cloud_receive.h"
 #include "tool.h"
-
+#include "local_list.h"
 #include "hilink.h"
 #include "hilink_profile_adapter.h"
+
+static const char *sc_sceName[] = {"回家", "离家", "会客", "影音", "全开", "全关"};
+static char *s_sCloudHY0134Temperature[] = {STR_CURRENT, STR_TARGET};
 
 static char *s_cloudHY0095[] = {"switch1", "indicator"};
 static char *s_cloudHY0096[] = {"switch1", "switch2", "indicator"};
 static char *s_cloudHY0097[] = {"switch1", "switch2", "switch3", "indicator"};
 static char *s_cloud09223f[] = {"cct", "brightness", "switch"};
 static char *s_cloudHY0121[] = {"switch", "indicator"};
-static char *s_cloudHY0122[] = {"switch1", "switch2", "indicator", "switch"};
-static char *s_cloudHY0107[] = {"switch1", "switch2", "switch3", "indicator", "switch"};
+static char *s_cloudHY0122[] = {"switch1", "switch2", "indicator"};
+static char *s_cloudHY0107[] = {"switch1", "switch2", "switch3", "indicator"};
 static char *s_cloudHY0093[] = {"doorEvent", "status"};
 static char *s_cloudHY0134[] = {"scene", "button1", "button2", "button3", "button4", "button5", "button6"}; //场景面板2ANF
 static char *s_cloudHY0134_0[] = {"switch", "temperature"};                                                 //地暖 2ANK
 static char *s_cloudHY0134_1[] = {"switch", "temperature", "mode", "fan"};                                  //空调2ANJ
 static char *s_cloudHY0134_2[] = {"switch", "fan"};                                                         //新风 2ANI
-
-static char *s_sCloudHY0134Temperature[] = {STR_CURRENT, STR_TARGET};
 
 const SAttrInfo g_SCloudAttr[] = {
     {.attr = s_cloudHY0095,
@@ -65,6 +66,7 @@ static char *s_cloud2ANF[] = {"2ANF", "U2-86QMP-Z02(HW)", "075"};
 static char *s_cloud2ANK[] = {"2ANK", "U2-86QMP-Z02(HW)", "012"};
 static char *s_cloud2ANJ[] = {"2ANJ", "U2-86QMP-Z02(HW)", "012"};
 static char *s_cloud2ANI[] = {"2ANI", "U2-86QMP-Z02(HW)", "030"};
+
 static const SAttrInfo g_SCloudProdId[] = {
     {.attr = s_cloud2AP1},
     {.attr = s_cloud2AP0},
@@ -80,18 +82,18 @@ static const SAttrInfo g_SCloudProdId[] = {
     {.attr = s_cloud2ANI},
 };
 
-int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out);
-
 static CloudControl_t g_SCloudControl;
 
 void cloud_control_init()
 {
+    pthread_mutex_init(&g_SCloudControl.mutex, NULL);
     list_init_cloud(&g_SCloudControl.head);
     g_SCloudControl.pid = getpid();
 }
 
 void cloud_control_destory()
 {
+    pthread_mutex_destroy(&g_SCloudControl.mutex);
     list_del_all_cloud();
 }
 
@@ -109,15 +111,8 @@ void set_cloud_status(CloudStatus status)
 {
     g_SCloudControl.cloud_status = status;
 }
-int get_registerFlag(void)
-{
-    return g_SCloudControl.registerFlag;
-}
 
-void set_registerFlag(void)
-{
-    g_SCloudControl.registerFlag = 1;
-}
+
 void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
 {
     // strcpy(brgDevInfo->prodId, PRODUCT_ID);
@@ -125,7 +120,7 @@ void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
     strcpy(brgDevInfo->fwv, "1.0.0");
     strcpy(brgDevInfo->hwv, "1.0.0");
     strcpy(brgDevInfo->swv, "1.0.0");
-    brgDevInfo->protType = PROTOCOL_TYPE;
+    brgDevInfo->protType = 3;
     strcpy(brgDevInfo->manu, MANUAFACTURER);
 
     // strcpy(brgDevInfo->sn, "12345678");
@@ -138,9 +133,6 @@ int modSvc(const char *sn, const char *svcId, char **svcVal, char *json)
 {
     if (json == NULL)
         return -1;
-    // if (*svcVal != NULL)
-    // {
-    // }
 
     if (*svcVal == NULL || strcmp(*svcVal, json) != 0)
     {
@@ -200,7 +192,7 @@ void reportBrgAllSubDevState(const int index, const char *sn, dev_local_t *local
 
     cJSON_AddStringToObject(obj, "sn", sn);
     cJSON *array = cJSON_AddArrayToObject(obj, "services");
-    cloud_get_attr(local, index, out);
+
     for (int i = 0; i < out->devSvcNum; ++i)
     {
         cJSON *svc = cJSON_CreateObject();
@@ -234,10 +226,10 @@ int cloud_add_device(const int index, dev_cloud_t **out, const char *sn, dev_loc
     BrgDevInfo_init(brgDevInfo);
     strcpy(brgDevInfo->sn, sn);
     strcpy(brgDevInfo->mac, local->GatewayId);
-    if (strlen(local->Version) > 0 && isdigit(local->Version[0]) && strcmp(brgDevInfo->fwv, local->Version))
-    {
-        strcpy(brgDevInfo->fwv, local->Version);
-    }
+    // if (strlen(local->Version) > 0 && isdigit(local->Version[0]) && strcmp(brgDevInfo->fwv, local->Version))
+    // {
+    //     strcpy(brgDevInfo->fwv, local->Version);
+    // }
 
     cloud_init_device_attr(index, brgDevInfo);
     cloud_add_device_attr(index, *out, brgDevInfo->sn);
@@ -277,8 +269,31 @@ void cloud_update_device_str(cJSON *root, char *key, char *value, dev_cloud_t *o
     modSvc(out->brgDevInfo.sn, out->devSvc[pos].svcId, &out->devSvc[pos].svcVal, json);
 }
 
-int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out)
+int cloud_get_attr(dev_local_t *src, int index, const int index_sub, dev_cloud_t *out)
 {
+    pthread_mutex_lock(&g_SCloudControl.mutex);
+    if (src == NULL)
+    {
+        char ssn[40] = {0};
+        index = str_search(out->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
+
+        strcpy(ssn, out->brgDevInfo.sn);
+
+        switch (index)
+        {
+        case 9:
+        case 10:
+        case 11:
+        {
+            int p = strlen(ssn);
+            ssn[p] = 0;
+        }
+        break;
+        }
+        src = list_get_by_id_local(ssn);
+        if (src == NULL)
+            goto fail;
+    }
 
     int pos = 0, i;
     cJSON *root = cJSON_CreateObject();
@@ -288,93 +303,211 @@ int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out)
     case 0: //U2/天际系列：单键智能开关（HY0095）
     {
         dev_HY0095_t *dev_sub = (dev_HY0095_t *)src->private;
-        //Switch
-        cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out, pos++);
 
-        //indicator
-        cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+        switch (index_sub)
+        {
+        case 0:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, index_sub);
+            break;
+        case 1:
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, index_sub);
+            break;
+        default:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, pos++);
+
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+            break;
+        }
     }
     break;
     case 1: //U2/天际系列：双键智能开关（HY0096）
     {
         dev_HY0096_t *dev_sub = (dev_HY0096_t *)src->private;
-
-        //Switch
-        for (i = 0; i < 2; ++i)
+        switch (index_sub)
         {
-            cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+        case 0:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out, index_sub);
+            break;
+        case 1:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out, index_sub);
+            break;
+        case 2:
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, index_sub);
+            break;
+        default:
+            //Switch
+            for (i = 0; i < 2; ++i)
+            {
+                cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+            }
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+
+            break;
         }
-        //indicator
-        cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
     }
     break;
     case 2: //U2/天际系列：三键智能开关（HY0097）
     {
         dev_HY0097_t *dev_sub = (dev_HY0097_t *)src->private;
-
-        //Switch
-        for (i = 0; i < 3; ++i)
+        switch (index_sub)
         {
-            cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+        case 0:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out, index_sub);
+            break;
+        case 1:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out, index_sub);
+            break;
+        case 2:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out, index_sub);
+            break;
+        case 3:
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, index_sub);
+            break;
+        default:
+            //Switch
+            for (i = 0; i < 3; ++i)
+            {
+                cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+            }
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+
+            break;
         }
-        //indicator
-        cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
     }
     break;
     case 3: //DLT调光
     {
 
         dev_09223f_t *dev_sub = (dev_09223f_t *)src->private;
+        switch (index_sub)
+        {
+        case 0:
+            //cct
+            cloud_update_device_int(root, STR_COLORTEMPERATURE, dev_sub->ColorTemperature, out, index_sub);
+            break;
+        case 1:
+            //brightness
+            cloud_update_device_int(root, STR_BRIGHTNESS, dev_sub->Luminance, out, index_sub);
+            break;
+        case 2:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, index_sub);
+            break;
+        default:
+            //cct
+            cloud_update_device_int(root, STR_COLORTEMPERATURE, dev_sub->ColorTemperature, out, pos++);
 
-        //cct
-        cloud_update_device_int(root, STR_COLORTEMPERATURE, dev_sub->ColorTemperature, out, pos++);
+            //brightness
+            cloud_update_device_int(root, STR_BRIGHTNESS, dev_sub->Luminance, out, pos++);
 
-        //brightness
-        cloud_update_device_int(root, STR_BRIGHTNESS, dev_sub->Luminance, out, pos++);
-
-        //Switch
-        cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, pos++);
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, pos++);
+            break;
+        }
     }
     break;
     case 4: //1路智能开关模块（HY0121，型号IHC1238）
     {
         dev_HY0121_t *dev_sub = (dev_HY0121_t *)src->private;
 
-        //Switch
-        cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, pos++);
+        switch (index_sub)
+        {
+        case 0:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, index_sub);
+            break;
+        case 1:
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, index_sub);
+            break;
+        default:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch, out, pos++);
 
-        //indicator
-        cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+            break;
+        }
     }
     break;
     case 5: //2路智能开关模块（HY0122，型号IHC1239）
     {
         dev_HY0122_t *dev_sub = (dev_HY0122_t *)src->private;
 
-        //Switch
-        for (i = 0; i < 2; ++i)
+        switch (index_sub)
         {
-            cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+        case 0:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out, index_sub);
+            break;
+        case 1:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out, index_sub);
+            break;
+        case 2:
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, index_sub);
+            break;
+        default:
+            //Switch
+            for (i = 0; i < 2; ++i)
+            {
+                cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+            }
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+            //switch
+            // cloud_update_device_int(root, STR_ON, 0, out, pos++);
+            break;
         }
-        //indicator
-        cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
-
-        cloud_update_device_int(root, STR_ON, 0, out, pos++);
     }
     break;
     case 6: //3路智能开关模块（HY0107，型号IHC1240）
     {
         dev_HY0107_t *dev_sub = (dev_HY0107_t *)src->private;
-
-        //Switch
-        for (i = 0; i < 3; ++i)
+        switch (index_sub)
         {
-            cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+        case 0:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out, index_sub);
+            break;
+        case 1:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out, index_sub);
+            break;
+        case 2:
+            //Switch
+            cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out, index_sub);
+            break;
+        case 3:
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, index_sub);
+            break;
+        default:
+            //Switch
+            for (i = 0; i < 3; ++i)
+            {
+                cloud_update_device_int(root, STR_ON, dev_sub->Switch[i], out, pos++);
+            }
+            //indicator
+            cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
+            //switch
+            // cloud_update_device_int(root, STR_ON, 0, out, pos++);
+            break;
         }
-        //indicator
-        cloud_update_device_int(root, STR_MODE, dev_sub->LedEnable, out, pos++);
-
-        cloud_update_device_int(root, STR_ON, 0, out, pos++);
     }
     break;
     case 7: //门窗传感器
@@ -415,35 +548,61 @@ int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out)
         //-------------------------------------------------------------
         //场景面板
 
-        // if (out->devSvc[pos].svcVal == NULL)
-        // {
-        //     dev_sub->KeyFobValue = 0xff;
-        // }
-
-        // if (dev_sub->KeyFobValue != 0xff)
-        // {
-        //     free(out->devSvc[pos].svcVal);
-        //     out->devSvc[pos].svcVal = malloc(1);
-        //     out->devSvc[pos].svcVal[0] = 0;
-        // }
-
-        cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
-        dev_sub->KeyFobValue = 0;
-
-        // const char name[] = {0xe5, 0x9b, 0x9e, 0xe5, 0xae, 0xb6, 0x00};
-
-        for (i = 0; i < 6; ++i)
+        if (index_sub == 12)
         {
-            if (strlen(dev_sub->SceName[i]) == 0)
-                sprintf(dev_sub->SceName[i], "场景%d", i + 1);
+            pos = 0;
+            if (dev_sub->KeyFobValue != 0)
+            {
+                if (out->devSvc[pos].svcVal != NULL)
+                    free(out->devSvc[pos].svcVal);
+                out->devSvc[pos].svcVal = malloc(1);
+                out->devSvc[pos].svcVal[0] = 0;
+            }
 
-            cloud_update_device_str(root, STR_NAME, dev_sub->SceName[i], out, pos++);
+            cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
+            dev_sub->KeyFobValue = 0;
+            goto update;
+        }
+        else if (index_sub == 13)
+        {
+            pos = 1;
+            for (i = 0; i < 6; ++i)
+            {
+                if (strlen(dev_sub->SceName[i]) == 0)
+                    strcpy(dev_sub->SceName[i], sc_sceName[i]);
+
+                cloud_update_device_str(root, STR_NAME, dev_sub->SceName[i], out, pos++);
+            }
+            goto update;
+        }
+        else
+        {
+            if (dev_sub->KeyFobValue != 0)
+            {
+                if (out->devSvc[pos].svcVal != NULL)
+                    free(out->devSvc[pos].svcVal);
+                out->devSvc[pos].svcVal = malloc(1);
+                out->devSvc[pos].svcVal[0] = 0;
+            }
+
+            cloud_update_device_int(root, STR_NUM, dev_sub->KeyFobValue, out, pos++);
+            dev_sub->KeyFobValue = 0;
+
+            // const char name[] = {0xe5, 0x9b, 0x9e, 0xe5, 0xae, 0xb6, 0x00};
+
+            for (i = 0; i < 6; ++i)
+            {
+                if (strlen(dev_sub->SceName[i]) == 0)
+                    sprintf(dev_sub->SceName[i], "场景%d", i + 1);
+
+                cloud_update_device_str(root, STR_NAME, dev_sub->SceName[i], out, pos++);
+            }
         }
         //-------------------------------------------------------------
 
         dev_cloud_t *out_sub[3] = {0};
         char sn[32] = {0};
-        stpcpy(sn, src->DeviceId);
+        strcpy(sn, src->DeviceId);
         int p = strlen(src->DeviceId);
         for (int j = 0; j < 3; j++)
         {
@@ -459,65 +618,135 @@ int cloud_get_attr(dev_local_t *src, const int index, dev_cloud_t *out)
             switch (j)
             {
             case 0:
-            {
-                cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out_sub[j], pos++);
+                if (index_sub == 3)
+                {
+                    pos = 0;
+                    cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out_sub[j], pos++);
+                    goto update;
+                }
+                else if (index_sub == 0)
+                {
+                    pos = 1;
+                    char value[2] = {dev_sub->CurrentTemperature, dev_sub->TargetTemperature[1]};
+                    cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
+                }
+                else if (index_sub == 7)
+                {
+                    pos = 1;
+                    char value[2] = {dev_sub->CurrentTemperature, dev_sub->TargetTemperature[1]};
+                    cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
+                    goto update;
+                }
+                else
+                {
+                    cloud_update_device_int(root, STR_ON, dev_sub->Switch[2], out_sub[j], pos++);
 
-                char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature[2]};
-                cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
-            }
-            break;
+                    char value[2] = {dev_sub->CurrentTemperature, dev_sub->TargetTemperature[1]};
+                    cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
+                }
+
+                break;
             case 1:
-            {
-                cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out_sub[j], pos++);
 
-                char value[2] = {dev_sub->CurrentTemperature_1, dev_sub->TargetTemperature[0]};
-                cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
+                if (index_sub == 1)
+                {
+                    pos = 0;
+                    cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out_sub[j], pos++);
+                    goto update;
+                }
+                else if (index_sub == 0)
+                {
+                    pos = 1;
+                    char value[2] = {dev_sub->CurrentTemperature, dev_sub->TargetTemperature[0]};
+                    cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
+                }
+                else if (index_sub == 6)
+                {
+                    pos = 1;
+                    char value[2] = {dev_sub->CurrentTemperature, dev_sub->TargetTemperature[0]};
+                    cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
+                    goto update;
+                }
+                else if (index_sub == 8)
+                {
+                    pos = 2;
+                    cloud_update_device_int(root, STR_MODE, dev_sub->WorkMode, out_sub[j], pos++);
+                    goto update;
+                }
+                else if (index_sub == 4)
+                {
+                    pos = 3;
+                    cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0], out_sub[j], pos++);
+                    goto update;
+                }
+                else
+                {
+                    cloud_update_device_int(root, STR_ON, dev_sub->Switch[0], out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_MODE, dev_sub->WorkMode_1, out_sub[j], pos++);
+                    char value[2] = {dev_sub->CurrentTemperature, dev_sub->TargetTemperature[0]};
+                    cloud_update_device_int_array(root, s_sCloudHY0134Temperature, value, sizeof(value), out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0], out_sub[j], pos++);
-            }
-            break;
+                    cloud_update_device_int(root, STR_MODE, dev_sub->WorkMode, out_sub[j], pos++);
+
+                    cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[0], out_sub[j], pos++);
+                }
+
+                break;
             case 2:
-                cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out_sub[j], pos++);
+                if (index_sub == 2)
+                {
+                    pos = 0;
+                    cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out_sub[j], pos++);
+                    goto update;
+                }
+                else if (index_sub == 5)
+                {
+                    pos = 1;
+                    cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1], out_sub[j], pos++);
+                    goto update;
+                }
+                else
+                {
+                    cloud_update_device_int(root, STR_ON, dev_sub->Switch[1], out_sub[j], pos++);
 
-                cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1], out_sub[j], pos++);
+                    cloud_update_device_int(root, STR_GEAR, dev_sub->WindSpeed[1], out_sub[j], pos++);
+                }
                 break;
             default:
                 break;
             }
         }
+
         //-------------------------------------------------------------
     }
     break;
     default:
         goto fail;
     }
-    // list_print_all_cloud();
-
+update:
     cJSON_Delete(root);
-
+    pthread_mutex_unlock(&g_SCloudControl.mutex);
     return 0;
 fail:
     log_error("hilink modelId not exist:%d\n", index);
 
     cJSON_Delete(root);
+    pthread_mutex_unlock(&g_SCloudControl.mutex);
     return -1;
 }
 
-int local_tocloud(dev_local_t *src, const int index)
+int local_tocloud(dev_local_t *src, const int index, int devAttr)
 {
-
-    log_info("local_tocloud index:%d\n", index);
+    log_info("local_tocloud index:%d,devAttr:%d\n", index, devAttr);
     char addFlag = 0;
     dev_cloud_t *out = list_get_by_id_cloud(src->DeviceId);
     if (out == NULL)
     {
         addFlag = 1;
-        // log_info("cloud_add_device %s,%d\n",src->DeviceId,src->Online);
         cloud_add_device(index, &out, src->DeviceId, src);
+        // devAttr = -1;
     }
-    int ret = cloud_get_attr(src, index, out);
+    int ret = cloud_get_attr(src, index, devAttr, out);
     if (ret < 0)
     {
         if (out != NULL)
@@ -531,14 +760,7 @@ int local_tocloud(dev_local_t *src, const int index)
         {
             if (src->Online)
             {
-                local_singleDevice_onlineStatus(src, DEV_ONLINE);
-            }
-            else
-            {
-                if (get_registerFlag())
-                {
-                    // local_singleDevice_onlineStatus(src, DEV_ONLINE);
-                }
+                hyLinkDevStatus(src, DEV_ONLINE);
             }
             log_info("local_tocloud HilinkSyncBrgDevStatus:%s,%d\n", src->DeviceId, src->Online);
         }

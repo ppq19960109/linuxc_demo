@@ -202,7 +202,7 @@ static void event_signal_cb(evutil_socket_t fd, short event, void *arg)
     printf("event_signal_cb:%d\n", fd);
     if (fd == SIGINT || fd == SIGQUIT || fd == SIGKILL)
     {
-        local_system_restartOrReFactory(INT_OFFLINE);
+        hyLinkSystem(INT_OFFLINE);
     }
 }
 static void event_signal_open()

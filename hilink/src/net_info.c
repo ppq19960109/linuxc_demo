@@ -223,18 +223,18 @@ int get_link_status(const char *if_name)
     if (!(ifr.ifr_flags & IFF_UP))
     {
         close(sd);
-        fprintf(stderr, "DEVICE_DOWN\n");
-        return 1;
+        // fprintf(stderr, "DEVICE_DOWN\n");
+        return -1;
     }
 
     if (!(ifr.ifr_flags & IFF_RUNNING))
     {
         close(sd);
-        fprintf(stderr, "DEVICE_UNPLUGGED\n");
-        return 2;
+        // fprintf(stderr, "DEVICE_UNPLUGGED\n");
+        return -2;
     }
 
-    fprintf(stderr, "DEVICE_LINKED\n");
+    // fprintf(stderr, "DEVICE_LINKED\n");
 
     close(sd);
     return 0;

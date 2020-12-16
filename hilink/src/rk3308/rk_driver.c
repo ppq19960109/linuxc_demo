@@ -172,7 +172,7 @@ static void sigio_signal_func(int signum)
         printf("sigio_signal_func read:%d\n", buf);
         if (buf == 1)
         {
-            local_system_restartOrReFactory(INT_REFACTORY);
+            hyLinkSystem(INT_REFACTORY);
         }
         else if (buf == 2)
         {
@@ -201,7 +201,6 @@ int driver_keyOpen()
 
     /* 设置信号SIGIO的处理函数 */
     signal(SIGIO, sigio_signal_func);
-    signal(SIGURG, sigio_signal_func);
 
     fcntl(fd, F_SETOWN, getpid());      /* 设置当前进程接收SIGIO信号 	*/
     int flags = fcntl(fd, F_GETFL);     /* 获取当前的进程状态 			*/

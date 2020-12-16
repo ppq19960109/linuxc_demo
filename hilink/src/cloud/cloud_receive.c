@@ -7,7 +7,7 @@
 
 #include "local_send.h"
 #include "local_list.h"
-#include "local_device.h"
+
 #include "local_send.h"
 
 #include "tool.h"
@@ -51,7 +51,23 @@ int cloud_tolocal(const char *sn, const char *svcId, const char *payload)
     cJSON *root = cJSON_Parse(payload);
     cJSON *val;
     int index = str_search(svcId, g_SCloudAttr[modelIndex].attr, g_SCloudAttr[modelIndex].attrLen);
-    strcpy(out.Data.Key, g_SLocalAttr[modelIndex].attr[index]);
+    if (index < 0)
+    {
+        if (modelIndex == 5 || modelIndex == 6)
+        {
+            if (strcmp(svcId, "switch") == 0)
+            {
+                strcpy(out.Data.Key, "Switch_All");
+            }
+        }
+        else
+        {
+            log_error("CloudAttr error\n");
+            goto fail;
+        }
+    }
+    else
+        strcpy(out.Data.Key, g_SLocalAttr[modelIndex].attr[index]);
     switch (modelIndex)
     {
     case 0: //U2/天际系列：单键智能开关（HY0095）
@@ -217,7 +233,7 @@ int cloud_delete_device(const char *sn)
         return -1;
     int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
 
-    stpcpy(ssn, sn);
+    strcpy(ssn, sn);
 
     switch (index)
     {
@@ -271,7 +287,7 @@ int cloud_singleDevice_offlink(const char *sn)
         return -1;
     int index = str_search(dev_cloud->brgDevInfo.prodId, g_SCloudModel.attr, g_SCloudModel.attrLen);
 
-    stpcpy(ssn, sn);
+    strcpy(ssn, sn);
     dev_local_t *local;
     switch (index)
     {
