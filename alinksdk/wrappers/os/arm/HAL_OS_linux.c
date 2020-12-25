@@ -48,7 +48,7 @@ char _device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "t9GmMf2jb3LgWfXBaZD2r3aJrfVWB
 #endif
 #endif
 
-static const char _firmware_version[IOTX_FIRMWARE_VER_LEN] = "app-1.0.0-20200101.1000";
+static const char _firmware_version[IOTX_FIRMWARE_VER_LEN] = "HonYar_GW_201218";
 
 void *HAL_Malloc(uint32_t size)
 {

@@ -4,10 +4,6 @@
 #include "hylink.h"
 #include "cloudLinkListFunc.h"
 
-extern const SAttrInfo g_GatewaAttr;
-extern const SAttrInfo g_SCloudModel;
-extern const SAttrInfo g_SCloudAttr[];
-
-int cloudUpdate(HylinkDev *hylinkDev, const unsigned int devType);
-int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int attrType);
+int cloudUpdate(HyLinkDev *hyLinkDev, const unsigned int hyAttr);
+int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr);
 #endif

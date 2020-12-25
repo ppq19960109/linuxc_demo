@@ -9,17 +9,20 @@
 
 #include "hylink.h"
 #include "zigbee.h"
+#include "cpython.h"
 
 int mainClose(void)
 {
     runSystemCb(LAN_CLOSE);
     runSystemCb(ZIGBEE_CLOSE);
     runSystemCb(HYLINK_CLOSE);
+    cpythonDestroy();
     return 0;
 }
 
 int main()
 {
+    cpythonInit();
     // return pythonTest();
     registerSystemCb(mainClose, SYSTEM_CLOSE);
     hylinkMain();

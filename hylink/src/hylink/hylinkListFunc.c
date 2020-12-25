@@ -1,99 +1,166 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
+#include "cJSON.h"
+#include "frameCb.h"
+#include "logFunc.h"
 #include "hylinkListFunc.h"
 
-void hylinkDevFree(HylinkDev *ptr)
+int getLinkValueType(unsigned char dataType)
 {
-    if (ptr == NULL)
-        return;
-
-    if (ptr->private != NULL)
+    int byteLen;
+    switch (dataType)
     {
-        free(ptr->private);
+    case LINK_VALUE_TYPE_ENUM:
+        byteLen = 1;
+        break;
+    case LINK_VALUE_TYPE_NUM:
+        byteLen = 4;
+        break;
+    case LINK_VALUE_TYPE_STRING:
+        byteLen = 18;
+        break;
+    default:
+        byteLen = -1;
+        break;
     }
-    free(ptr);
-    ptr = NULL;
+    return byteLen;
 }
 
-#ifndef HY_USER_KHASH
-static struct list_head *hylinkListHead = NULL;
-
-void hylinkListInit(void *head)
+void *hyLinkParseJson(const char *devId, const char *str)
 {
-    INIT_LIST_HEAD(head);
-    hylinkListHead = head;
-}
-
-void hylinkListDestroy(void)
-{
-}
-
-void hylinkListAdd(void *node)
-{
-    if (node == NULL)
-        return;
-    list_add(node, hylinkListHead);
-}
-
-void hylinkListDel(HylinkDev *ptr)
-{
-    if (ptr == NULL)
-        return;
-    list_del(&ptr->hylinkNode);
-    hylinkDevFree(ptr);
-}
-
-int hylinkListDelById(const char *devid)
-{
-    if (devid == NULL)
-        return -1;
-    HylinkDev *ptr = hylinkListGetById(devid);
-    if (ptr == NULL)
-    {
-        return -1;
-    }
-    hylinkListDel(ptr);
-    return 0;
-}
-
-void hylinkListEmpty(void)
-{
-    HylinkDev *ptr, *next;
-    if (hylinkListHead == NULL)
-    {
-        return;
-    }
-    list_for_each_entry_safe(ptr, next, hylinkListHead, hylinkNode)
-    {
-        hylinkListDel(ptr);
-    }
-}
-
-HylinkDev *hylinkListGetById(const char *devid)
-{
-    if (devid == NULL)
-        return;
-    HylinkDev *ptr;
-    if (hylinkListHead == NULL || devid == NULL)
+    cJSON *root = cJSON_Parse(str);
+    if (root == NULL)
     {
         return NULL;
     }
 
-    list_for_each_entry(ptr, hylinkListHead, hylinkNode)
+    cJSON *modelId = cJSON_GetObjectItem(root, "modelId");
+    if (modelId == NULL)
     {
-        if (strcmp(ptr->DeviceId, devid) == 0)
-        {
-            return ptr;
-        }
+        logError("modelId is NULL\n");
+        goto fail;
+    }
+    cJSON *attr = cJSON_GetObjectItem(root, "attr");
+    if (attr == NULL)
+    {
+        logError("attr is NULL\n");
+        goto fail;
+    }
+
+    int arraySize = cJSON_GetArraySize(attr);
+    if (arraySize == 0)
+    {
+        logError("attr arraySize is 0\n");
+        goto fail;
+    }
+
+    HyLinkDev *dev = (HyLinkDev *)malloc(sizeof(HyLinkDev));
+    memset(dev, 0, sizeof(HyLinkDev));
+    dev->attrLen = arraySize;
+    dev->attr = (HyLinkDevAttr *)malloc(sizeof(HyLinkDevAttr) * dev->attrLen);
+    memset(dev->attr, 0, sizeof(HyLinkDevAttr) * dev->attrLen);
+
+    strcpy(dev->devId, devId);
+    strcpy(dev->modelId, modelId->valuestring);
+    dev->online = SUBDEV_ONLINE;
+    cJSON *arraySub, *hyKey, *valueType, *repeat;
+    for (int i = 0; i < arraySize; i++)
+    {
+        arraySub = cJSON_GetArrayItem(attr, i);
+        if (arraySub == NULL)
+            continue;
+
+        hyKey = cJSON_GetObjectItem(arraySub, "hyKey");
+        strcpy(dev->attr[i].hyKey, hyKey->valuestring);
+        valueType = cJSON_GetObjectItem(arraySub, "valueType");
+        dev->attr[i].valueType = valueType->valueint;
+        repeat = cJSON_GetObjectItem(arraySub, "repeat");
+        dev->attr[i].repeat = repeat->valueint;
+
+        int valueLen = getLinkValueType(dev->attr[i].valueType);
+        if (valueLen < 0)
+            continue;
+        dev->attr[i].value = (char *)malloc(valueLen);
+        memset(dev->attr[i].value, 0, valueLen);
+    }
+    cJSON_Delete(root);
+    hylinkListAdd(dev);
+    return dev;
+fail:
+    cJSON_Delete(root);
+    return NULL;
+}
+
+void *addProfileDev(const char *path, const char *devId, const char *modelId, void *(*func)(const char *, const char *))
+{
+    char filePath[33] = {0};
+    snprintf(filePath, sizeof(filePath), "%s/%s.json", path, modelId);
+    struct stat statfile;
+    if (stat(filePath, &statfile) < 0)
+    {
+        logError("stat %s error", filePath);
+        return NULL;
+    }
+    if (statfile.st_size == 0)
+    {
+        logError("file size 0");
+        return NULL;
+    }
+    logInfo("file size:%d", statfile.st_size);
+    int fd = open(filePath, O_RDONLY);
+    if (fd < 0)
+    {
+        perror("open file fail");
+        return NULL;
+    }
+    void *buf = malloc(statfile.st_size);
+    memset(buf, 0, statfile.st_size);
+    if (buf == NULL)
+    {
+        goto fail;
+    }
+    int res = read(fd, buf, statfile.st_size);
+    if (res != statfile.st_size)
+    {
+        logError("read file size :%d", res);
+        goto fail;
+    }
+    close(fd);
+    void *dev = func(devId, buf);
+
+    free(buf);
+    return dev;
+fail:
+    close(fd);
+    if (buf != NULL)
+    {
+        free(buf);
     }
     return NULL;
 }
 
-#else
+//-----------------------------------------------------
+void hyLinkDevFree(HyLinkDev *dev)
+{
+    if (dev == NULL)
+        return;
 
-KHASH_MAP_INIT_STR(hyLink, HylinkDev *)
+    for (int i = 0; i < dev->attrLen; ++i)
+    {
+        if (dev->attr[i].value != NULL)
+            free(dev->attr[i].value);
+    }
+    free(dev->attr);
+    free(dev);
+    dev = NULL;
+}
+
+KHASH_MAP_INIT_STR(hyLink, HyLinkDev *)
 
 khash_t(hyLink) * hyMap;
 //-------------------------------
@@ -115,7 +182,7 @@ void *hyLink_kh_exist(int k)
 }
 
 //-------------------------------
-void hylinkListInit(void *head)
+void hylinkListInit(void)
 {
     hyMap = kh_init(hyLink);
 }
@@ -129,42 +196,37 @@ void hylinkListAdd(void *node)
 {
     if (node == NULL)
         return;
-    HylinkDev *ptr = NULL;
-    ptr = list_entry(node, typeof(*ptr), hylinkNode);
-    if (ptr == NULL)
-    {
-        printf("hylinkListAdd ptr null error\n");
-        return;
-    }
+    HyLinkDev *dev = (HyLinkDev *)node;
+
     int ret;
-    khint_t k = kh_put(hyLink, hyMap, ptr->DeviceId, &ret);
+    khint_t k = kh_put(hyLink, hyMap, dev->devId, &ret);
     if (ret < 0)
     {
         printf("kh_put error\n");
         return;
     }
-    kh_value(hyMap, k) = ptr;
+    kh_value(hyMap, k) = dev;
 }
 
-void hylinkListDel(HylinkDev *ptr)
+void hylinkListDel(HyLinkDev *dev)
 {
-    if (ptr == NULL)
+    if (dev == NULL)
         return;
-    khint_t k = kh_get(hyLink, hyMap, ptr->DeviceId);
+    khint_t k = kh_get(hyLink, hyMap, dev->devId);
     kh_del(hyLink, hyMap, k);
-    hylinkDevFree(ptr);
+    hyLinkDevFree(dev);
 }
 
 int hylinkListDelById(const char *id)
 {
     if (id == NULL)
         return -1;
-    HylinkDev *ptr = hylinkListGetById(id);
-    if (ptr == NULL)
+    HyLinkDev *dev = hylinkListGetById(id);
+    if (dev == NULL)
     {
         return -1;
     }
-    hylinkListDel(ptr);
+    hylinkListDel(dev);
     return 0;
 }
 
@@ -174,19 +236,19 @@ void hylinkListEmpty(void)
     {
         return;
     }
-    HylinkDev *ptr;
+    HyLinkDev *dev;
 
-#define CLOUDLINKEMPTY      \
+#define LISTEMPTY           \
     do                      \
     {                       \
-        hylinkDevFree(ptr); \
+        hyLinkDevFree(dev); \
     } while (0)
 
-    kh_foreach_value(hyMap, ptr, CLOUDLINKEMPTY);
+    kh_foreach_value(hyMap, dev, LISTEMPTY);
     kh_clear(hyLink, hyMap);
 }
 
-HylinkDev *hylinkListGetById(const char *id)
+HyLinkDev *hylinkListGetById(const char *id)
 {
     if (hyMap == NULL)
     {
@@ -195,10 +257,8 @@ HylinkDev *hylinkListGetById(const char *id)
     khint_t k = kh_get(hyLink, hyMap, id);
     if (k == kh_end(hyMap))
     {
-        printf("cloudLinkListGetById id null:%d\n", k);
+        printf("hylinkListGetById id null:%d\n", k);
         return NULL;
     }
     return kh_value(hyMap, k);
 }
-
-#endif

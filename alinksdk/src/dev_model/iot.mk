@@ -34,7 +34,7 @@ LDFLAGS	+= -Wl,--start-group	\
 		-Wl,-Bdynamic \
 		-Wl,--end-group
 
-SOURCE_FILES:= alink/src/*.c alink/src/cloudlink/*c
+SOURCE_FILES:= alink/src/*.c alink/src/cloudlink/*c alink/src/scene/*c
 
 LIB_SRCS_EXCLUDE         += $(SOURCE_FILES) 
 SRCS_alinkapp := $(SOURCE_FILES)

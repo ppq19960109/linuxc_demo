@@ -146,10 +146,10 @@ void hmm_forward(const hmm_par_t *hp, hmm_data_t *hd)
 {
 	FLOAT sum, tmp, **at;
 	int u, k, l;
-	int n, m, L;
+	int n, L;
 	assert(hp && hd);
 	// allocate memory for hd->f and hd->s
-	n = hp->n; m = hp->m; L = hd->L;
+	n = hp->n; L = hd->L;
 	if (hd->s) free(hd->s);
 	if (hd->f) { 
 		for (k = 0; k <= hd->L; ++k) free(hd->f[k]);
@@ -211,11 +211,11 @@ void hmm_backward(const hmm_par_t *hp, hmm_data_t *hd)
 {
 	FLOAT tmp;
 	int k, l, u;
-	int m, n, L;
+	int n, L;
 	assert(hp && hd);
 	assert(hd->status & HMM_FORWARD);
 	// allocate memory for hd->b
-	m = hp->m; n = hp->n; L = hd->L;
+	n = hp->n; L = hd->L;
 	if (hd->b) { 
 		for (k = 0; k <= hd->L; ++k) free(hd->b[k]);
 		free(hd->b);

@@ -26,7 +26,7 @@ int getZcl3DataType(unsigned char dataType, unsigned char *data, int *realShift)
     case ZCL_DATA_TYPE_Boolean:
     case ZCL_DATA_TYPE_8_BIT_DATA:
     case ZCL_DATA_TYPE_8_BIT_BITMAP:
-    case ZCL_DATA_TYPE_UNSIGNED_8_BIT:
+    case ZCL_DATA_TYPE_UINT_8:
     case ZCL_DATA_TYPE_INT_8:
     case ZCL_DATA_TYPE_8_BIT_ENUM:
         byteLen = 1;
@@ -191,7 +191,7 @@ static int _z3_dev_join_cb(ty_z3_desc_s *desc)
              (desc->version >> 6) & 0x03, (desc->version >> 4) & 0x03, desc->version & 0x0f);
     log_notice("version: %s", ver_str);
 
-    runZigbeeCb((void *)desc->id, desc->manu_name, ver_str, desc->model_id, ZIGBEE_DEV_JOIN);
+    runZigbeeCb((void *)desc->id, desc->model_id, ver_str, desc->manu_name, ZIGBEE_DEV_JOIN);
     return ret;
 }
 

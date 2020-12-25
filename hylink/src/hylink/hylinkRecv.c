@@ -23,6 +23,7 @@ static char *s_typeReport[] = {
     "DevsInfo",
     "ReFactory",
     "Ack",
+    "LocalScene",
 };
 
 static const SAttrInfo s_StypeReport = {
@@ -31,37 +32,36 @@ static const SAttrInfo s_StypeReport = {
 
 void hylinkAnalyDevInfo(cJSON *root, cJSON *Data, const char *Params)
 {
-    HylinkDev *hylinkDevBuf;
+    HyLinkDev *hyLinkDevBuf;
 
     cJSON *devidJson = cJSON_GetObjectItem(Data, STR_DEVICEID);
     if (devidJson == NULL)
         return;
+    char online = 0;
+    getByteForJson(Data, STR_ONLINE, &online);
 
     cJSON *params = cJSON_GetObjectItem(Data, Params);
 
-    if (strcmp(STR_HOST_GATEWAYID, devidJson->valuestring) == 0)
+    hyLinkDevBuf = hylinkListGetById(devidJson->valuestring);
+
+    if (hyLinkDevBuf == NULL)
     {
-        return;
-    }
-
-    hylinkDevBuf = hylinkListGetById(devidJson->valuestring);
-
-    if (hylinkDevBuf == NULL)
-    {
-        hylinkDevBuf = (HylinkDev *)malloc(sizeof(HylinkDev));
-        memset(hylinkDevBuf, 0, sizeof(HylinkDev));
-        getStrForJson(root, STR_GATEWAYID, hylinkDevBuf->GatewayId);
-        getStrForJson(Data, STR_DEVICEID, hylinkDevBuf->DeviceId);
-        getStrForJson(Data, STR_MODELID, hylinkDevBuf->ModelId);
-        getStrForJson(Data, STR_VERSION, hylinkDevBuf->Version);
-        getByteForJson(Data, STR_ONLINE, &hylinkDevBuf->Online);
-
-        hylinkListAdd(&hylinkDevBuf->hylinkNode);
+        if (online == SUBDEV_ONLINE)
+        {
+            char hyModelId[33] = {0};
+            getStrForJson(Data, STR_MODELID, hyModelId);
+            hyLinkDevBuf = addProfileDev(HYLINK_PROFILE_PATH, devidJson->valuestring, hyModelId, hyLinkParseJson);
+            if (hyLinkDevBuf == NULL)
+                return;
+        }
     }
     else
     {
-        getStrForJson(Data, STR_VERSION, hylinkDevBuf->Version);
-        getByteForJson(Data, STR_ONLINE, &hylinkDevBuf->Online);
+        if (online != hyLinkDevBuf->online)
+        {
+            hyLinkDevBuf->online = online;
+            runTransferCb(hyLinkDevBuf->devId, hyLinkDevBuf->online, TRANSFER_SUBDEV_LINE);
+        }
     }
     int res;
     cJSON *array_sub;
@@ -69,18 +69,18 @@ void hylinkAnalyDevInfo(cJSON *root, cJSON *Data, const char *Params)
     for (int i = 0; i < array_size; i++)
     {
         array_sub = cJSON_GetArrayItem(params, i);
-        res = hylinkSubDevAttrUpdate(hylinkDevBuf, array_sub);
-        if (res == -2)
+        res = hylinkSubDevAttrUpdate(hyLinkDevBuf, array_sub);
+        if (res < 0)
         {
-            logError("hylinkSubDevAttrUpdate");
+            logError("hylinkSubDevAttrUpdate error");
             goto fail;
         }
     }
-    runTransferCb(hylinkDevBuf, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
+    runTransferCb(hyLinkDevBuf, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
     return;
 fail:
     logError("hylinkAnalyDevInfo fail");
-    hylinkListDel(hylinkDevBuf);
+    hylinkListDel(hyLinkDevBuf);
 }
 
 int hylinkRecvAnaly(const char *json)
@@ -138,8 +138,9 @@ int hylinkRecvAnaly(const char *json)
         goto fail;
     }
 
-    HylinkDev hylinkDevData;
-    HylinkDev *hylinkDevBuf = NULL;
+    char hyDevId[33] = {0};
+
+    HyLinkDev *hyLinkDevBuf = NULL;
     cJSON *array_sub = NULL;
     int array_size = cJSON_GetArraySize(Data);
     for (int i = 0; i < array_size; i++)
@@ -149,80 +150,113 @@ int hylinkRecvAnaly(const char *json)
         {
             continue;
         }
-        getStrForJson(array_sub, STR_DEVICEID, hylinkDevData.DeviceId);
+        getStrForJson(array_sub, STR_DEVICEID, hyDevId);
         switch (type)
         {
         case 0: //设备注册上报：”Register”；
         {
-            hylinkDevBuf = hylinkListGetById(hylinkDevData.DeviceId);
-            if (hylinkDevBuf == NULL)
+            hyLinkDevBuf = hylinkListGetById(hyDevId);
+            if (hyLinkDevBuf == NULL)
             {
-                hylinkDevBuf = (HylinkDev *)malloc(sizeof(HylinkDev));
-                memset(hylinkDevBuf, 0, sizeof(HylinkDev));
-                getStrForJson(root, STR_GATEWAYID, hylinkDevBuf->GatewayId);
-                getStrForJson(array_sub, STR_DEVICEID, hylinkDevBuf->DeviceId);
-                getStrForJson(array_sub, STR_MODELID, hylinkDevBuf->ModelId);
-                hylinkDevBuf->Online = SUBDEV_ONLINE;
-                if (hylinkSubDevAttrUpdate(hylinkDevBuf, NULL) != 0)
+                char hyModelId[33] = {0};
+                getStrForJson(array_sub, STR_MODELID, hyModelId);
+                hyLinkDevBuf = addProfileDev(HYLINK_PROFILE_PATH, hyDevId, hyModelId, hyLinkParseJson);
+                if (hyLinkDevBuf != NULL)
+                    runTransferCb(hyLinkDevBuf, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
+            }
+            else
+            {
+                if (hyLinkDevBuf->online == SUBDEV_OFFLINE)
                 {
-                    logError("hylinkSubDevAttrUpdate error\n");
-                    free(hylinkDevBuf);
-                    break;
+                    hyLinkDevBuf->online = SUBDEV_ONLINE;
+                    runTransferCb(hyLinkDevBuf->devId, hyLinkDevBuf->online, TRANSFER_SUBDEV_LINE);
                 }
-                hylinkListAdd(&hylinkDevBuf->hylinkNode);
             }
         }
         break;
         case 1: //设备注销上报：”UnRegister”；
         {
-            hylinkDevBuf = hylinkListGetById(hylinkDevData.DeviceId);
-            if (hylinkDevBuf != NULL)
+            hyLinkDevBuf = hylinkListGetById(hyDevId);
+            if (hyLinkDevBuf != NULL)
             {
-                runTransferCb(hylinkDevBuf->DeviceId, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
-                hylinkListDel(hylinkDevBuf);
+                runTransferCb(hyLinkDevBuf->devId, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
+                hylinkListDel(hyLinkDevBuf);
             }
             else
             {
-                logError("UnRegister but sub device not exist:%s\n", hylinkDevData.DeviceId);
+                logError("UnRegister but sub device not exist:%s\n", hyDevId);
             }
         }
         break;
         case 2: //设备在线状态上报, “OnOff”
         {
-            hylinkDevBuf = hylinkListGetById(hylinkDevData.DeviceId);
-
-            if (hylinkDevBuf != NULL)
+            hyLinkDevBuf = hylinkListGetById(hyDevId);
+            char online = 0;
+            getByteForJson(array_sub, STR_VALUE, &online);
+            if (hyLinkDevBuf == NULL)
             {
-                getByteForJson(array_sub, STR_VALUE, &hylinkDevBuf->Online);
-                runTransferCb(hylinkDevBuf->DeviceId, hylinkDevBuf->Online, TRANSFER_SUBDEV_LINE);
+                if (online)
+                {
+                    if (cJSON_HasObjectItem(array_sub, STR_MODELID))
+                    {
+                        char hyModelId[33] = {0};
+                        getStrForJson(array_sub, STR_MODELID, hyModelId);
+                        hyLinkDevBuf = addProfileDev(HYLINK_PROFILE_PATH, hyDevId, hyModelId, hyLinkParseJson);
+                        if (hyLinkDevBuf != NULL)
+                        {
+                            runTransferCb(hyLinkDevBuf, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
+                            runTransferCb(hyLinkDevBuf->devId, strlen(hyLinkDevBuf->devId), TRANSFER_DEVATTR);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (online != hyLinkDevBuf->online)
+                {
+                    getByteForJson(array_sub, STR_VALUE, &hyLinkDevBuf->online);
+                    runTransferCb(hyLinkDevBuf->devId, hyLinkDevBuf->online, TRANSFER_SUBDEV_LINE);
+                }
             }
         }
         break;
         case 3: //设备属性上报：”Attribute”；
         case 4: //设备事件上报：”Event”；
         case 5: //设备全部属性上报：”DevAttri”;
-            if (strcmp(STR_HOST_GATEWAYID, hylinkDevData.DeviceId) == 0)
+            hyLinkDevBuf = hylinkListGetById(hyDevId);
+            if (hyLinkDevBuf != NULL)
             {
-                hylinkGateway(array_sub);
-                break;
-            }
-            hylinkDevBuf = hylinkListGetById(hylinkDevData.DeviceId);
-            if (hylinkDevBuf != NULL)
-            {
-                if (hylinkDevBuf->Online == SUBDEV_OFFLINE)
+                if (hyLinkDevBuf->online == SUBDEV_OFFLINE)
                 {
-                    hylinkDevBuf->Online = SUBDEV_ONLINE;
-                    runTransferCb(hylinkDevBuf->DeviceId, hylinkDevBuf->Online, TRANSFER_SUBDEV_LINE);
+                    hyLinkDevBuf->online = SUBDEV_ONLINE;
+                    runTransferCb(hyLinkDevBuf->devId, hyLinkDevBuf->online, TRANSFER_SUBDEV_LINE);
+                    runTransferCb(hyLinkDevBuf->devId, strlen(hyLinkDevBuf->devId), TRANSFER_DEVATTR);
                 }
-                int type = hylinkSubDevAttrUpdate(hylinkDevBuf, array_sub);
-                if (type >= 0)
-                    runTransferCb(hylinkDevBuf, type, TRANSFER_CLOUD_REPORT);
+                int type = hylinkSubDevAttrUpdate(hyLinkDevBuf, array_sub);
+                if (type < 0)
+                {
+                    if (type == -2)
+                        logWarn("hylinkSubDevAttrUpdate repeat\n");
+                    else
+                        logError("hylinkSubDevAttrUpdate error\n");
+                }
                 else
-                    logError("hylinkSubDevAttrUpdate error\n");
+                    runTransferCb(hyLinkDevBuf, type, TRANSFER_CLOUD_REPORT);
             }
             else
             {
-                logError("sub device not exist:%s  -\n", hylinkDevData.DeviceId);
+                logError("sub device not exist:%s \n", hyDevId);
+                if (cJSON_HasObjectItem(array_sub, STR_MODELID))
+                {
+                    char hyModelId[33] = {0};
+                    getStrForJson(array_sub, STR_MODELID, hyModelId);
+                    hyLinkDevBuf = addProfileDev(HYLINK_PROFILE_PATH, hyDevId, hyModelId, hyLinkParseJson);
+                    if (hyLinkDevBuf != NULL)
+                    {
+                        runTransferCb(hyLinkDevBuf, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
+                        runTransferCb(hyLinkDevBuf->devId, strlen(hyLinkDevBuf->devId), TRANSFER_DEVATTR);
+                    }
+                }
             }
             break;
         case 6: //获取设备列表详细信息(网关指令)DevsInfo
@@ -238,6 +272,17 @@ int hylinkRecvAnaly(const char *json)
         case 8: //Ack
         {
             // logDebug("type:Ack\n");
+        }
+        break;
+        case 9:
+        {
+            cJSON *Op = cJSON_GetObjectItem(array_sub, "Op");
+            if (strcmp("ExecScene", Op->valuestring) == 0)
+            {
+                cJSON *Id = cJSON_GetObjectItem(array_sub, "Id");
+                if (Id != NULL)
+                    runTransferCb(Id->valuestring, strlen(Id->valuestring), TRANSFER_SCENE_REPORT);
+            }
         }
         break;
         default:

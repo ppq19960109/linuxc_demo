@@ -12,14 +12,16 @@ INSTALL_LIB = "$(INSTALL)/lib"
 
 TOPDIR = .
 
-SRC_DIRS := $(shell find src -maxdepth 1 -type d)
+SRC_DIRS := $(shell find src -maxdepth 3 -type d)
 
 CJSON_PATH:=libs/cJSON
 KLIB_PATH:=libs/klib
+BASE64_PATH:=libs/base64
 
 CFLAGS += $(addprefix -I , $(SRC_DIRS))
 CFLAGS += -I$(CJSON_PATH)
 CFLAGS += -I$(KLIB_PATH)
+CFLAGS += -I$(BASE64_PATH)
 CFLAGS += -Wall
 
 LDFLAGS += -L$(TOPDIR)
@@ -36,10 +38,13 @@ SRC_CJSON := $(wildcard $(CJSON_PATH)/*.c)
 INC_CJSON := $(wildcard $(CJSON_PATH)/*.h)
 SRC_KLIB := $(wildcard $(KLIB_PATH)/*.c)
 INC_KLIB := $(wildcard $(KLIB_PATH)/*.h)
+SRC_BASE64 := $(wildcard $(BASE64_PATH)/*.c)
+INC_KBASE64 := $(wildcard $(BASE64_PATH)/*.h)
 
 OBJ += $(SRC:%.c=%.o)
 OBJ += $(SRC_CJSON:%.c=%.o)
 OBJ += $(SRC_KLIB:%.c=%.o)
+OBJ += $(SRC_BASE64:%.c=%.o)
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -53,11 +58,12 @@ $(TARGET) : $(OBJ)
 	$(AR) $@ $^
 
 install: $(TARGET)
-	$(MKDIR) $(INSTALL_LIB) $(INSTALL_INCLUDE) $(INSTALL_INCLUDE)/cJSON $(INSTALL_INCLUDE)/klib
+	$(MKDIR) $(INSTALL_LIB) $(INSTALL_INCLUDE) $(INSTALL_INCLUDE)/cJSON $(INSTALL_INCLUDE)/klib $(INSTALL_INCLUDE)/base64
 	$(CP) $(TARGET) $(INSTALL_LIB)
 	$(CP) $(INC) $(INSTALL_INCLUDE)
 	$(CP) $(INC_CJSON) $(INSTALL_INCLUDE)/cJSON
 	$(CP) $(INC_KLIB) $(INSTALL_INCLUDE)/klib
+	$(CP) $(INC_KBASE64) $(INSTALL_INCLUDE)/base64
 	@echo "successed installed......."
 
 clean :

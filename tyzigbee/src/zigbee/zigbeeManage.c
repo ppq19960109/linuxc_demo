@@ -70,7 +70,7 @@ int hylinkValueConversion(ConverDesc *converDesc)
     }
     else //down
     {
-        if (converDesc->hyKeyPrivate == 0 && converDesc->inLen == 1)
+        if (converDesc->hyKeyPrivate == 0)
         {
             long num;
             strToNum((char *)converDesc->in, 10, &num);
@@ -106,6 +106,57 @@ int hylinkValueConversion(ConverDesc *converDesc)
     return converDesc->outLen;
 }
 
+void zigbeeAttrReportHy(ZigbeeAttr *attr, char *devId, char *modelId, unsigned char *in, int inLen)
+{
+    unsigned char converData[33] = {0};
+    ConverDesc converDesc = {0};
+    converDesc.modelId = modelId;
+    strcpy(converDesc.hyKey, attr->hyKey);
+    converDesc.hyKeyPrivate = attr->hyKeyPrivate;
+    converDesc.dir = STR_UP;
+    converDesc.in = in;
+    converDesc.inLen = inLen;
+    converDesc.out = converData;
+    logDebug("converDesc.hyKey:%s", converDesc.hyKey);
+    int converLen = hylinkValueConversion(&converDesc);
+
+    runZigbeeCb(devId, converDesc.hyKey, converData, (void *)converLen, ZIGBEE_DEV_REPORT);
+}
+
+void zigbeeReportHy(zigbeeDev *zDev, ty_z3_aps_frame_s *frame, int attributeId, unsigned char *in, int inLen)
+{
+    int i;
+    for (i = 0; i < zDev->attrLen; ++i)
+    {
+        if (zDev->attr[i].ClusterId == frame->cluster_id && (zDev->attr[i].AttributeId == attributeId || attributeId < 0) && (zDev->attr[i].dstEndpoint == frame->src_endpoint || frame->dst_endpoint == 255))
+        {
+            // unsigned char converData[33] = {0};
+            // ConverDesc converDesc = {0};
+            // converDesc.modelId = zDev->manuName;
+            // strcpy(converDesc.hyKey, zDev->attr[i].hyKey);
+            // converDesc.hyKeyPrivate = zDev->attr[i].hyKeyPrivate;
+            // converDesc.dir = STR_UP;
+            // converDesc.in = in;
+            // converDesc.inLen = inLen;
+            // converDesc.out = converData;
+            // logDebug("converDesc.hyKey:%s", converDesc.hyKey);
+            // int converLen = hylinkValueConversion(&converDesc);
+
+            // runZigbeeCb(frame->id, converDesc.hyKey, converData, (void *)converLen, ZIGBEE_DEV_REPORT);
+
+            if (strcmp(zDev->manuName, "_TYZB01_kw2okqc3") == 0)
+            {
+                unsigned char attr = (*in >> zDev->attr[i].z3CmdId) & 0x01;
+                zigbeeAttrReportHy(&zDev->attr[i], frame->id, zDev->manuName, &attr, 1);
+            }
+            else
+            {
+                zigbeeAttrReportHy(&zDev->attr[i], frame->id, zDev->manuName, in, inLen);
+            }
+        }
+    }
+}
+
 int zigbeeDevZclReport(void *recv)
 {
     if (recv == NULL)
@@ -131,60 +182,73 @@ int zigbeeDevZclReport(void *recv)
     unsigned char *value;
     int shift = 0, i = 0;
     int dataTypeLen;
-
-    if (frame->cluster_id == ZCL_PRIVATE_CLUSTER)
+    if (frame->cmd_type == Z3_CMD_TYPE_PRIVATE)
     {
-        switch (frame->cmd_id)
+        if (frame->cluster_id == ZCL_PRIVATE_CLUSTER)
         {
-        case TY_DATA_RESPONE:
-        case TY_DATA_REPORT:
-        case TY_DATA_QUERY:
-        {
-            attributeId = frame->message[2];
-            dataType = frame->message[3];
-            dataTypeLen = (frame->message[4] << 8) + frame->message[5];
-            value = &frame->message[6];
-            goto report;
-        }
-        break;
-        case TUYA_MCU_VERSION_RSP:
-        {
-            char ver_str[16] = {0};
-            unsigned char version = frame->message[2];
-            snprintf(ver_str, sizeof(ver_str), "%d.%d.%d",
-                     (version >> 6) & 0x03, (version >> 4) & 0x03, version & 0x0f);
-            logInfo("mcu version: %s", ver_str);
-        }
-        break;
-        case TUYA_MCU_SYNC_TIME:
-        {
-            unsigned char msg[16] = {0};
-            unsigned short sequence = 0;
-            memcpy(msg, &sequence, 2);
-            time_t stdTime = time(NULL);
-
-            msg[2] = stdTime >> 24;
-            msg[3] = stdTime >> 16;
-            msg[4] = stdTime >> 8;
-            msg[5] = stdTime & 0xff;
-
-            stdTime = stdTime + 8 * 60 * 60;
-            msg[6] = stdTime >> 24;
-            msg[7] = stdTime >> 16;
-            msg[8] = stdTime >> 8;
-            msg[9] = stdTime & 0xff;
-
-            frame->msg_length = 10;
-            if (frame->msg_length > 0)
-                frame->message = msg;
-
-            return tuya_user_iot_z3_dev_send_zcl_cmd(frame);
-        }
-            logInfo("zigbee tuya sync time");
+            switch (frame->cmd_id)
+            {
+            case TY_DATA_RESPONE:
+            case TY_DATA_REPORT:
+            case TY_DATA_QUERY:
+            case TY_DATA_MODULE_RSP:
+            case TY_DATA_MODULE:
+            {
+                attributeId = frame->message[2];
+                dataType = frame->message[3];
+                dataTypeLen = (frame->message[4] << 8) + frame->message[5];
+                value = &frame->message[6];
+                zigbeeReportHy(zDev, frame, attributeId, value + shift, dataTypeLen);
+            }
             break;
-        default:
-            logError("zigbee private cmd id not exist");
+            case TUYA_MCU_VERSION_RSP:
+            {
+                char ver_str[16] = {0};
+                unsigned char version = frame->message[2];
+                snprintf(ver_str, sizeof(ver_str), "%d.%d.%d",
+                         (version >> 6) & 0x03, (version >> 4) & 0x03, version & 0x0f);
+                logInfo("mcu version: %s", ver_str);
+            }
             break;
+            case TUYA_MCU_SYNC_TIME:
+            {
+                unsigned char msg[16] = {0};
+                unsigned short sequence = 0;
+                memcpy(msg, &sequence, 2);
+                time_t stdTime = time(NULL);
+
+                msg[2] = stdTime >> 24;
+                msg[3] = stdTime >> 16;
+                msg[4] = stdTime >> 8;
+                msg[5] = stdTime & 0xff;
+
+                stdTime = stdTime + 8 * 60 * 60;
+                msg[6] = stdTime >> 24;
+                msg[7] = stdTime >> 16;
+                msg[8] = stdTime >> 8;
+                msg[9] = stdTime & 0xff;
+
+                frame->msg_length = 10;
+                if (frame->msg_length > 0)
+                    frame->message = msg;
+
+                return tuya_user_iot_z3_dev_send_zcl_cmd(frame);
+            }
+                logInfo("zigbee tuya sync time");
+                break;
+            default:
+                logError("zigbee private cmd id not exist");
+                break;
+            }
+        }
+        else
+        {
+            if (strcmp(zDev->manuName, "_TYZB01_kw2okqc3") == 0)
+            {
+                dataTypeLen = 1;
+                value = frame->message;
+                zigbeeReportHy(zDev, frame, -1, value + shift, dataTypeLen);
+            }
         }
     }
     else
@@ -193,26 +257,43 @@ int zigbeeDevZclReport(void *recv)
         {
         case READ_ATTRIBUTES_RESPONSE:
         {
-            attributeId = frame->message[0] + (frame->message[1] << 8);
-            status = frame->message[2];
-            if (status != 0)
+            int index = 0;
+            while (index < frame->msg_length)
             {
-                logError("READ_ATTRIBUTES_RESPONSE status error:%d", status);
-                break;
+                logInfo("READ_ATTRIBUTES_RESPONSE");
+                attributeId = frame->message[index + 0] + (frame->message[index + 1] << 8);
+                index += 2;
+                status = frame->message[index];
+                index += 1;
+                if (status != 0)
+                {
+                    logError("READ_ATTRIBUTES_RESPONSE status error:%d", status);
+                    break;
+                }
+                dataType = frame->message[index];
+                index += 1;
+                value = &frame->message[index];
+                dataTypeLen = getZcl3DataType(dataType, value, &shift);
+                index += dataTypeLen + shift;
+                zigbeeReportHy(zDev, frame, attributeId, value + shift, dataTypeLen);
             }
-            dataType = frame->message[3];
-            value = &frame->message[4];
-            dataTypeLen = getZcl3DataType(dataType, value, &shift);
-            goto report;
         }
         break;
         case REPORT_ATTRIBUTES:
         {
-            attributeId = frame->message[0] + (frame->message[1] << 8);
-            dataType = frame->message[2];
-            value = &frame->message[3];
-            dataTypeLen = getZcl3DataType(dataType, value, &shift);
-            goto report;
+            int index = 0;
+            while (index < frame->msg_length)
+            {
+                logInfo("REPORT_ATTRIBUTES");
+                attributeId = frame->message[index + 0] + (frame->message[index + 1] << 8);
+                index += 2;
+                dataType = frame->message[index];
+                index += 1;
+                value = &frame->message[index];
+                dataTypeLen = getZcl3DataType(dataType, value, &shift);
+                index += dataTypeLen + shift;
+                zigbeeReportHy(zDev, frame, attributeId, value + shift, dataTypeLen);
+            }
         }
         break;
         case WRITE_ATTRIBUTES_RESPONSE:
@@ -229,28 +310,129 @@ int zigbeeDevZclReport(void *recv)
         }
     }
     return 0;
-report:
-    for (i = 0; i < zDev->attrLen; ++i)
+}
+
+static int tuyaZclSend(ty_z3_aps_frame_s *frame)
+{
+    logDebug("device zcl send callback");
+    logDebug("        id: %s", frame->id);
+    logDebug("profile_id: 0x%04x", frame->profile_id);
+    logDebug("cluster_id: 0x%04x", frame->cluster_id);
+    logDebug("   node_id: 0x%04x", frame->node_id);
+    logDebug("    src_ep: %d", frame->src_endpoint);
+    logDebug("    dst_ep: %d", frame->dst_endpoint);
+    logDebug("  group_id: %d", frame->group_id);
+    logDebug("  cmd_type: %d", frame->cmd_type);
+    logDebug("   command: 0x%02x", frame->cmd_id);
+    logDebug("frame_type: %d", frame->frame_type);
+    logDebug("   msg_len: %d", frame->msg_length);
+    logDebug("       msg: ");
+    for (int i = 0; i < frame->msg_length; i++)
+        printf("%02x ", frame->message[i]);
+    printf("\n");
+    return tuya_user_iot_z3_dev_send_zcl_cmd(frame);
+}
+
+int zigbeeDevZclQuery(ZigbeeAttr *attr, ty_z3_aps_frame_s *frame)
+{
+    if (attr->ClusterId == ZCL_PRIVATE_CLUSTER)
     {
-        if (zDev->attr[i].ClusterId == frame->cluster_id && zDev->attr[i].AttributeId == attributeId && zDev->attr[i].dstEndpoint == frame->src_endpoint)
+        frame->cmd_type = Z3_CMD_TYPE_PRIVATE;
+        frame->cmd_id = attr->z3CmdId >> 4;
+        // frame->msg_length = 0;
+        unsigned short squ = 0;
+        memcpy(frame->message, &squ, 2);
+        frame->message[2] = attr->AttributeId;
+        frame->msg_length = 3;
+    }
+    else
+    {
+        frame->cmd_type = Z3_CMD_TYPE_GLOBAL;
+        frame->cmd_id = READ_ATTRIBUTE;
+        memcpy(frame->message, &attr->AttributeId, 2);
+        frame->msg_length = 2;
+    }
+    return tuyaZclSend(frame);
+}
+
+static int zigbeeDevZclCtrl(ZigbeeAttr *attr, ty_z3_aps_frame_s *frame, char *modelId, void *key, void *value)
+{
+    unsigned char cmdId;
+    unsigned char cmdType;
+    unsigned short msgLen;
+    unsigned char *msg = frame->message;
+
+    ConverDesc converDesc = {0};
+    converDesc.modelId = modelId;
+    strcpy(converDesc.hyKey, key);
+    converDesc.hyKeyPrivate = attr->hyKeyPrivate;
+    converDesc.dir = STR_DOWN;
+    converDesc.in = value;
+
+    int shift;
+    int dataTypeLen = 0;
+    cmdType = attr->z3CmdType;
+    if (attr->ClusterId == ZCL_PRIVATE_CLUSTER)
+    {
+        cmdId = attr->z3CmdId & 0x0f;
+        unsigned short sequence = 0;
+        memcpy(msg, &sequence, 2);
+        msg[2] = attr->AttributeId;
+        msg[3] = attr->dataType;
+        dataTypeLen = getZcl3ProvateDataType(attr->dataType);
+
+        converDesc.inLen = dataTypeLen;
+        converDesc.out = &msg[6];
+        dataTypeLen = hylinkValueConversion(&converDesc);
+        msg[4] = dataTypeLen >> 8;
+        msg[5] = dataTypeLen & 0xff;
+        msgLen = dataTypeLen + 6;
+    }
+    else
+    {
+        dataTypeLen = getZcl3DataType(attr->dataType, NULL, &shift);
+        switch (cmdType)
         {
+        case Z3_CMD_TYPE_GLOBAL:
+        {
+            cmdId = WRITE_ATTRIBUTES;
+            memcpy(msg, &attr->AttributeId, 2);
+            msg[2] = attr->dataType;
 
-            unsigned char converData[33] = {0};
-            ConverDesc converDesc = {0};
-            converDesc.modelId = hyDev->ModelId;
-            strcpy(converDesc.hyKey, zDev->attr[i].hyKey);
-            converDesc.hyKeyPrivate = zDev->attr[i].hyKeyPrivate;
-            converDesc.dir = STR_UP;
-            converDesc.in = value + shift;
             converDesc.inLen = dataTypeLen;
-            converDesc.out = converData;
-            logDebug("converDesc.hyKey:%s", converDesc.hyKey);
-            int converLen = hylinkValueConversion(&converDesc);
-
-            runZigbeeCb(frame->id, converDesc.hyKey, converData, (void *)converLen, ZIGBEE_DEV_REPORT);
+            converDesc.out = &msg[3];
+            dataTypeLen = hylinkValueConversion(&converDesc);
+            msgLen = dataTypeLen + 3;
+        }
+        break;
+        case Z3_CMD_TYPE_PRIVATE:
+        {
+            converDesc.inLen = dataTypeLen;
+            converDesc.out = &msg[0];
+            if (attr->z3CmdId == 0)
+            {
+                dataTypeLen = hylinkValueConversion(&converDesc);
+                cmdId = msg[0];
+                msgLen = 0;
+            }
+            else
+            {
+                cmdId = attr->z3CmdId & 0x0f;
+                msgLen = hylinkValueConversion(&converDesc);
+            }
+        }
+        break;
+        case Z3_CMD_TYPE_ZDO:
+            break;
+        default:
+            return -1;
         }
     }
-    return 0;
+
+    frame->cmd_type = cmdType;
+    frame->cmd_id = cmdId;
+    frame->msg_length = msgLen;
+    return tuyaZclSend(frame);
 }
 
 int zigbeeDevZclDispatch(void *devId, void *modelId, void *key, void *value)
@@ -267,7 +449,30 @@ int zigbeeDevZclDispatch(void *devId, void *modelId, void *key, void *value)
         logError("zDev is null");
         return -1;
     }
+
     int i;
+
+    unsigned char msg[33] = {0};
+    ty_z3_aps_frame_s frame = {0};
+    strcpy(frame.id, devId);
+    frame.node_id = 0;
+    frame.profile_id = Z3_PROFILE_ID_HA;
+    frame.group_id = 0;
+    frame.disable_ack = 0;
+    frame.frame_type = Z3_FRAME_TYPE_UNICAST;
+    frame.message = msg;
+
+    if (key == NULL)
+    {
+        for (i = 0; i < zDev->attrLen; ++i)
+        {
+            frame.cluster_id = zDev->attr[i].ClusterId;
+            frame.src_endpoint = zDev->attr[i].srcEndpoint;
+            frame.dst_endpoint = zDev->attr[i].dstEndpoint;
+            zigbeeDevZclQuery(&zDev->attr[i], &frame);
+        }
+        return 0;
+    }
     int hyKeyLen;
     for (i = 0; i < zDev->attrLen; ++i)
     {
@@ -277,121 +482,20 @@ int zigbeeDevZclDispatch(void *devId, void *modelId, void *key, void *value)
             break;
         }
     }
-    unsigned char cmdId;
-    unsigned char cmdType;
-    unsigned char msg[33] = {0};
-    unsigned short msgLen;
-
-    if (value == NULL)
-    {
-
-        if (zDev->attr[i].ClusterId == ZCL_PRIVATE_CLUSTER)
-        {
-            cmdType = Z3_CMD_TYPE_PRIVATE;
-            cmdId = TY_DATA_QUERY;
-            msgLen = 0;
-        }
-        else
-        {
-            cmdType = Z3_CMD_TYPE_GLOBAL;
-            cmdId = READ_ATTRIBUTE;
-            memcpy(msg, &zDev->attr[i].AttributeId, 2);
-            msgLen = 2;
-        }
-    }
-    else
-    {
-        ConverDesc converDesc = {0};
-        converDesc.modelId = hyDev->ModelId;
-        strcpy(converDesc.hyKey, key);
-        converDesc.hyKeyPrivate = zDev->attr[i].hyKeyPrivate;
-        converDesc.dir = STR_DOWN;
-        converDesc.in = value;
-
-        int shift;
-        int dataTypeLen = 0;
-        cmdType = zDev->attr[i].z3CtrlCmdType;
-        if (zDev->attr[i].ClusterId == ZCL_PRIVATE_CLUSTER)
-        {
-            cmdId = TY_DATA_REQUEST;
-            unsigned short sequence = 0;
-            memcpy(msg, &sequence, 2);
-            msg[2] = zDev->attr[i].AttributeId;
-            msg[3] = zDev->attr[i].dataType;
-            dataTypeLen = getZcl3ProvateDataType(zDev->attr[i].dataType);
-
-            converDesc.inLen = dataTypeLen;
-            converDesc.out = &msg[6];
-            dataTypeLen = hylinkValueConversion(&converDesc);
-            msg[4] = dataTypeLen >> 8;
-            msg[5] = dataTypeLen & 0xff;
-            msgLen = dataTypeLen + 6;
-        }
-        else
-        {
-            dataTypeLen = getZcl3DataType(zDev->attr[i].dataType, NULL, &shift);
-            switch (cmdType)
-            {
-            case Z3_CMD_TYPE_GLOBAL:
-            {
-                cmdId = WRITE_ATTRIBUTES;
-                memcpy(msg, &zDev->attr[i].AttributeId, 2);
-                msg[2] = zDev->attr[i].dataType;
-
-                converDesc.inLen = dataTypeLen;
-                converDesc.out = &msg[3];
-                dataTypeLen = hylinkValueConversion(&converDesc);
-                msgLen = dataTypeLen + 3;
-            }
-            break;
-            case Z3_CMD_TYPE_PRIVATE:
-            {
-
-                converDesc.inLen = dataTypeLen;
-                converDesc.out = &msg[0];
-                dataTypeLen = hylinkValueConversion(&converDesc);
-                cmdId = msg[0];
-                msgLen = 0;
-            }
-            break;
-            case Z3_CMD_TYPE_ZDO:
-                break;
-            default:
-                return -1;
-            }
-        }
-    }
-    ty_z3_aps_frame_s frame = {0};
-    strcpy(frame.id, devId);
-    frame.node_id = 0;
-    frame.profile_id = Z3_PROFILE_ID_HA;
+    if (i == zDev->attrLen)
+        return -1;
+    //------------------------
     frame.cluster_id = zDev->attr[i].ClusterId;
     frame.src_endpoint = zDev->attr[i].srcEndpoint;
     frame.dst_endpoint = zDev->attr[i].dstEndpoint;
-    frame.group_id = 0;
-    frame.cmd_type = cmdType;
-    frame.cmd_id = cmdId;
-    frame.frame_type = Z3_FRAME_TYPE_UNICAST;
-    frame.disable_ack = 0;
-    frame.msg_length = msgLen;
-    if (frame.msg_length > 0)
-        frame.message = msg;
+    //-------------------------
 
-    logDebug("device zcl send callback");
-    logDebug("        id: %s", frame.id);
-    logDebug("profile_id: 0x%04x", frame.profile_id);
-    logDebug("cluster_id: 0x%04x", frame.cluster_id);
-    logDebug("   node_id: 0x%04x", frame.node_id);
-    logDebug("    src_ep: %d", frame.src_endpoint);
-    logDebug("    dst_ep: %d", frame.dst_endpoint);
-    logDebug("  group_id: %d", frame.group_id);
-    logDebug("  cmd_type: %d", frame.cmd_type);
-    logDebug("   command: 0x%02x", frame.cmd_id);
-    logDebug("frame_type: %d", frame.frame_type);
-    logDebug("   msg_len: %d", frame.msg_length);
-    logDebug("       msg: ");
-    for (i = 0; i < frame.msg_length; i++)
-        printf("%02x ", frame.message[i]);
-    printf("\n");
-    return tuya_user_iot_z3_dev_send_zcl_cmd(&frame);
+    if (value == NULL)
+    {
+        return zigbeeDevZclQuery(&zDev->attr[i], &frame);
+    }
+    else
+    {
+        return zigbeeDevZclCtrl(&zDev->attr[i], &frame, zDev->manuName, key, value);
+    }
 }

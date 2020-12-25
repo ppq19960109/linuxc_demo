@@ -20,32 +20,32 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 104,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 1
         },
         {
             "keyName": "空调风速",
             "hyKey": "WindSpeed_1",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 111,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 4
         },
         {
             "keyName": "空调模式",
             "hyKey": "WorkMode_1",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 107,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 4
         },
         {
@@ -56,8 +56,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 105,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 2
         },
         {
@@ -68,8 +68,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 106,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 2
         },
         {
@@ -80,20 +80,20 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 102,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 1
         },
         {
             "keyName": "新风风速",
             "hyKey": "WindSpeed_2",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 103,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 4
         },
         {
@@ -104,8 +104,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 108,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 1
         },
         {
@@ -116,8 +116,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 110,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 2
         },
         {
@@ -128,8 +128,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 114,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 1
         },
         {
@@ -140,8 +140,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 115,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 1
         },
         {
@@ -152,8 +152,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 116,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 1
         },
         {
@@ -164,8 +164,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 119,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 4
         },
         {
@@ -176,8 +176,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 101,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 4
         },
         {
@@ -188,8 +188,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 113,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 0
         },
         {
@@ -200,8 +200,8 @@
             "dstEndpoint": 1,
             "ClusterId": 61184,
             "AttributeId": 117,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 1,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
             "dataType": 0
         }
     ]

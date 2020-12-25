@@ -1,0 +1,49 @@
+{
+    "modelId": "TS0502",
+    "manuName": "_TYZB01_lc17o7gh",
+    "devName": "DLT调光调色温开关U2",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Version",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 0,
+            "AttributeId": 1
+        },
+        {
+            "hyKey": "Switch",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 6,
+            "AttributeId": 0,
+            "z3CmdType": 2,
+            "z3CmdId": 0,
+            "dataType": 16
+        },
+        {
+            "hyKey": "Luminance",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 8,
+            "AttributeId": 0,
+            "z3CmdType": 2,
+            "z3CmdId": 16,
+            "dataType": 32
+        },
+        {
+            "hyKey": "ColorTemperature",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 768,
+            "AttributeId": 7,
+            "z3CmdType": 2,
+            "z3CmdId": 26,
+            "dataType": 33
+        }
+    ]
+}

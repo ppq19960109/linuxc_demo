@@ -12,6 +12,16 @@
 
 #include "hylinkSend.h"
 
+int hylinkDispatch(const char *str)
+{
+    char *dispatchBuf = (char *)getHyDispatchBuf();
+    int jsonLen = strlen(str);
+    dispatchBuf[0] = 0x02;
+    strncpy(&dispatchBuf[1], str, jsonLen);
+    dispatchBuf[jsonLen + 1] = 0x03;
+
+    return runTransferCb(dispatchBuf, jsonLen + 2, TRANSFER_CLIENT_WRITE);
+}
 int hylinkSend(void *ptr)
 {
     if (NULL == ptr)
@@ -44,7 +54,7 @@ int hylinkSend(void *ptr)
     char *json = cJSON_PrintUnformatted(root);
     logInfo("send json:%s\n", json);
 
-    int ret = runTransferCb(json, strlen(json), TRANSFER_WRITE);
+    int ret = hylinkDispatch(json);
 
     free(json);
     cJSON_Delete(root);
@@ -53,18 +63,7 @@ int hylinkSend(void *ptr)
 
 int hylinkHeart(void)
 {
-    return runTransferCb(HY_HEART, strlen(HY_HEART), TRANSFER_WRITE);
-}
-
-int hylinkSendNetwork(void)
-{
-    HylinkDevSendData hylinkDevSendData = {0};
-    hylinkDevSendData.FrameNumber = 0;
-    strcpy(hylinkDevSendData.Type, STR_ADD);
-    strcpy(hylinkDevSendData.Data.DeviceId, STR_HOST_GATEWAYID);
-    strcpy(hylinkDevSendData.Data.Key, "Time");
-    strcpy(hylinkDevSendData.Data.Value, STR_NET_TIME);
-    return hylinkSend(&hylinkDevSendData);
+    return runTransferCb(HY_HEART, strlen(HY_HEART), TRANSFER_CLIENT_WRITE);
 }
 
 int hylinkSendDevInfo(void)
@@ -72,8 +71,18 @@ int hylinkSendDevInfo(void)
     HylinkDevSendData hylinkDevSendData = {0};
     hylinkDevSendData.FrameNumber = 0;
     strcpy(hylinkDevSendData.Type, STR_DEVSINFO);
-    strcpy(hylinkDevSendData.Data.DeviceId, STR_HOST_GATEWAYID);
+    strcpy(hylinkDevSendData.Data.DeviceId, STR_GATEWAY_DEVID);
     strcpy(hylinkDevSendData.Data.Key, STR_DEVSINFO);
+    return hylinkSend(&hylinkDevSendData);
+}
+
+int hylinkSendDevAttr(void *devId, unsigned int len)
+{
+    HylinkDevSendData hylinkDevSendData = {0};
+    hylinkDevSendData.FrameNumber = 0;
+    strcpy(hylinkDevSendData.Type, STR_DEVATTRI);
+    strcpy(hylinkDevSendData.Data.DeviceId, devId);
+    strcpy(hylinkDevSendData.Data.Key, "All");
     return hylinkSend(&hylinkDevSendData);
 }
 

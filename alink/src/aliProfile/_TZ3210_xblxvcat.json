@@ -1,0 +1,30 @@
+{
+    "modelId": "_TZ3210_xblxvcat",
+    "productKey": "a1yWwWtUcEX",
+    "productSecret": "8r8moukQAeqxaV1w",
+    "deviceSecret": "",
+    "devName": "一路开关模块",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Switch_1",
+            "cloudKey": "PowerSwitch_1",
+            "valueType": 0
+        },
+        {
+            "hyKey": "LedEnable",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "PowerOffProtection",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "KeyMode",
+            "cloudKey": "WorkMode",
+            "valueType": 0
+        }
+    ]
+}

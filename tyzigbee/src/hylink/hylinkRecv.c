@@ -109,36 +109,26 @@ int hylinkRecvJson(char *data)
             long num;
             strToNum(value->valuestring, 10, &num);
             char cmd = num;
-            if (cmd >= 0)
+
+            res = runCmdCb(&cmd, CMD_NETWORK_ACCESS);
+
+            if (res == 0)
             {
-                res = runCmdCb(&cmd, CMD_NETWORK_ACCESS);
-                if (res == 0)
-                {
-                    HylinkReport hylinkReport = {0};
-                    HylinkReportData hylinkReportData = {0};
-                    hylinkReport.Data = &hylinkReportData;
-                    hylinkReport.DataSize = 1;
+                HylinkReport hylinkReport = {0};
+                HylinkReportData hylinkReportData = {0};
+                hylinkReport.Data = &hylinkReportData;
+                hylinkReport.DataSize = 1;
 
-                    strcpy(hylinkReport.Type, STR_ATTRIBUTE);
+                strcpy(hylinkReport.Type, STR_ATTRIBUTE);
 
-                    strcpy(hylinkReportData.DeviceId, STR_GATEWAY_ID);
-                    strcpy(hylinkReportData.ModelId, STR_GATEWAY_MODELID);
+                strcpy(hylinkReportData.DeviceId, STR_GATEWAY_DEVID);
+                strcpy(hylinkReportData.ModelId, STR_GATEWAY_MODELID);
 
-                    strcpy(hylinkReportData.Key, STR_PERMITJOINING);
+                strcpy(hylinkReportData.Key, STR_TIME);
 
-                    if (cmd > 0)
-                    {
-                        strcpy(hylinkReportData.Value, "1");
-                    }
-                    else
-                    {
-                        strcpy(hylinkReportData.Value, "0");
-                    }
-                    hylinkReportFunc(&hylinkReport);
-                }
-            }
-            else
-            {
+                strcpy(hylinkReportData.Value, value->valuestring);
+
+                hylinkReportFunc(&hylinkReport);
             }
         }
         break;
@@ -155,10 +145,17 @@ int hylinkRecvJson(char *data)
         case RESTART:
             break;
         case DEVSINFO:
-            break;
+        {
+        }
+        break;
         case DEVATTRI:
-
-            break;
+        {
+            cJSON *DeviceId = cJSON_GetObjectItem(array_sub, STR_DEVICEID);
+            if (DeviceId == NULL)
+                goto fail;
+            res = runZigbeeCb((void *)DeviceId->valuestring, NULL, NULL, NULL, ZIGBEE_DEV_DISPATCH);
+        }
+        break;
         case CTRL:
         {
             cJSON *DeviceId = cJSON_GetObjectItem(array_sub, STR_DEVICEID);

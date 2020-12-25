@@ -25,10 +25,14 @@
 //--------------------------------
 #include "logFunc.h"
 #include "networkFunc.h"
-#include "cloudLink.h"
-#include "cloudLinkCtrl.h"
 #include "commonFunc.h"
 #include "frameCb.h"
+
+#include "hylink.h"
+#include "hylinkRecv.h"
+#include "cloudLink.h"
+#include "cloudLinkCtrl.h"
+#include "cloudLinkListFunc.h"
 
 #ifdef LINKKIT_GATEWAY_TEST_CMD
 #include "simulate_subdev/testcmd.h"
@@ -38,8 +42,8 @@
 #include "ota_service.h"
 #endif
 
-char g_product_key[IOTX_PRODUCT_KEY_LEN + 1] = "a1f0jNVDEPL";
-char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "iaBya0CvodivLBg6";
+char g_product_key[IOTX_PRODUCT_KEY_LEN + 1] = "";
+char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "";
 char g_device_name[IOTX_DEVICE_NAME_LEN + 1] = "";
 char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "";
 #define USER_EXAMPLE_YIELD_TIMEOUT_MS (200)
@@ -278,13 +282,41 @@ int main_close(void)
     return 0;
 }
 
-void main_init(void)
+void main_before_init(void)
 {
     registerSystemCb(main_close, SYSTEM_CLOSE);
+    cloudLinkMain();
+    CloudLinkDev *cloudLinkDev = (CloudLinkDev *)addProfileDev(ALILINK_PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, cloudLinkParseJson);
+    if (cloudLinkDev == NULL)
+    {
+        EXAMPLE_TRACE("gw cloudLinkDev is NULL");
+        return;
+    }
+    strcpy(g_product_key, cloudLinkDev->alinkInfo.product_key);
+    strcpy(g_product_secret, cloudLinkDev->alinkInfo.product_secret);
+    strcpy(g_device_secret, cloudLinkDev->alinkInfo.device_secret);
+    if (strlen(g_device_name) == 0)
+    {
+        getNetworkSmallMac(ETH_NAME, g_device_name, sizeof(g_device_name));
+        // for (int i = 0; i < strlen(g_device_name); i++)
+        //     g_device_name[i] = toupper(g_device_name[i]);
+    }
+    EXAMPLE_TRACE("linkkit gateway g_device_name:%s,g_device_secret:%s,g_product_key:%s,g_product_secret:%s", g_device_name, g_device_secret, g_product_key, g_product_secret);
+}
+
+void main_init(void)
+{
     user_example_ctx_t *user_example_ctx = user_example_get_ctx();
     user_example_ctx->mutex = HAL_MutexCreate();
 
-    cloudLinkMain();
+    CloudLinkDev *cloudLinkDev = cloudLinkListGetById(STR_GATEWAY_DEVID);
+    if (cloudLinkDev == NULL)
+    {
+        EXAMPLE_TRACE("gw cloudLinkDev is NULL");
+        return;
+    }
+    cloudLinkDev->id = user_example_ctx->master_devid;
+    hylinkMain();
     // HAL_MutexLock();
     // HAL_MutexUnlock();
 }
@@ -297,105 +329,6 @@ void linkkit_ota_install(void)
     system("chmod 777 " otafilename);
     system("cd /tmp;" otafilename);
 }
-// 注册事件回调函数, 注册配网事件回调一定要需在awss_start之前调用
-
-// linkkit_event_monitor是事件回调函数参考事件:
-static void linkkit_event_monitor(int event)
-{
-    switch (event) {
-        case IOTX_AWSS_START: // AWSS start without enbale, just supports device discover
-             // operate led to indicate user
-            EXAMPLE_TRACE("IOTX_AWSS_START");
-            break;
-        case IOTX_AWSS_ENABLE: // AWSS enable, AWSS doesn't parse awss packet until AWSS is enabled.
-            EXAMPLE_TRACE("IOTX_AWSS_ENABLE");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_LOCK_CHAN: // AWSS lock channel(Got AWSS sync packet)
-            EXAMPLE_TRACE("IOTX_AWSS_LOCK_CHAN");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_PASSWD_ERR: // AWSS decrypt passwd error
-            EXAMPLE_TRACE("IOTX_AWSS_PASSWD_ERR");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_GOT_SSID_PASSWD:
-            EXAMPLE_TRACE("IOTX_AWSS_GOT_SSID_PASSWD");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_CONNECT_ADHA: // AWSS try to connnect adha (device
-                                     // discover, router solution)
-            EXAMPLE_TRACE("IOTX_AWSS_CONNECT_ADHA");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_CONNECT_ADHA_FAIL: // AWSS fails to connect adha
-            EXAMPLE_TRACE("IOTX_AWSS_CONNECT_ADHA_FAIL");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_CONNECT_AHA: // AWSS try to connect aha (AP solution)
-            EXAMPLE_TRACE("IOTX_AWSS_CONNECT_AHA");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_CONNECT_AHA_FAIL: // AWSS fails to connect aha
-            EXAMPLE_TRACE("IOTX_AWSS_CONNECT_AHA_FAIL");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_SETUP_NOTIFY: // AWSS sends out device setup information
-                                     // (AP and router solution)
-            EXAMPLE_TRACE("IOTX_AWSS_SETUP_NOTIFY");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_CONNECT_ROUTER: // AWSS try to connect destination router
-            EXAMPLE_TRACE("IOTX_AWSS_CONNECT_ROUTER");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_CONNECT_ROUTER_FAIL: // AWSS fails to connect destination
-                                            // router.
-            EXAMPLE_TRACE("IOTX_AWSS_CONNECT_ROUTER_FAIL");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_GOT_IP: // AWSS connects destination successfully and got
-                               // ip address
-            EXAMPLE_TRACE("IOTX_AWSS_GOT_IP");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_SUC_NOTIFY: // AWSS sends out success notify (AWSS
-                                   // sucess)
-            EXAMPLE_TRACE("IOTX_AWSS_SUC_NOTIFY");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_BIND_NOTIFY: // AWSS sends out bind notify information to
-                                    // support bind between user and device
-            EXAMPLE_TRACE("IOTX_AWSS_BIND_NOTIFY");
-            // operate led to indicate user
-            break;
-        case IOTX_AWSS_ENABLE_TIMEOUT: // AWSS enable timeout
-                                       // user needs to enable awss again to support get ssid & passwd of router
-            EXAMPLE_TRACE("IOTX_AWSS_ENALBE_TIMEOUT");
-            // operate led to indicate user
-            break;
-         case IOTX_CONN_CLOUD: // Device try to connect cloud
-            EXAMPLE_TRACE("IOTX_CONN_CLOUD");
-            // operate led to indicate user
-            break;
-        case IOTX_CONN_CLOUD_FAIL: // Device fails to connect cloud, refer to
-                                   // net_sockets.h for error code
-            EXAMPLE_TRACE("IOTX_CONN_CLOUD_FAIL");
-            // operate led to indicate user
-            break;
-        case IOTX_CONN_CLOUD_SUC: // Device connects cloud successfully
-            EXAMPLE_TRACE("IOTX_CONN_CLOUD_SUC");
-            // operate led to indicate user
-            break;
-        case IOTX_RESET: // Linkkit reset success (just got reset response from
-                         // cloud without any other operation)
-            EXAMPLE_TRACE("IOTX_RESET");
-            // operate led to indicate user
-            break;
-        default:
-            break;
-    }
-}
 
 static int max_running_seconds = 0;
 int main(int argc, char **argv)
@@ -406,14 +339,7 @@ int main(int argc, char **argv)
     iotx_linkkit_dev_meta_info_t master_meta_info;
 
     memset(user_example_ctx, 0, sizeof(user_example_ctx_t));
-    if (strlen(g_device_name) == 0)
-    {
-        getNetworkSmallMac(ETH_NAME, g_device_name, sizeof(g_device_name));
-        // for (int i = 0; i < strlen(g_device_name); i++)
-        //     g_device_name[i] = toupper(g_device_name[i]);
-    }
-    EXAMPLE_TRACE("linkkit gateway g_device_name:%s", g_device_name);
-
+    main_before_init();
 #if defined(__UBUNTU_SDK_DEMO__)
     if (argc > 1)
     {
@@ -467,38 +393,40 @@ int main(int argc, char **argv)
     EXAMPLE_TRACE("master_meta_info:%s\n", master_meta_info.product_secret);
     EXAMPLE_TRACE("master_meta_info:%s\n", master_meta_info.device_name);
     EXAMPLE_TRACE("master_meta_info:%s\n", master_meta_info.device_secret);
-
-    res = IOT_Dynamic_Register(IOTX_HTTP_REGION_SHANGHAI, &master_meta_info);
-    if (res < 0)
+    if (strlen(master_meta_info.device_secret) == 0)
     {
-        EXAMPLE_TRACE("IOT_Dynamic_Register:%d fail\n", res);
-        char buf[64] = {0};
-        res = operateFile(0, ALINKGATEWAYFILE, buf, sizeof(buf));
+        res = IOT_Dynamic_Register(IOTX_HTTP_REGION_SHANGHAI, &master_meta_info);
         if (res < 0)
         {
-            EXAMPLE_TRACE("operateFile:%s fail\n", ALINKGATEWAYFILE);
-        }
-        else if (res == 0)
-        {
+            EXAMPLE_TRACE("IOT_Dynamic_Register:%d fail\n", res);
+            char buf[64] = {0};
+            res = operateFile(0, ALINKGATEWAYFILE, buf, sizeof(buf));
+            if (res < 0)
+            {
+                EXAMPLE_TRACE("operateFile:%s fail\n", ALINKGATEWAYFILE);
+            }
+            else if (res == 0)
+            {
+            }
+            else
+            {
+                cJSON *root = cJSON_Parse(buf);
+                cJSON *val = cJSON_GetObjectItem(root, "device_secret");
+                if (val != NULL)
+                    strcpy(master_meta_info.device_secret, val->valuestring);
+                cJSON_Delete(root);
+            }
         }
         else
         {
-            cJSON *root = cJSON_Parse(buf);
-            cJSON *val = cJSON_GetObjectItem(root, "device_secret");
-            if (val != NULL)
-                strcpy(master_meta_info.device_secret, val->valuestring);
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddStringToObject(root, "device_secret", master_meta_info.device_secret);
+            char *json = cJSON_PrintUnformatted(root);
+            if (json != NULL)
+                operateFile(1, ALINKGATEWAYFILE, json, strlen(json) + 1);
+            free(json);
             cJSON_Delete(root);
         }
-    }
-    else
-    {
-        cJSON *root = cJSON_CreateObject();
-        cJSON_AddStringToObject(root, "device_secret", master_meta_info.device_secret);
-        char *json = cJSON_PrintUnformatted(root);
-        if (json != NULL)
-            operateFile(1, ALINKGATEWAYFILE, json, strlen(json) + 1);
-        free(json);
-        cJSON_Delete(root);
     }
     /* Choose Login Server */
     int domain_type = IOTX_CLOUD_REGION_SHANGHAI;

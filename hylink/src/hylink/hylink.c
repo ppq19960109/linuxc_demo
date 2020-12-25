@@ -10,32 +10,37 @@
 #include "hylink.h"
 #include "hylinkRecv.h"
 #include "hylinkSend.h"
+#include "hylinkSubDev.h"
 #include "logFunc.h"
 
-static HylinkController s_hylinkler;
-
-void hylinkGatewayInit(void)
+typedef struct
 {
-    s_hylinkler.gateway = malloc(sizeof(HylinkDev));
+    unsigned char dispatchBuf[1024];
+    pthread_mutex_t mutex;
+} HylinkController;
 
-    HylinkDev *hylinkDev = s_hylinkler.gateway;
-    memset(hylinkDev, 0, sizeof(HylinkDev));
-    strcpy(hylinkDev->GatewayId, "");
-    strcpy(hylinkDev->DeviceId, STR_HOST_GATEWAYID);
-    strcpy(hylinkDev->ModelId, "000000");
-    hylinkDev->Online = SUBDEV_ONLINE;
-    hylinkDev->devType = GATEWAYTYPE;
-    hylinkDev->private = malloc(sizeof(HylinkDevGateway));
-    memset(hylinkDev->private, 0, sizeof(HylinkDevGateway));
+static HylinkController s_hylink;
+
+pthread_mutex_t *hylinkGetMutex(void)
+{
+    return &s_hylink.mutex;
+}
+
+unsigned char *getHyDispatchBuf(void)
+{
+    return s_hylink.dispatchBuf;
 }
 
 int hylinkInit(void)
 {
-    pthread_mutex_init(&s_hylinkler.mutex, NULL);
-    hylinkListInit(&s_hylinkler.head);
-    hylinkGatewayInit();
-    hylinkGateway(NULL);
+    pthread_mutex_init(&s_hylink.mutex, NULL);
+
+    hylinkListInit();
     rkDriverOpen();
+
+    HyLinkDev *gwHyLinkDev = addProfileDev(HYLINK_PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, hyLinkParseJson);
+    if (gwHyLinkDev != NULL)
+        runTransferCb(gwHyLinkDev, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
 
     runSystemCb(LAN_OPEN);
     return 0;
@@ -43,20 +48,14 @@ int hylinkInit(void)
 
 int hylinkReset(void)
 {
-    HylinkDev *ptr;
-#ifndef HY_USER_KHASH
-    HylinkDev *next;
-    hylinkListEachEntrySafe(ptr, next, &s_hylinkler.head, hylinkNode)
-    {
-        hylinkDelDev(ptr->DeviceId);
-    }
-#else
-    hyLink_kh_foreach_value(ptr)
+    HyLinkDev *dev;
+
+    hyLink_kh_foreach_value(dev)
     {
         logWarn("hyLink_kh_foreach_value");
-        hylinkDelDev(ptr->DeviceId);
+        hylinkDelDev(dev->devId);
     }
-#endif
+
     hylinkSendReset();
     hylinkListEmpty();
     return 0;
@@ -69,47 +68,8 @@ int hylinkDestory(void)
     hylinkListEmpty();
     rkDriverClose();
 
-    hylinkDevFree(s_hylinkler.gateway);
-    pthread_mutex_destroy(&s_hylinkler.mutex);
+    pthread_mutex_destroy(&s_hylink.mutex);
     return 0;
-}
-
-pthread_mutex_t *hylinkGetMutex(void)
-{
-    return &s_hylinkler.mutex;
-}
-
-struct list_head *hylinkGetListHead(void)
-{
-    return &s_hylinkler.head;
-}
-
-int hylinkGateway(cJSON *Data)
-{
-    HylinkDev *hylinkDev = s_hylinkler.gateway;
-    int res = -1;
-    if (Data == NULL)
-        goto cloud;
-
-    HylinkDevGateway *gatewayDev = (HylinkDevGateway *)hylinkDev->private;
-
-    cJSON *Key = cJSON_GetObjectItem(Data, STR_KEY);
-    if (Key == NULL)
-        goto fail;
-    if (strcmp(Key->valuestring, STR_PERMITJOINING) == 0)
-    {
-        getByteForJson(Data, STR_VALUE, &gatewayDev->PermitJoining);
-    }
-    else
-    {
-        goto fail;
-    }
-
-cloud:
-    res = runTransferCb(hylinkDev, GATEWAYTYPE, TRANSFER_CLOUD_REPORT);
-    return res;
-fail:
-    return -1;
 }
 
 void hylinkMain(void)
@@ -118,11 +78,13 @@ void hylinkMain(void)
     registerSystemCb(hylinkDestory, HYLINK_CLOSE);
     registerSystemCb(hylinkReset, HYLINK_RESET);
 
-    registerTransferCb(hylinkRecv, TRANSFER_READ);
-
+    registerTransferCb(hylinkRecv, TRANSFER_CLIENT_READ);
+    registerTransferCb(hylinkSendDevAttr, TRANSFER_DEVATTR);
     registerSystemCb(hylinkHeart, CMD_HEART);
-    registerSystemCb(hylinkSendNetwork, CMD_NETWORK);
+ 
     registerSystemCb(hylinkSendDevInfo, CMD_DEVSINFO);
 
     registerSystemCb(nativeFrameOpen, LAN_OPEN);
+
+    runSystemCb(HYLINK_OPEN);
 }

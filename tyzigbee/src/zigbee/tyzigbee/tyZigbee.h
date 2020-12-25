@@ -20,12 +20,16 @@ extern "C"
     };
 
 #define ZCL_PRIVATE_CLUSTER 0xef00
+
     enum ZCL_PRIVATE_CLUSTER_CMOOAND_ID
     {
         TY_DATA_REQUEST = 0x00,         // 网关端数据请求
         TY_DATA_RESPONE = 0x01,         // MCU 侧数据请求的回复
         TY_DATA_REPORT = 0x02,          // MCU 侧数据主动上报（双向）
         TY_DATA_QUERY = 0x03,           // GW 下发，触发 MCU侧把当前的信息全部上报，没有 zcl payload.注：设备端可以做个策略，数 据最好不要集中上报
+        TY_DATA_MODULE_RSP = 0x05,
+        TY_DATA_MODULE = 0x06,
+
         TUYA_MCU_VERSION_REQ = 0x10,    //Gw->Zigbee 网关查询 mcu 版本
         TUYA_MCU_VERSION_RSP = 0x11,    //Zigbee->Gw mcu返回版本或主动上报版本
         TUYA_MCU_OTA_NOTIFY = 0x12,     // Gw->Zigbee 网关通知 mcu 升级

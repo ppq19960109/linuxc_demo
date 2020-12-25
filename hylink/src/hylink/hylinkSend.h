@@ -32,13 +32,14 @@ extern "C"
         // char GatewayId[16];
         struct HylinkSendData Data;
     } HylinkDevSendData;
-
+    int hylinkDispatch(const char *str);
     int hylinkSend(void *ptr);
     int hylinkDelDev(const char *sn);
-    
+
     int hylinkHeart(void);
-    int hylinkSendNetwork(void);
+
     int hylinkSendDevInfo(void);
+    int hylinkSendDevAttr(void *devId, unsigned int len);
     int hylinkSendReset(void);
 #ifdef __cplusplus
 }

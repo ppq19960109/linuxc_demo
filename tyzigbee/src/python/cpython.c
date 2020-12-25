@@ -7,6 +7,19 @@
 #include "base64.h"
 #include "python3.6m/Python.h"
 
+void cpythonInit(void)
+{
+    Py_Initialize(); //开始Python解释器
+
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString("sys.path.append('./')");
+    PyRun_SimpleString("sys.path.append('./pyfile')");
+}
+
+void cpythonDestroy(void)
+{
+    Py_Finalize();
+}
 int hyLinkConver(const char *modelId, const char *key, const char *dir, char *in, int inLen, char *out, int *outLen)
 {
     char hkey[24] = {0};
@@ -19,12 +32,6 @@ int hyLinkConver(const char *modelId, const char *key, const char *dir, char *in
     {
         strcpy(hkey, key);
     }
-
-    Py_Initialize(); //开始Python解释器
-
-    PyRun_SimpleString("import sys");
-    PyRun_SimpleString("sys.path.append('./')");
-    PyRun_SimpleString("sys.path.append('./pyfile')");
     //导入python源文件
     PyObject *pname = NULL;
     pname = PyUnicode_FromString(modelId);
@@ -73,7 +80,7 @@ int hyLinkConver(const char *modelId, const char *key, const char *dir, char *in
     Py_DECREF(pfunc);
     Py_DECREF(pmodule);
     Py_DECREF(pname);
-    Py_Finalize();
+
     return 0;
 
 fail_pRetVal:

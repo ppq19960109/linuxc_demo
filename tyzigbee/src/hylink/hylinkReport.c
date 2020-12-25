@@ -47,7 +47,7 @@ int hylinkReportSingle(char *type, char *devId, char *modelId, char *key, char *
     reportBuf[0] = 0x02;
     strncpy(&reportBuf[1], json, jsonLen);
     reportBuf[jsonLen + 1] = 0x03;
-    int ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_HYLINK_WRITE);
+    int ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_SERVER_HYLINK_WRITE);
 
     cJSON_free(json);
     cJSON_Delete(root);
@@ -89,7 +89,7 @@ int hylinkReportFunc(HylinkReport *hylinkReport)
     reportBuf[0] = 0x02;
     strncpy(&reportBuf[1], json, jsonLen);
     reportBuf[jsonLen + 1] = 0x03;
-    int ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_HYLINK_WRITE);
+    int ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_SERVER_HYLINK_WRITE);
 
     cJSON_free(json);
     cJSON_Delete(root);

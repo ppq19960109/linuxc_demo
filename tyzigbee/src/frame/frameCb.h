@@ -22,6 +22,7 @@ extern "C"
         ZIGBEE_OPEN,
         ZIGBEE_CLOSE,
         ZIGBEE_RESET,
+        CMD_DEVSINFO,
         SYSTEM_LAST,
     } SystemStatus;
     typedef int (*systemCb)(void);
@@ -30,8 +31,10 @@ extern "C"
 
     typedef enum
     {
-        TRANSFER_HYLINK_WRITE = 0,
-        TRANSFER_HYLINK_READ,
+        TRANSFER_CLIENT_WRITE = 0,
+        TRANSFER_CLIENT_READ,
+        TRANSFER_SERVER_HYLINK_WRITE,
+        TRANSFER_SERVER_HYLINK_READ,
         TRANSFER_LAST,
     } TransferStatus;
     typedef int (*transferCb)(void *, unsigned int);

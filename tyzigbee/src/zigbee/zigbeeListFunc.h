@@ -25,8 +25,8 @@ extern "C"
         char dstEndpoint;
         unsigned short AttributeId;
         unsigned short ClusterId;
-        char z3CtrlCmdType;
-        char z3PrivateCluster;
+        char z3CmdType;
+        char z3CmdId;
         unsigned char dataType;
     } ZigbeeAttr;
 

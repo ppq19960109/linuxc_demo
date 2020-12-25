@@ -19,8 +19,8 @@
             "dstEndpoint": 1,
             "ClusterId": 6,
             "AttributeId": 0,
-            "z3CtrlCmdType": 2,
-            "z3PrivateCluster": 0,
+            "z3CmdType": 2,
+            "z3CmdId": 0,
             "dataType": 16
         },
         {
@@ -30,8 +30,8 @@
             "dstEndpoint": 1,
             "ClusterId": 6,
             "AttributeId": 32769,
-            "z3CtrlCmdType": 1,
-            "z3PrivateCluster": 0,
+            "z3CmdType": 1,
+            "z3CmdId": 0,
             "dataType": 48
         },
         {
@@ -41,9 +41,20 @@
             "dstEndpoint": 1,
             "ClusterId": 6,
             "AttributeId": 32770,
-            "z3CtrlCmdType": 1,
-            "z3PrivateCluster": 0,
+            "z3CmdType": 1,
+            "z3CmdId": 0,
             "dataType": 48
+        },
+        {
+            "hyKey": "KeyMode",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 61184,
+            "AttributeId": 101,
+            "z3CmdType": 2,
+            "z3CmdId": 48,
+            "dataType": 4
         }
     ]
 }

@@ -6,14 +6,20 @@
 #include "nativeTimer.h"
 #include "nativeSignal.h"
 #include "nativeServer.h"
+#include "nativeClient.h"
 #include "frameCb.h"
+
+#define SERVER
 
 static int nativeFrameClose(void)
 {
     printf("nativeFrameClose\n");
-
-    nativeServerEpollClose();
-
+    runSystemCb(LED_DRIVER_TIMER_CLOSE);
+#ifdef SERVER
+    nativeServerCLose();
+#else
+    nativeClientClose();
+#endif
     return 0;
 }
 
@@ -24,9 +30,12 @@ int nativeFrameOpen(void)
     registerSystemCb(nativeTimerClose, LED_DRIVER_TIMER_CLOSE);
 
     registerSystemCb(nativeFrameClose, LAN_CLOSE);
-    registerTransferCb(nativeHylinkWrite, TRANSFER_HYLINK_WRITE);
-
     nativeSignal();
-    nativeServerEpollMain();
+#ifdef SERVER
+    nativeServerOpen();
+#else
+    nativeClientOpen();
+#endif
+
     return 0;
 }

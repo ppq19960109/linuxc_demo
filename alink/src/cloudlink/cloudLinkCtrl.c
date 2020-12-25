@@ -4,6 +4,7 @@
 
 #include "logFunc.h"
 #include "cJSON.h"
+#include "base64.h"
 #include "commonFunc.h"
 #include "frameCb.h"
 #include "hylinkListFunc.h"
@@ -15,7 +16,7 @@
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 
-static void getValueForJson(cJSON *val, char *dst)
+void getValueForJson(cJSON *val, char *dst)
 {
     if (val->valuestring != NULL)
     {
@@ -27,94 +28,62 @@ static void getValueForJson(cJSON *val, char *dst)
     }
 }
 
-int cloudLinkGatewayCtrl(void *payload)
-{
-    cJSON *root = cJSON_Parse(payload);
-    if (root == NULL)
-        return -1;
-    for (int i = 0; i < g_GatewaAttr.attrLen; i++)
-    {
-        if (cJSON_HasObjectItem(root, g_GatewaAttr.attr[i]))
-        {
-            cJSON *val;
-            switch (i)
-            {
-            case 0:
-                val = cJSON_GetObjectItem(root, g_GatewaAttr.attr[i]);
-                if (val == NULL)
-                    break;
-                if (val->valueint > 0)
-                {
-                    runSystemCb(CMD_NETWORK);
-                }
-                break;
-            }
-        }
-    }
-    return 0;
-}
-
 //cloud转换成hanyar的json格式
 int cloudLinkCtrl(void *sn, const char *payload)
 {
-
-    CloudLinkDev *cloudLinkDev = cloudLinkControlGet()->cloudLinkGateway;
-    logInfo("cloudLinkCtrl:%d,%d", cloudLinkDev->devInfo.id, (int)sn);
-    if (cloudLinkDev->devInfo.id == (int)sn)
-    {
-        return cloudLinkGatewayCtrl(payload);
-    }
-    cloudLinkDev = cloudLinkListGetBySn((int)sn);
+    int i, res;
+    CloudLinkDev *cloudLinkDev = cloudLinkListGetBySn((int)sn);
     if (cloudLinkDev == NULL)
         return -1;
 
     HylinkDevSendData hylinkDevSend = {0};
-    int i;
+
     hylinkDevSend.FrameNumber = 0;
 
-    strcpy(hylinkDevSend.Data.DeviceId, cloudLinkDev->devInfo.sn);
-
-    int devType = cloudLinkDev->devType;
-    strcpy(hylinkDevSend.Data.ModelId, g_SLocalModel.attr[devType]);
+    strcpy(hylinkDevSend.Data.DeviceId, cloudLinkDev->alinkInfo.device_name);
+    strcpy(hylinkDevSend.Data.ModelId, cloudLinkDev->modelId);
 
     cJSON *root = cJSON_Parse(payload);
     cJSON *val;
 
     strcpy(hylinkDevSend.Type, STR_CTRL);
-    for (i = 0; i < g_SCloudAttr[devType].attrLen; ++i)
-    {
-        if (cJSON_HasObjectItem(root, g_SCloudAttr[devType].attr[i]))
-        {
-            int attrType = findStrIndex(g_SCloudAttr[devType].attr[i], g_SCloudAttr[devType].attr, g_SCloudAttr[devType].attrLen);
-            if (attrType < 0)
-            {
-                // if (devType == TOUCHPANEL02U2)
-                // {
-                // }
-                // else
-                // {
-                    goto fail;
-                // }
-            }
-            strcpy(hylinkDevSend.Data.Key, g_SLocalAttr[devType].attr[i]);
 
-            val = cJSON_GetObjectItem(root, g_SCloudAttr[devType].attr[i]);
+    for (i = 0; i < cloudLinkDev->attrLen; ++i)
+    {
+        if (cJSON_HasObjectItem(root, cloudLinkDev->attr[i].cloudKey))
+        {
             break;
         }
     }
+    if (i == cloudLinkDev->attrLen)
+    {
+        logError("cloudKey not exist");
+        goto fail;
+    }
+    if (strlen(cloudLinkDev->attr[i].hyType) != 0)
+        strcpy(hylinkDevSend.Type, cloudLinkDev->attr[i].hyType);
+
+    strcpy(hylinkDevSend.Data.Key, cloudLinkDev->attr[i].hyKey);
+
+    val = cJSON_GetObjectItem(root, cloudLinkDev->attr[i].cloudKey);
+
     getValueForJson(val, hylinkDevSend.Data.Value);
-    hylinkSend(&hylinkDevSend);
+    res = hylinkSend(&hylinkDevSend);
     cJSON_Delete(root);
-    return 0;
+    return res;
 fail:
     cJSON_Delete(root);
-    logError("cloudLinkCtrl fail\n");
     return -1;
 }
 
 int cloudLinkServicCtrl(const int devid, const char *serviceid, const int serviceid_len, const char *request, char **response, int *response_len)
 {
-    int res = -1;
+    int res = -1, i;
+
+    if (strncmp(serviceid, "TriggerGatewayService", serviceid_len) == 0)
+    {
+        return localScene(devid, serviceid, serviceid_len, request, response, response_len);
+    }
     /* Parse Root */
     cJSON *root = cJSON_Parse(request);
     if (root == NULL || !cJSON_IsObject(root))
@@ -128,58 +97,66 @@ int cloudLinkServicCtrl(const int devid, const char *serviceid, const int servic
         logError("cloudLinkDev Null Error");
         return -1;
     }
-    int devType = cloudLinkDev->devType;
-    if (g_SCloudAttr[devType].attrCtrl == NULL)
+    logDebug("serviceid:%s", serviceid);
+    for (i = 0; i < cloudLinkDev->serverAttrLen; ++i)
     {
-        logError("g_SCloudAttr Null Error");
-        return -1;
+        if (strncmp(serviceid, cloudLinkDev->serverAttr[i].serverId, serviceid_len) == 0)
+        {
+            break;
+        }
     }
-    int attrType = findStrnIndex(serviceid, serviceid_len, g_SCloudAttr[devType].attrCtrl, g_SCloudAttr[devType].attrCtrlLen);
-    if (attrType < 0)
+    if (i == cloudLinkDev->serverAttrLen)
     {
-        logError("attrType Null Error,devType:%d,%*.s,%d", devType, serviceid_len, serviceid, g_SCloudAttr[devType].attrCtrlLen);
+        logError("server cloudKey not exist:%s", serviceid);
         goto fail;
     }
-
     HylinkDevSendData hylinkDevSend = {0};
     hylinkDevSend.FrameNumber = 0;
-    strcpy(hylinkDevSend.Data.DeviceId, cloudLinkDev->devInfo.sn);
-    strcpy(hylinkDevSend.Data.ModelId, g_SLocalModel.attr[devType]);
+    strcpy(hylinkDevSend.Data.DeviceId, cloudLinkDev->alinkInfo.device_name);
+    strcpy(hylinkDevSend.Data.ModelId, cloudLinkDev->modelId);
     strcpy(hylinkDevSend.Type, STR_CTRL);
 
-    if (g_SLocalAttr[devType].attrCtrl == NULL || attrType >= g_SLocalAttr[devType].attrCtrlLen)
+    strcpy(hylinkDevSend.Data.Key, cloudLinkDev->serverAttr[i].hyKey);
+    cJSON *key = NULL;
+    cJSON *value;
+    if (cJSON_HasObjectItem(root, cloudLinkDev->serverAttr[i].key))
     {
-        logError("g_SLocalAttr Null Error");
-        if (devType == TOUCHPANEL02U2)
-        {
-            cJSON *Key = cJSON_GetObjectItem(root, "Key");
+        key = cJSON_GetObjectItem(root, cloudLinkDev->serverAttr[i].key);
+    }
+    //------------------------------------
+    value = cJSON_GetObjectItem(root, cloudLinkDev->serverAttr[i].value);
+    if (strcmp(cloudLinkDev->alinkInfo.product_key, "a1aqqjEXCWa") == 0)
+    {
+        int keyNum = key->valueint - 1;
+        char buf[24] = {0};
+        sprintf(buf, "%d", keyNum);
+        strcat(hylinkDevSend.Data.Key, buf);
 
-            cJSON *Words = cJSON_GetObjectItem(root, "Words");
-            cJSON *PictureCode = cJSON_GetObjectItem(root, "PictureCode");
-            if (Words != NULL)
-            {
-                sprintf(hylinkDevSend.Data.Key, "SceName_%d", Key->valueint);
-                getValueForJson(Words, hylinkDevSend.Data.Value);
-            }
-            else if (PictureCode != NULL)
-            {
-                sprintf(hylinkDevSend.Data.Key, "ScePhoto_%d", Key->valueint);
-                getValueForJson(PictureCode, hylinkDevSend.Data.Value);
-            }
-            else
-            {
-                goto fail;
-            }
+        if (strncmp(serviceid, "WordsCfg", serviceid_len) == 0)
+        {
+            getValueForJson(value, buf);
+            int encLen = strlen(buf);
+            void *decodeOut = malloc(BASE64_DECODE_OUT_SIZE(encLen));
+            int decodeOutlen = base64_decode(buf, encLen, decodeOut);
+            strncpy(hylinkDevSend.Data.Value, decodeOut, decodeOutlen);
+            free(decodeOut);
         }
-        else
-            goto fail;
+        else if (strncmp(serviceid, "PictureCfg", serviceid_len) == 0)
+        {
+            getValueForJson(value, hylinkDevSend.Data.Value);
+        }
     }
     else
     {
-        strcpy(hylinkDevSend.Data.Key, g_SLocalAttr[devType].attrCtrl[attrType]);
-        cJSON *val = cJSON_GetObjectItem(root, g_SLocalAttr[devType].attrCtrl[attrType]);
-        getValueForJson(val, hylinkDevSend.Data.Value);
+        if (key != NULL)
+        {
+            char buf[24];
+            getValueForJson(key, buf);
+            strcat(hylinkDevSend.Data.Key, buf);
+        }
+        getValueForJson(value, hylinkDevSend.Data.Value);
     }
+    //------------------------------------
     res = hylinkSend(&hylinkDevSend);
 
     /* Send Service Response To Cloud */
@@ -204,7 +181,8 @@ int cloudLinkDevDel(void *sn)
 {
     logWarn("cloudLinkDevDel:%s", sn);
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
-    runTransferCb(cloudLinkDev->devInfo.sn, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
+    if (cloudLinkDev != NULL)
+        runTransferCb(cloudLinkDev->alinkInfo.device_name, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
 
     return hylinkDelDev(sn);
 }

@@ -40,10 +40,14 @@ extern "C"
 
     typedef enum
     {
-        TRANSFER_WRITE = 0,
-        TRANSFER_READ = 1,
+        TRANSFER_CLIENT_WRITE = 0,
+        TRANSFER_CLIENT_READ,
+        TRANSFER_SERVER_HYLINK_WRITE,
+        TRANSFER_SERVER_HYLINK_READ,
         TRANSFER_SUBDEV_LINE,
         TRANSFER_CLOUD_REPORT,
+        TRANSFER_SCENE_REPORT,
+        TRANSFER_DEVATTR,
         TRANSFER_LAST,
     } TransferStatus;
     typedef int (*transferCb)(void *, unsigned int);

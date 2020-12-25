@@ -5,9 +5,9 @@
 extern "C"
 {
 #endif
-#define STR_GATEWAY_ID "0000000000000000"
-#define STR_GATEWAY_MODELID "0000000000000000"
-#define STR_PERMITJOINING "PermitJoining"
+#define STR_GATEWAY_DEVID "0000000000000000"
+#define STR_GATEWAY_MODELID "000000"
+#define STR_TIME "Time"
 
 #define STR_COMMAND "Command"
 #define STR_REPORT "Report"
@@ -36,6 +36,8 @@ extern "C"
 
 #define STR_UP "up"
 #define STR_DOWN "down"
+
+#define STR_DEVSINFO "DevsInfo"
 
     typedef struct
     {

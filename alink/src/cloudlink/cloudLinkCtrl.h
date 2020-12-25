@@ -9,7 +9,7 @@ extern "C"
     int cloudLinkCtrl(void *sn, const char *payload);
     int cloudLinkServicCtrl(const int devid, const char *serviceid, const int serviceid_len, const char *request, char **response, int *response_len);
     int cloudLinkDevDel(void *sn);
-
+    void getValueForJson(cJSON *val, char *dst);
 #ifdef __cplusplus
 }
 #endif

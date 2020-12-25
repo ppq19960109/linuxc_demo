@@ -24,6 +24,13 @@ extern "C"
 #define STR_ATTRIBUTE "Attribute"
 #define STR_DELETE "Delete"
 
+#define STR_GATEWAY_DEVID "0000000000000000"
+#define STR_GATEWAY_MODELID "000000"
+#define STR_PERMITJOINING "PermitJoining"
+
+#define STR_KEY "Key"
+#define STR_VALUE "Value"
+
     int hylinkRecv(void *recv, unsigned int len);
 #ifdef __cplusplus
 }

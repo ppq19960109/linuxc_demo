@@ -10,14 +10,6 @@ extern "C"
 #include "cJSON.h"
 #include "hylinkListFunc.h"
 
-#define GATEWAYTYPE 0xff
-
-#define STR_HOST_GATEWAYID "0000000000000000"
-#define STR_PERMITJOINING "PermitJoining"
-
-#define STR_KEY "Key"
-#define STR_VALUE "Value"
-
     typedef struct
     {
         char *const *attr;
@@ -26,25 +18,9 @@ extern "C"
         unsigned short attrCtrlLen;
     } SAttrInfo;
 
-    typedef struct
-    {
-        struct list_head head;
-        pthread_mutex_t mutex;
-        HylinkDev *gateway;
-    } HylinkController;
-
-    typedef struct
-    {
-        char PermitJoining;
-        char FirmwareVersion[8];
-        char SoftVersion[8];
-    } HylinkDevGateway;
-
     void hylinkMain(void);
     pthread_mutex_t *hylinkGetMutex(void);
-    struct list_head *hylinkGetListHead(void);
-
-    int hylinkGateway(cJSON *Data);
+    unsigned char *getHyDispatchBuf(void);
 #ifdef __cplusplus
 }
 #endif

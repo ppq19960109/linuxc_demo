@@ -1,0 +1,109 @@
+{
+    "modelId": "_TZE200_twuagcv5",
+    "productKey": "a1aqqjEXCWa",
+    "productSecret": "sydbSMHWg6J9VaBY",
+    "deviceSecret": "",
+    "devName": "智镜",
+    "deviceType": "0",
+    "attr": [
+        {
+            "keyName": "空调开关",
+            "hyKey": "Switch_1",
+            "cloudKey": "PowerSwitch",
+            "valueType": 0
+        },
+        {
+            "keyName": "空调风速",
+            "hyKey": "WindSpeed_1",
+            "cloudKey": "WindSpeed",
+            "valueType": 0
+        },
+        {
+            "keyName": "空调模式",
+            "hyKey": "WorkMode_1",
+            "cloudKey": "WorkMode",
+            "valueType": 0
+        },
+        {
+            "keyName": "当前环境温度",
+            "hyKey": "CurrentTemperature_1",
+            "cloudKey": "CurrentTemperature",
+            "valueType": 0
+        },
+        {
+            "keyName": "空调设定温度",
+            "hyKey": "TargetTemperature_1",
+            "cloudKey": "TargetTemperature",
+            "valueType": 0
+        },
+        {
+            "keyName": "新风开关",
+            "hyKey": "Switch_2",
+            "cloudKey": "PowerSwitch_1",
+            "valueType": 0
+        },
+        {
+            "keyName": "新风风速",
+            "hyKey": "WindSpeed_2",
+            "cloudKey": "WindSpeed_1",
+            "valueType": 0
+        },
+        {
+            "keyName": "地暖开关",
+            "hyKey": "Switch_3",
+            "cloudKey": "PowerSwitch_2",
+            "valueType": 0
+        },
+        {
+            "keyName": "地暖设定温度",
+            "hyKey": "TargetTemperature_3",
+            "cloudKey": "TargetTemperature_2",
+            "valueType": 0
+        },
+        {
+            "keyName": "空调启用",
+            "hyKey": "Enable_1",
+            "cloudKey": "AirConditioner",
+            "valueType": 0
+        },
+        {
+            "keyName": "新风启用",
+            "hyKey": "Enable_2",
+            "cloudKey": "FreshAir",
+            "valueType": 0
+        },
+        {
+            "keyName": "地暖启用",
+            "hyKey": "Enable_3",
+            "cloudKey": "FloorHeating",
+            "valueType": 0
+        },
+        {
+            "keyName": "模式选择",
+            "hyKey": "ModeSelect",
+            "valueType": 0
+        }
+    ],
+    "events": [
+        {
+            "eventId": "KeyValueNotification",
+            "hyKey": "KeyFobValue",
+            "key": "KeyValue",
+            "value": 1
+        }
+    ],
+    "services": [
+        {
+            "serverId": "WordsCfg",
+            "hyKey": "SceName_",
+            "key": "Key",
+            "value": "Words"
+        },
+        {
+            "serverId": "PictureCfg",
+            "hyKey": "ScePhoto_",
+            "key": "Key",
+            "value": "PictureCode"
+        }
+    ]
+}

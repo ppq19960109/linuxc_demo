@@ -1,0 +1,16 @@
+{
+    "modelId": "000000",
+    "productKey": "a1f0jNVDEPL",
+    "productSecret": "iaBya0CvodivLBg6",
+    "deviceSecret": "",
+    "devName": "网关",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Time",
+            "hyType": "Add",
+            "cloudKey": "powerstate",
+            "valueType": 0
+        }
+    ]
+}

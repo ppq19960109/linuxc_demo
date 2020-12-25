@@ -7,10 +7,13 @@
 #include "dev_reset_api.h"
 #include "infra_compat.h"
 
+#include "scene.h"
+#include "base64.h"
 #include "cJSON.h"
+#include "frameCb.h"
+#include "hylinkListFunc.h"
 #include "cloudLink.h"
 #include "cloudLinkCtrl.h"
-#include "frameCb.h"
 #include "cloudLinkListFunc.h"
 
 static int user_property_set_event_handler(const int devid, const char *request, const int request_len)
@@ -27,17 +30,28 @@ static int user_property_set_event_handler(const int devid, const char *request,
 
 static int user_property_get_event_handler(const int devid, const char *request, const int request_len, char **response, int *response_len)
 {
-    int res = 0, i, j;
+    int res = 0, i, j, k;
 
     EXAMPLE_TRACE("Property Get Received, Devid: %d, Request: %s", devid, request);
+
+    CloudLinkDev *cloudLinkDev = cloudLinkListGetBySn(devid);
+    if (cloudLinkDev == NULL)
+    {
+        printf(" cloudLinkDev is null\n");
+        return -1;
+    }
+    HyLinkDev *hyLinkDev = hylinkListGetById(cloudLinkDev->alinkInfo.device_name);
+    if (hyLinkDev == NULL)
+    {
+        printf(" hyLinkDev is null\n");
+        return -1;
+    }
+
     cJSON *root = cJSON_Parse(request);
     // char *json = cJSON_Print(root);
     // EXAMPLE_TRACE("json:%s", json);
     // free(json);
 
-    CloudLinkDev *cloudLinkDev = cloudLinkListGetBySn(devid);
-    if (cloudLinkDev == NULL)
-        return -1;
     cJSON *send = cJSON_CreateObject();
 
     cJSON *array_sub;
@@ -49,28 +63,34 @@ static int user_property_get_event_handler(const int devid, const char *request,
         if (array_sub == NULL)
             continue;
 
-        for (j = 0; j < cloudLinkDev->devSvcNum; j++)
+        for (j = 0; j < cloudLinkDev->attrLen; j++)
         {
-            if (strcmp(cloudLinkDev->devSvc[j].svcId, array_sub->valuestring) == 0)
+            if (strcmp(cloudLinkDev->attr[j].cloudKey, array_sub->valuestring) == 0)
             {
-                if (cloudLinkDev->devSvc[j].svcVal == NULL)
+                for (k = 0; k < hyLinkDev->attrLen; ++k)
                 {
-                    EXAMPLE_TRACE("svcId:%s svcVal is null", cloudLinkDev->devSvc[j].svcId);
-                    break;
+                    if (strcmp(hyLinkDev->attr[k].hyKey, cloudLinkDev->attr[j].hyKey) == 0)
+                    {
+                        char *cloudKey = cloudLinkDev->attr[j].cloudKey;
+                        char *hyValue = hyLinkDev->attr[k].value;
+                        switch (hyLinkDev->attr[k].valueType)
+                        {
+                        case LINK_VALUE_TYPE_ENUM:
+                            cJSON_AddNumberToObject(send, cloudKey, *hyValue);
+                            break;
+                        case LINK_VALUE_TYPE_NUM:
+                            cJSON_AddNumberToObject(send, cloudKey, *(int *)hyValue);
+                            break;
+                        case LINK_VALUE_TYPE_STRING:
+                            cJSON_AddStringToObject(send, cloudKey, hyValue);
+                            break;
+                        default:
+                            break;
+                        }
+                        break;
+                    }
                 }
-                // EXAMPLE_TRACE("svcId:%s,%s", cloudLinkDev->devSvc[j].svcId, cloudLinkDev->devSvc[j].svcVal);
-                cJSON *buf = cJSON_Parse(cloudLinkDev->devSvc[j].svcVal);
-                cJSON *val = cJSON_GetObjectItem(buf, cloudLinkDev->devSvc[j].svcId);
-                if (val->valuestring != NULL)
-                {
-                    cJSON_AddStringToObject(send, cloudLinkDev->devSvc[j].svcId, val->valuestring);
-                }
-                else
-                {
-                    cJSON_AddNumberToObject(send, cloudLinkDev->devSvc[j].svcId, val->valueint);
-                }
-
-                cJSON_Delete(buf);
+                break;
             }
         }
     }
@@ -84,7 +104,6 @@ static int user_property_get_event_handler(const int devid, const char *request,
     cJSON_Delete(send);
     return res;
 }
-
 static int user_permit_join_event_handler(const char *product_key, const int time)
 {
     user_example_ctx_t *user_example_ctx = user_example_get_ctx();
@@ -143,7 +162,7 @@ static int user_dev_bind_handler(const char *detail)
 void linkkit_subdev_register(void)
 {
     IOT_RegisterCallback(ITE_PROPERTY_SET, user_property_set_event_handler);
-    // IOT_RegisterCallback(ITE_PROPERTY_GET, user_property_get_event_handler);
+    IOT_RegisterCallback(ITE_PROPERTY_GET, user_property_get_event_handler);
     IOT_RegisterCallback(ITE_PERMIT_JOIN, user_permit_join_event_handler);
     IOT_RegisterCallback(ITE_SERVICE_REQUEST, user_service_request_event_handler);
     IOT_RegisterCallback(ITE_REPORT_REPLY, user_report_reply_event_handler);
@@ -188,7 +207,15 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
 {
     EXAMPLE_TRACE("linkkit_subdev_status\n");
     int res = -1, devid = -1;
-
+    if (id != NULL)
+    {
+        user_example_ctx_t *user_example_ctx = user_example_get_ctx();
+        if (*id == user_example_ctx->master_devid)
+        {
+            EXAMPLE_TRACE("gw device online");
+            return -1;
+        }
+    }
     switch (status)
     {
     case SUBDEV_OFFLINE:
@@ -236,15 +263,18 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         *id = devid;
 
         res = IOT_Linkkit_Connect(devid);
-        if (res == FAIL_RETURN)
+        if (res < 0)
         {
             EXAMPLE_TRACE("subdev connect Failed\n");
-            goto fail;
+            if (online == 0)
+            {
+                goto fail;
+            }
         }
         EXAMPLE_TRACE("subdev connect success: devid = %d,%d\n", devid, res);
 
         res = IOT_Linkkit_Report(devid, ITM_MSG_LOGIN, NULL, 0);
-        if (res == FAIL_RETURN)
+        if (res < 0)
         {
             EXAMPLE_TRACE("subdev login Failed\n");
             if (online == 0)
@@ -288,9 +318,11 @@ fail:
 int user_post_event(int devid, char *event_id, const char *event_payload)
 {
     int res = -1;
-
+    int payloadLen = 0;
+    if (event_payload != NULL)
+        payloadLen = strlen(event_payload);
     res = IOT_Linkkit_TriggerEvent(devid, event_id, strlen(event_id),
-                                   event_payload, strlen(event_payload));
+                                   event_payload, payloadLen);
     EXAMPLE_TRACE("Post Event Message ID: %d", res);
     return res;
 }

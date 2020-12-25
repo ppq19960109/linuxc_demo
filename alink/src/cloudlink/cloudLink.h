@@ -6,12 +6,10 @@ extern "C"
 {
 #endif
 
-#include "cloudLinkListFunc.h"
+
     typedef struct
     {
-        CloudLinkDev *cloudLinkGateway;
         pthread_mutex_t mutex;
-        struct list_head head;
     } CloudLinkControl;
 
     void cloudLinkInit(void);

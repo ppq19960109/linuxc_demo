@@ -4,7 +4,7 @@
 
 void ke_core_strq(int n, double *q, double *b, double *c)
 {
-	int	i, j, k, u, v;
+	int	i, j, k, u;//, v
 	double h, f, g, h2;
 	for (i = n - 1; i >= 1; i--) {
 		h = 0.0;

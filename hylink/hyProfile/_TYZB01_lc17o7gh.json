@@ -1,0 +1,27 @@
+{
+    "modelId": "_TYZB01_lc17o7gh",
+    "devName": "DLT调光调色温开关U2",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Version",
+            "valueType": 2,
+            "repeat": 0
+        },
+        {
+            "hyKey": "Switch",
+            "valueType": 0,
+            "repeat": 0
+        },
+        {
+            "hyKey": "Luminance",
+            "valueType": 0,
+            "repeat": 0
+        },
+        {
+            "hyKey": "ColorTemperature",
+            "valueType": 1,
+            "repeat": 0
+        }
+    ]
+}

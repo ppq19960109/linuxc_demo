@@ -102,7 +102,7 @@ static void zigbeeParseJson(char *str)
     strcpy(zDev->modelId, modelId->valuestring);
     strcpy(zDev->manuName, manuName->valuestring);
 
-    cJSON *arraySub, *hyKey, *hyKeyPrivate, *srcEndpoint, *dstEndpoint, *ClusterId, *AttributeId, *z3CtrlCmdType, *z3PrivateCluster, *dataType;
+    cJSON *arraySub, *hyKey, *hyKeyPrivate, *srcEndpoint, *dstEndpoint, *ClusterId, *AttributeId, *z3CmdType, *z3CmdId, *dataType;
     for (int i = 0; i < arraySize; i++)
     {
         arraySub = cJSON_GetArrayItem(attr, i);
@@ -121,15 +121,15 @@ static void zigbeeParseJson(char *str)
         zDev->attr[i].ClusterId = ClusterId->valueint;
         AttributeId = cJSON_GetObjectItem(arraySub, "AttributeId");
         zDev->attr[i].AttributeId = AttributeId->valueint;
-        if (cJSON_HasObjectItem(arraySub, "z3CtrlCmdType"))
+        if (cJSON_HasObjectItem(arraySub, "z3CmdType"))
         {
-            z3CtrlCmdType = cJSON_GetObjectItem(arraySub, "z3CtrlCmdType");
-            zDev->attr[i].z3CtrlCmdType = z3CtrlCmdType->valueint;
+            z3CmdType = cJSON_GetObjectItem(arraySub, "z3CmdType");
+            zDev->attr[i].z3CmdType = z3CmdType->valueint;
         }
-        if (cJSON_HasObjectItem(arraySub, "z3PrivateCluster"))
+        if (cJSON_HasObjectItem(arraySub, "z3CmdId"))
         {
-            z3PrivateCluster = cJSON_GetObjectItem(arraySub, "z3PrivateCluster");
-            zDev->attr[i].z3PrivateCluster = z3PrivateCluster->valueint;
+            z3CmdId = cJSON_GetObjectItem(arraySub, "z3CmdId");
+            zDev->attr[i].z3CmdId = z3CmdId->valueint;
         }
         if (cJSON_HasObjectItem(arraySub, "dataType"))
         {
