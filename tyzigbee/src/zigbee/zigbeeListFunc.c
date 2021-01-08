@@ -16,6 +16,17 @@ void zigbeeDevFree(void *dev)
     {
         free(zDev->attr);
     }
+    if (zDev->sceneAttr != NULL)
+    {
+        for (int i = 0; i < zDev->sceneAttrLen; ++i)
+        {
+            if (zDev->sceneAttr[i].value != NULL)
+            {
+                free(zDev->sceneAttr[i].value);
+            }
+        }
+        free(zDev->sceneAttr);
+    }
     free(zDev);
 }
 

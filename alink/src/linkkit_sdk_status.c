@@ -29,13 +29,14 @@ static int user_connected_event_handler(void)
 {
     user_example_ctx_t *user_example_ctx = user_example_get_ctx();
 
-    EXAMPLE_TRACE("user_connected_event_handler subdev_index:%d",user_example_ctx->subdev_index);
+    EXAMPLE_TRACE("user_connected_event_handler subdev_index:%d", user_example_ctx->subdev_index);
 
     user_example_ctx->cloud_connected = 1;
     if (user_example_ctx->subdev_index > 0)
     {
         runTransferCb(NULL, SUBDEV_ONLINE, TRANSFER_SUBDEV_LINE);
     }
+    runCmdCb((void *)1, LED_DRIVER_LINE);
     return 0;
 }
 
@@ -46,7 +47,7 @@ static int user_connect_fail_event_handler(void)
     EXAMPLE_TRACE("user_connect_fail_event_handler");
 
     user_example_ctx->cloud_connected = 0;
-
+    runCmdCb((void *)0, LED_DRIVER_LINE);
     return 0;
 }
 
@@ -57,14 +58,12 @@ static int user_disconnected_event_handler(void)
     EXAMPLE_TRACE("user_disconnected_event_handler");
 
     user_example_ctx->cloud_connected = 0;
-
+    runCmdCb((void *)0, LED_DRIVER_LINE);
     return 0;
 }
 
 static int user_dynamic_device_secret(const char *device_secret)
 {
-    user_example_ctx_t *user_example_ctx = user_example_get_ctx();
-
     EXAMPLE_TRACE("device_secret:%s", device_secret);
 
     return 0;

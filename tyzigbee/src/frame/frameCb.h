@@ -8,21 +8,17 @@ extern "C"
 
     typedef enum
     {
-        SYSTEM_OPEN = 0,
-        SYSTEM_CLOSE = 1,
-        SYSTEM_RESET = 2,
-        HYLINK_OPEN,
+        SYSTEM_CLOSE = 0,
+        SYSTEM_RESET,
         HYLINK_CLOSE,
         HYLINK_RESET,
         LAN_OPEN,
         LAN_CLOSE,
-        LED_DRIVER_TIMER_OPEN,
-        LED_DRIVER_TIMER_CLOSE,
-        LED_DRIVER_TIMER_FILP,
-        ZIGBEE_OPEN,
         ZIGBEE_CLOSE,
         ZIGBEE_RESET,
-        CMD_DEVSINFO,
+        HYLINK_DEVSINFO,
+        HYLINK_ZB_CHANNEL,
+        SYSTEM_HEARTBEAT,
         SYSTEM_LAST,
     } SystemStatus;
     typedef int (*systemCb)(void);
@@ -33,8 +29,6 @@ extern "C"
     {
         TRANSFER_CLIENT_WRITE = 0,
         TRANSFER_CLIENT_READ,
-        TRANSFER_SERVER_HYLINK_WRITE,
-        TRANSFER_SERVER_HYLINK_READ,
         TRANSFER_LAST,
     } TransferStatus;
     typedef int (*transferCb)(void *, unsigned int);
@@ -44,8 +38,9 @@ extern "C"
     typedef enum
     {
         CMD_NETWORK_ACCESS = 0,
+        CMD_HYLINK_NETWORK_ACCESS,
         CMD_DELETE_DEV,
-        CMD_DEV_REPORT,
+        CMD_ZCL_FRAME_REPORT,
         CMD_LAST,
     } CmdStatus;
     typedef int (*CmdCb)(void *);

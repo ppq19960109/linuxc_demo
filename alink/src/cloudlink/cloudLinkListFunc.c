@@ -6,6 +6,7 @@
 #include "frameCb.h"
 #include "logFunc.h"
 #include "cloudLinkListFunc.h"
+#include "hylinkListFunc.h"
 
 void *cloudLinkParseJson(const char *devId, const char *str)
 {
@@ -63,10 +64,11 @@ void *cloudLinkParseJson(const char *devId, const char *str)
     dev->attr = (CloudLinkDevAttr *)malloc(sizeof(CloudLinkDevAttr) * dev->attrLen);
     memset(dev->attr, 0, sizeof(CloudLinkDevAttr) * dev->attrLen);
     dev->id = -1;
-    strcpy(dev->alinkInfo.device_name, devId);
+
     strcpy(dev->modelId, modelId->valuestring);
     strcpy(dev->alinkInfo.product_key, productKey->valuestring);
     strcpy(dev->alinkInfo.product_secret, productSecret->valuestring);
+    strcpy(dev->alinkInfo.device_name, devId);
     strcpy(dev->alinkInfo.device_secret, deviceSecret->valuestring);
 
     cJSON *arraySub, *hyKey, *hyType, *cloudKey, *valueType;

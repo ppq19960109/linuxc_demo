@@ -19,25 +19,5 @@ SRCS_linkkit-example-gateway := examples/linkkit_example_gateway.c examples/cJSO
 
 $(call Append_Conditional, LIB_SRCS_PATTERN, alcs/*.c, ALCS_ENABLED)
 
-# $(call Append_Conditional, TARGET, linkkit-example-solo, DEVICE_MODEL_ENABLED, BUILD_AOS NO_EXECUTABLES)
-# $(call Append_Conditional, TARGET, linkkit-example-gateway, DEVICE_MODEL_GATEWAY, BUILD_AOS NO_EXECUTABLES)
-
-
-BASE_PATH=src/dev_model/alink
-
-CFLAGS+=-I$(BASE_PATH)/hylink -I$(BASE_PATH)/cJSON -I$(BASE_PATH)/klib
-CFLAGS+= -Wall -DUSE_LIBEVENT=0
-
-LDFLAGS += -L$(BASE_PATH)/hylink/lib
-LDFLAGS	+= -Wl,--start-group	\
-		-Wl,-Bstatic -lhylink	\
-		-Wl,-Bdynamic \
-		-Wl,--end-group
-
-SOURCE_FILES:= alink/src/*.c alink/src/cloudlink/*c alink/src/scene/*c
-
-LIB_SRCS_EXCLUDE         += $(SOURCE_FILES) 
-SRCS_alinkapp := $(SOURCE_FILES)
-$(call Append_Conditional, TARGET, alinkapp, DEVICE_MODEL_GATEWAY, BUILD_AOS NO_EXECUTABLES)
-
-
+$(call Append_Conditional, TARGET, linkkit-example-solo, DEVICE_MODEL_ENABLED, BUILD_AOS NO_EXECUTABLES)
+$(call Append_Conditional, TARGET, linkkit-example-gateway, DEVICE_MODEL_GATEWAY, BUILD_AOS NO_EXECUTABLES)

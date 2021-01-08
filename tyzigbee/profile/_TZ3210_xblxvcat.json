@@ -1,6 +1,7 @@
 {
     "modelId": "TS0001",
     "manuName": "_TZ3210_xblxvcat",
+    "heartbeatTime": 720,
     "devName": "一路开关模块",
     "deviceType": "0",
     "attr": [
@@ -36,7 +37,7 @@
         },
         {
             "hyKey": "PowerOffProtection",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 6,

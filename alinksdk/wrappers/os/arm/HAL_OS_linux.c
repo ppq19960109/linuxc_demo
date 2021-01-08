@@ -25,8 +25,6 @@
 #include "infra_defs.h"
 #include "wrappers_defs.h"
 
-#include "linkkit_app_gateway.h"
-
 #define PLATFORM_WAIT_INFINITE (~0)
 
 #ifdef DYNAMIC_REGISTER
@@ -36,10 +34,10 @@ char _device_name[IOTX_DEVICE_NAME_LEN + 1] = "example1";
 char _device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "";
 #else
 #ifdef DEVICE_MODEL_ENABLED
-char _product_key[IOTX_PRODUCT_KEY_LEN + 1]       = "a1RIsMLz2BJ";
+char _product_key[IOTX_PRODUCT_KEY_LEN + 1] = "a1RIsMLz2BJ";
 char _product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "fSAF0hle6xL0oRWd";
-char _device_name[IOTX_DEVICE_NAME_LEN + 1]       = "example1";
-char _device_secret[IOTX_DEVICE_SECRET_LEN + 1]   = "RDXf67itLqZCwdMCRrw0N5FHbv5D7jrE";
+char _device_name[IOTX_DEVICE_NAME_LEN + 1] = "example1";
+char _device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "RDXf67itLqZCwdMCRrw0N5FHbv5D7jrE";
 #else
 char _product_key[IOTX_PRODUCT_KEY_LEN + 1] = "a1MZxOdcBnO";
 char _product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "h4I4dneEFp7EImTv";
@@ -226,7 +224,7 @@ int HAL_ThreadCreate(
 
 static FILE *fp;
 
-// #define otafilename "/tmp/alinkota.bin"
+#define otafilename "/tmp/upgrade.bin"
 
 void HAL_Firmware_Persistence_Start(void)
 {
@@ -255,7 +253,9 @@ int HAL_Firmware_Persistence_Stop(void)
     }
 
     /* check file md5, and burning it to flash ... finally reboot system */
-    linkkit_ota_install();
+    sync();
+    system("chmod 777 " otafilename);
+    system("cd /tmp;" otafilename);
     return 0;
 }
 

@@ -4,6 +4,6 @@
 #include "hylink.h"
 #include "cloudLinkListFunc.h"
 
-int cloudUpdate(HyLinkDev *hyLinkDev, const unsigned int hyAttr);
+int cloudReport(void *hydev, unsigned int hyAttr);
 int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr);
 #endif

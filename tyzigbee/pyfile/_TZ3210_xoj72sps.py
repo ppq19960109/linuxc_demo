@@ -24,3 +24,21 @@ def KeyModedown(inStrVal,inLen):
     outNum=int(inStrVal)-1
     outBase64=num_down(outNum,inLen)
     return outBase64,len(outBase64)
+
+def PowerOffProtectionup(inBase64,inLen):
+    num=num_up(inBase64,inLen)
+    if num < 2:
+        num = 1
+    else:
+        num = 0
+    strVal=str(num)
+    return strVal,len(strVal)
+
+def PowerOffProtectiondown(inStrVal,inLen):
+    outNum=int(inStrVal)
+    if outNum > 0:
+        outNum = 0
+    else:
+        outNum = 2
+    outBase64=num_down(outNum,inLen)
+    return outBase64,len(outBase64)

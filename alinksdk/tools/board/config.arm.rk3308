@@ -1,6 +1,7 @@
 CONFIG_ENV_CFLAGS = \
-    -D_PLATFORM_IS_LINUX_ \
-    -Wall 
+    -Wall   \
+    -D_PLATFORM_IS_LINUX_ 
+    
 
 CONFIG_ENV_LDFLAGS = \
     -lpthread -lrt -ldl -lm \

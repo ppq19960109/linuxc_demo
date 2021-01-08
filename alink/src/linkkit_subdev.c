@@ -24,7 +24,7 @@ static int user_property_set_event_handler(const int devid, const char *request,
 
     // EXAMPLE_TRACE("Post Property Message ID: %d", res);
 
-    res = cloudLinkCtrl(devid, request);
+    res = cloudLinkCtrl((void *)devid, request);
     return res;
 }
 
@@ -242,16 +242,6 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
             EXAMPLE_TRACE("subdev already login: devid = %d\n", *id);
             online = 1;
         }
-        else
-        {
-            // res = IOT_Dynamic_Register(IOTX_HTTP_REGION_SHANGHAI, meta_info);
-            // if (res < 0)
-            // {
-            //     EXAMPLE_TRACE("IOT_Dynamic_Register:%d fail\n", res);
-            //     goto fail;
-            // }
-            // EXAMPLE_TRACE("subdev IOT_Dynamic_Register %s\n", meta_info->device_secret);
-        }
 
         devid = IOT_Linkkit_Open(IOTX_LINKKIT_DEV_TYPE_SLAVE, meta_info);
         if (devid < 0)
@@ -286,8 +276,8 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         res = 0;
     }
     break;
-    // case SUBDEV_LAST:
     case SUBDEV_RESTORE:
+    {
         devid = *id;
         // res = IOT_Linkkit_Report(devid, ITM_MSG_DELETE_TOPO, NULL, 0);
         // if (res == FAIL_RETURN)
@@ -297,7 +287,12 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         // }
         // EXAMPLE_TRACE("subdev ITM_MSG_DELETE_TOPO success: devid = %d\n", devid);
 
-        res = IOT_DevReset_Report(meta_info, linkkit_devrst_evt_handle, NULL);
+        iotx_dev_meta_info_t reset_meta_info;
+        memset(&reset_meta_info, 0, sizeof(iotx_dev_meta_info_t));
+        memcpy(reset_meta_info.product_key, meta_info->product_key, strlen(meta_info->product_key));
+        memcpy(reset_meta_info.device_name, meta_info->device_name, strlen(meta_info->device_name));
+
+        res = IOT_DevReset_Report(&reset_meta_info, linkkit_devrst_evt_handle, NULL);
         if (res == FAIL_RETURN)
         {
             EXAMPLE_TRACE("subdev IOT_DevReset_Report Failed\n");
@@ -307,7 +302,8 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         res = IOT_Linkkit_Close(devid);
         EXAMPLE_TRACE("subdev IOT_Linkkit_Close:%d\n", res);
         *id = -1;
-        break;
+    }
+    break;
     default:
         break;
     }
@@ -315,14 +311,21 @@ fail:
     return res;
 }
 
-int user_post_event(int devid, char *event_id, const char *event_payload)
+int user_post_event(int devid, char *event_id, char *event_payload)
 {
     int res = -1;
-    int payloadLen = 0;
+
+    EXAMPLE_TRACE("Post Event %s,%s", event_id, event_payload);
     if (event_payload != NULL)
-        payloadLen = strlen(event_payload);
-    res = IOT_Linkkit_TriggerEvent(devid, event_id, strlen(event_id),
-                                   event_payload, payloadLen);
-    EXAMPLE_TRACE("Post Event Message ID: %d", res);
+    {
+        res = IOT_Linkkit_TriggerEvent(devid, event_id, strlen(event_id),
+                                       event_payload, strlen(event_payload));
+    }
+    else
+    {
+        res = IOT_Linkkit_TriggerEvent(devid, event_id, strlen(event_id),
+                                       "{}", strlen("{}"));
+    }
+    EXAMPLE_TRACE("Post Event Message ID: %d,%s", res, event_payload);
     return res;
 }

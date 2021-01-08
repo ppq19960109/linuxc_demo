@@ -13,9 +13,9 @@ extern "C"
     khint_t cloudLink_kh_end();
     void *cloudLink_kh_exist(int k);
 #define cloudLink_kh_foreach_value(vvar) \
-    for (khint_t __i = cloudLink_kh_begin(), vvar = NULL; (vvar = cloudLink_kh_exist(__i)) || __i != cloudLink_kh_end(); ++__i, vvar = NULL)
+    for (khint_t __i = cloudLink_kh_begin(); (vvar = cloudLink_kh_exist(__i)) || __i != cloudLink_kh_end(); ++__i)
 
-#define ALILINK_PROFILE_PATH "aliProfile"
+#define ALILINK_PROFILE_PATH "aliprofile"
     typedef struct
     {
         char hyKey[33];

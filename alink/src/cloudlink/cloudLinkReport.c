@@ -58,9 +58,11 @@ static int cloudSingleEventReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkD
         }
         if (i == cloudLinkDev->eventAttrLen)
             return -1;
-
-        char *json = getCloudJson(cloudLinkDev->eventAttr[i].key, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
-
+        char *json = NULL;
+        if (strlen(cloudLinkDev->eventAttr[i].key) != 0)
+        {
+            json = getCloudJson(cloudLinkDev->eventAttr[i].key, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
+        }
         if (hyLinkDev->attr[hyAttr].valueType == LINK_VALUE_TYPE_ENUM)
         {
             if (*hyLinkDev->attr[hyAttr].value == 0)
@@ -94,7 +96,7 @@ static int cloudSingleAttrReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDe
     }
     if (i == cloudLinkDev->attrLen)
         goto event;
-
+    logInfo("attr report cloudKey %s", cloudLinkDev->attr[i].cloudKey);
     char *json = getCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
     if (json != NULL)
     {
@@ -119,7 +121,7 @@ int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr)
 
     if (hyAttr == ATTR_REPORT_ALL)
     {
-        for (int i = 0; i < cloudLinkDev->attrLen; ++i)
+        for (int i = 0; i < hyLinkDev->attrLen; ++i)
         {
             cloudSingleAttrReport(hyLinkDev, cloudLinkDev, i);
         }
@@ -130,11 +132,18 @@ int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr)
     }
     return res;
 }
-
-int cloudUpdate(HyLinkDev *hyLinkDev, const unsigned int hyAttr)
+/*********************************************************************************
+  *Function:  cloudReport
+  * Description： report hylink device information
+  *Input:  
+    hyLinkDev:hylink device information
+    hyAttr:index of the attributes reported by hylink device,0xFF means report all attributes
+  *Return:  0:success otherwise:fail
+**********************************************************************************/
+int cloudReport(void *hydev, unsigned int hyAttr)
 {
-
-    logInfo("cloudUpdate hyAttr:%d,devid:%s,modelid:%s", hyAttr, hyLinkDev->devId, hyLinkDev->modelId);
+    HyLinkDev *hyLinkDev = (HyLinkDev *)hydev;
+    logInfo("cloudReport hyAttr:%d,devid:%s,modelid:%s", hyAttr, hyLinkDev->devId, hyLinkDev->modelId);
 
     int res = 0;
 
@@ -152,9 +161,9 @@ int cloudUpdate(HyLinkDev *hyLinkDev, const unsigned int hyAttr)
         {
             res = runTransferCb(cloudLinkDev->alinkInfo.device_name, hyLinkDev->online, TRANSFER_SUBDEV_LINE);
             if (res < 0)
-                logError("cloudUpdate TRANSFER_SUBDEV_LINE onlink error:%d", res);
+                logError("cloudReport TRANSFER_SUBDEV_LINE onlink error:%d", res);
             else
-                logInfo("cloudUpdate TRANSFER_SUBDEV_LINE onlink success:%d", res);
+                logInfo("cloudReport TRANSFER_SUBDEV_LINE onlink success:%d", res);
         }
         return res;
     }

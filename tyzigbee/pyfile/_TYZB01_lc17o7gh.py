@@ -28,7 +28,6 @@ def Luminancedown(inStrVal,inLen):
 def ColorTemperatureup(inBase64,inLen):
     num=num_up(inBase64,inLen)
     num = round(10000/(217*(255-num)/255+153))
-    print(num)
     if num>=65:
         num=65
     elif num<=27:

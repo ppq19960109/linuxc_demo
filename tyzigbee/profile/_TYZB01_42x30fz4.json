@@ -1,6 +1,7 @@
 {
     "modelId": "TS0003",
     "manuName": "_TYZB01_42x30fz4",
+    "heartbeatTime": 720,
     "devName": "三键智能开关U2",
     "deviceType": "0",
     "attr": [

@@ -15,5 +15,5 @@
 void linkkit_subdev_register(void);
 void linkkit_user_post_property(const int devid, const char *payload);
 int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubDevStatus status);
-int user_post_event(int devid, char *event_id, const char *event_payload);
+int user_post_event(int devid, char *event_id, char *event_payload);
 #endif

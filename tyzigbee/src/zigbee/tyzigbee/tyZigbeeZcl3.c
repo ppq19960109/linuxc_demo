@@ -169,6 +169,7 @@ static int _z3_dev_init_data_cb(void)
 {
     int ret = 0;
     log_notice("_z3_dev_init_data_cb");
+
     return ret;
 }
 
@@ -224,7 +225,7 @@ static int _z3_dev_zcl_report_cb(ty_z3_aps_frame_s *frame)
         printf("%02x ", frame->message[i]);
     printf("\n");
     /* USER TODO */
-    runCmdCb(frame, CMD_DEV_REPORT);
+    runCmdCb(frame, CMD_ZCL_FRAME_REPORT);
     return ret;
 }
 

@@ -5,7 +5,6 @@
 extern "C"
 {
 #endif
-#define ZIGBEE_PROFILE_PATH "profile"
     void zigbeeMain(void);
 
 #ifdef __cplusplus

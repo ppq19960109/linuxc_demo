@@ -28,7 +28,4 @@ typedef struct
 
 user_example_ctx_t *user_example_get_ctx(void);
 
-#define otafilename "/userdata/update/upgrade.bin"
-void linkkit_ota_install(void);
-
 #endif

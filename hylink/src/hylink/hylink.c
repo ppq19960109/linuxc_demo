@@ -1,90 +1,89 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "commonFunc.h"
 #include "frameCb.h"
-#include "nativeFrame.h"
-#include "rkDriver.h"
+#include "logFunc.h"
+#include "cJSON.h"
+#include "commonFunc.h"
 
 #include "hylink.h"
 #include "hylinkRecv.h"
+#include "hylinkListFunc.h"
 #include "hylinkSend.h"
-#include "hylinkSubDev.h"
-#include "logFunc.h"
 
 typedef struct
 {
-    unsigned char dispatchBuf[1024];
-    pthread_mutex_t mutex;
-} HylinkController;
+  unsigned char reportBuf[4096];
+  char mac[24];
 
-static HylinkController s_hylink;
+} hylinkHandle_t;
 
-pthread_mutex_t *hylinkGetMutex(void)
+hylinkHandle_t hylinkHandle;
+
+unsigned char *getHylinkSendBuf(void)
 {
-    return &s_hylink.mutex;
+  return hylinkHandle.reportBuf;
 }
 
-unsigned char *getHyDispatchBuf(void)
+/*********************************************************************************
+  *Function:  hylinkDevJoin
+  * Description： report zigbee device registriation information
+  *Input:  
+    devId:device id
+    modelId:invalid parameter
+    version:version information
+    manuName:tuya zigbee device model id
+  *Return:  0:success -1:fail
+**********************************************************************************/
+int hylinkNetAccess(void *data, void *data2)
 {
-    return s_hylink.dispatchBuf;
+  int sec = *(unsigned char *)data;
+
+  HylinkSend hylinkSend = {0};
+  hylinkSend.Command = 1;
+  strcpy(hylinkSend.Type, STR_ADD);
+  hylinkSend.DataSize = 1;
+  HylinkSendData hylinkSendData = {0};
+  hylinkSend.Data = &hylinkSendData;
+
+  strcpy(hylinkSendData.DeviceId, STR_GATEWAY_DEVID);
+  strcpy(hylinkSendData.ModelId, STR_GATEWAY_MODELID);
+  strcpy(hylinkSendData.Key, STR_TIME);
+  sprintf(hylinkSendData.Value, "%d", sec);
+
+  return hylinkSendFunc(&hylinkSend);
 }
 
-int hylinkInit(void)
+int hylinkSendReset(void)
 {
-    pthread_mutex_init(&s_hylink.mutex, NULL);
+  HylinkSend hylinkSend = {0};
+  hylinkSend.Command = 0;
+  strcpy(hylinkSend.Type, STR_REFACTORY);
+  hylinkSendFunc(&hylinkSend);
+  //-------------------------------
+  hylinkSend.Command = 1;
 
-    hylinkListInit();
-    rkDriverOpen();
-
-    HyLinkDev *gwHyLinkDev = addProfileDev(HYLINK_PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, hyLinkParseJson);
-    if (gwHyLinkDev != NULL)
-        runTransferCb(gwHyLinkDev, ATTR_REPORT_ALL, TRANSFER_CLOUD_REPORT);
-
-    runSystemCb(LAN_OPEN);
-    return 0;
+  hylinkSendFunc(&hylinkSend);
+  sleep(2);
+  system("sh /userdata/app/restore.sh alink &");
+  return 0;
 }
-
-int hylinkReset(void)
+//--------------------------------------------------------
+int hylinkClose(void)
 {
-    HyLinkDev *dev;
-
-    hyLink_kh_foreach_value(dev)
-    {
-        logWarn("hyLink_kh_foreach_value");
-        hylinkDelDev(dev->devId);
-    }
-
-    hylinkSendReset();
-    hylinkListEmpty();
-    return 0;
-}
-
-int hylinkDestory(void)
-{
-    runSystemCb(LAN_CLOSE);
-
-    hylinkListEmpty();
-    rkDriverClose();
-
-    pthread_mutex_destroy(&s_hylink.mutex);
-    return 0;
+  hylinkListEmpty();
+  return 0;
 }
 
 void hylinkMain(void)
 {
-    registerSystemCb(hylinkInit, HYLINK_OPEN);
-    registerSystemCb(hylinkDestory, HYLINK_CLOSE);
-    registerSystemCb(hylinkReset, HYLINK_RESET);
+  registerSystemCb(hylinkClose, HYLINK_CLOSE);
+  registerSystemCb(hylinkSendReset, SYSTEM_RESET);
 
-    registerTransferCb(hylinkRecv, TRANSFER_CLIENT_READ);
-    registerTransferCb(hylinkSendDevAttr, TRANSFER_DEVATTR);
-    registerSystemCb(hylinkHeart, CMD_HEART);
- 
-    registerSystemCb(hylinkSendDevInfo, CMD_DEVSINFO);
-
-    registerSystemCb(nativeFrameOpen, LAN_OPEN);
-
-    runSystemCb(HYLINK_OPEN);
+  registerTransferCb(hylinkRecvManage, TRANSFER_SERVER_HYLINK_READ);
+  registerTransferCb(hylinkRecvManage, TRANSFER_SERVER_ZIGBEE_READ);
+  registerCmdCb(hylinkNetAccess, CMD_NETWORK_ACCESS);
+  hylinkListInit();
 }

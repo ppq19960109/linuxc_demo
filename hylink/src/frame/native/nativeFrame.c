@@ -9,12 +9,13 @@
 #include "nativeClient.h"
 #include "frameCb.h"
 
-// #define SERVER
+#define SERVER
 
 static int nativeFrameClose(void)
 {
     printf("nativeFrameClose\n");
     runSystemCb(LED_DRIVER_TIMER_CLOSE);
+
 #ifdef SERVER
     nativeServerCLose();
 #else
@@ -26,11 +27,13 @@ static int nativeFrameClose(void)
 int nativeFrameOpen(void)
 {
     printf("nativeFrameOpen\n");
-    registerSystemCb(nativeLedTimerOpen, LED_DRIVER_TIMER_OPEN);
-    registerSystemCb(nativeLedTimerClose, LED_DRIVER_TIMER_CLOSE);
+    registerSystemCb(nativeTimerOpen, LED_DRIVER_TIMER_OPEN);
+    registerSystemCb(nativeTimerClose, LED_DRIVER_TIMER_CLOSE);
 
     registerSystemCb(nativeFrameClose, LAN_CLOSE);
+    registerCmdCb(nativeNetTimer, CMD_NETWORK_ACCESS_TIME);
     nativeSignal();
+
 #ifdef SERVER
     nativeServerOpen();
 #else

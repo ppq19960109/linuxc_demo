@@ -1,6 +1,7 @@
 {
     "modelId": "TS0002",
     "manuName": "_TZ3210_pcikchu8",
+    "heartbeatTime": 720,
     "devName": "二路开关模块",
     "deviceType": "0",
     "attr": [
@@ -47,7 +48,7 @@
         },
         {
             "hyKey": "PowerOffProtection",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 6,
@@ -66,6 +67,15 @@
             "z3CmdType": 2,
             "z3CmdId": 48,
             "dataType": 4
+        }
+    ],
+    "scene": [
+        {
+            "key": "Switch_All",
+            "value": [
+                "Switch_1",
+                "Switch_2"
+            ]
         }
     ]
 }

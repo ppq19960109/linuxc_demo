@@ -1,6 +1,7 @@
 {
     "modelId": "TS0203",
     "manuName": "_TYZB01_kw2okqc3",
+    "heartbeatTime": 43200,
     "devName": "门窗磁传感器",
     "deviceType": "0",
     "attr": [
@@ -25,7 +26,7 @@
         },
         {
             "hyKey": "BatteryPercentage",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 1,
@@ -36,7 +37,7 @@
         },
         {
             "hyKey": "ContactAlarm",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 1280,
@@ -47,24 +48,24 @@
         },
         {
             "hyKey": "TamperAlarm",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 1280,
             "AttributeId": 2,
             "z3CmdType": 2,
-            "z3CmdId": 2,
+            "z3CmdId": 0,
             "dataType": 25
         },
         {
             "hyKey": "LowBatteryAlarm",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 1280,
             "AttributeId": 2,
             "z3CmdType": 2,
-            "z3CmdId": 3,
+            "z3CmdId": 0,
             "dataType": 25
         }
     ]

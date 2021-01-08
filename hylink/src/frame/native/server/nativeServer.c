@@ -58,9 +58,12 @@ static void recvdata(int fd, int events, void *arg)
         if (ev->listenPort == HYLINK_SERVER_PORT)
         {
             runTransferCb(ev->buf, ev->len, TRANSFER_SERVER_HYLINK_READ);
+            runTransferCb(ev->buf, ev->len, TRANSFER_SERVER_ZIGBEE_WRITE);
         }
         else if (ev->listenPort == ZIGBEE_SERVER_PORT)
         {
+            runTransferCb(ev->buf, ev->len, TRANSFER_SERVER_ZIGBEE_READ);
+            runTransferCb(ev->buf, ev->len, TRANSFER_SERVER_HYLINK_WRITE);
         }
         else
         {
@@ -112,6 +115,15 @@ static void acceptconn(int lfd, int events, void *arg)
         getsockname(lfd, (struct sockaddr *)&cin, &len);
         myevents[i].listenPort = ntohs(cin.sin_port);
 
+        if (myevents[i].listenPort == HYLINK_SERVER_PORT)
+        {
+        }
+        else if (myevents[i].listenPort == ZIGBEE_SERVER_PORT)
+        {
+        }
+        else
+        {
+        }
         eventset(&myevents[i], cfd, recvdata, &myevents[i]); //找到合适的节点之后，将其添加到监听树中，并监听读事件
         eventadd(epollfd, EPOLLIN, &myevents[i]);
     } while (0);
@@ -214,7 +226,7 @@ int nativeServerEpollOpen()
         if (nfd < 0)
         {
             printf("epoll_wait error, exit\n");
-            exit(-1);
+            continue;
         }
         for (i = 0; i < nfd; ++i)
         {
@@ -304,6 +316,7 @@ int nativeServerCLose(void)
 int nativeServerOpen(void)
 {
     registerTransferCb(nativeHylinkWrite, TRANSFER_SERVER_HYLINK_WRITE);
+    registerTransferCb(nativeZigbeeWrite, TRANSFER_SERVER_ZIGBEE_WRITE);
     nativeServerEpollOpen();
     return 0;
 }

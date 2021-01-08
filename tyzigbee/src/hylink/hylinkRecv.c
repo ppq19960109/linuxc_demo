@@ -9,7 +9,8 @@
 #include "commonFunc.h"
 
 #include "hylinkRecv.h"
-#include "hylinkReport.h"
+#include "hylinkSend.h"
+#include "hylinkListFunc.h"
 
 static char *s_dispatchTypeAttr[] = {
     "Add",
@@ -108,28 +109,10 @@ int hylinkRecvJson(char *data)
                 goto fail;
             long num;
             strToNum(value->valuestring, 10, &num);
-            char cmd = num;
+            unsigned char cmd = num;
 
             res = runCmdCb(&cmd, CMD_NETWORK_ACCESS);
-
-            if (res == 0)
-            {
-                HylinkReport hylinkReport = {0};
-                HylinkReportData hylinkReportData = {0};
-                hylinkReport.Data = &hylinkReportData;
-                hylinkReport.DataSize = 1;
-
-                strcpy(hylinkReport.Type, STR_ATTRIBUTE);
-
-                strcpy(hylinkReportData.DeviceId, STR_GATEWAY_DEVID);
-                strcpy(hylinkReportData.ModelId, STR_GATEWAY_MODELID);
-
-                strcpy(hylinkReportData.Key, STR_TIME);
-
-                strcpy(hylinkReportData.Value, value->valuestring);
-
-                hylinkReportFunc(&hylinkReport);
-            }
+            runSystemCb(HYLINK_ZB_CHANNEL);
         }
         break;
         case DELETE:
@@ -146,6 +129,30 @@ int hylinkRecvJson(char *data)
             break;
         case DEVSINFO:
         {
+            if (!cJSON_HasObjectItem(array_sub, STR_MODELID))
+            {
+                logError("model id is NULL");
+                break;
+            }
+
+            cJSON *devidJson = cJSON_GetObjectItem(array_sub, STR_DEVICEID);
+            if (devidJson == NULL)
+            {
+                logError("dev id is NULL");
+                break;
+            }
+            cJSON *modelidJson = cJSON_GetObjectItem(array_sub, STR_MODELID);
+            if (modelidJson == NULL)
+            {
+                logError("model id is NULL");
+                break;
+            }
+            HylinkDev *hyDev = (HylinkDev *)malloc(sizeof(HylinkDev));
+            memset(hyDev, 0, sizeof(HylinkDev));
+            strcpy(hyDev->DeviceId, devidJson->valuestring);
+            strcpy(hyDev->ModelId, modelidJson->valuestring);
+            hylinkListAdd(hyDev);
+            runZigbeeCb((void *)hyDev->DeviceId, (void *)hyDev->ModelId, NULL, NULL, ZIGBEE_DEV_DISPATCH);
         }
         break;
         case DEVATTRI:
@@ -180,7 +187,7 @@ int hylinkRecvJson(char *data)
         }
     }
     cJSON_Delete(root);
-    return 0;
+    return res;
 heart:
 fail:
     cJSON_Delete(root);

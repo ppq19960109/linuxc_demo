@@ -1,6 +1,7 @@
 {
     "modelId": "TS0502",
     "manuName": "_TYZB01_lc17o7gh",
+    "heartbeatTime": 720,
     "devName": "DLT调光调色温开关U2",
     "deviceType": "0",
     "attr": [

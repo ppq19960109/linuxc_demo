@@ -1,6 +1,7 @@
 {
     "modelId": "TS0601",
     "manuName": "_TZE200_twuagcv5",
+    "heartbeatTime": 720,
     "devName": "智镜",
     "deviceType": "0",
     "attr": [

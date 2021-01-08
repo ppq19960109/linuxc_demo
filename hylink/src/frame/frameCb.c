@@ -15,7 +15,7 @@ int runSystemCb(SystemStatus status)
         return s_systemCb[status]();
     return -1;
 }
-
+//--------------------------------------------------------
 static transferCb s_transferCb[TRANSFER_LAST];
 
 void registerTransferCb(transferCb callback, TransferStatus status)
@@ -29,3 +29,18 @@ int runTransferCb(void *data, unsigned int len, TransferStatus status)
         return s_transferCb[status](data, len);
     return -1;
 }
+//--------------------------------------------------------
+static CmdCb s_cmdCb[CMD_LAST];
+
+void registerCmdCb(CmdCb callback, CmdStatus status)
+{
+    s_cmdCb[status] = callback;
+}
+
+int runCmdCb(void *data, void *data2, CmdStatus status)
+{
+    if (s_cmdCb[status] != NULL)
+        return s_cmdCb[status](data, data2);
+    return -1;
+}
+//--------------------------------------------------------

@@ -5,13 +5,15 @@
 
 #include "frameCb.h"
 #include "logFunc.h"
-#include "nativeFrame.h"
 
 #include "hylink.h"
 #include "zigbee.h"
 #include "cpython.h"
+#include "heartbeat.h"
 
-int mainClose(void)
+#include "client.h"
+
+static int mainClose(void)
 {
     runSystemCb(LAN_CLOSE);
     runSystemCb(ZIGBEE_CLOSE);
@@ -24,11 +26,16 @@ int main()
 {
     cpythonInit();
     // return pythonTest();
+    registerSystemCb(heartbeat, SYSTEM_HEARTBEAT);
     registerSystemCb(mainClose, SYSTEM_CLOSE);
     hylinkMain();
     zigbeeMain();
-    logInfo("hylinkapp main start");
-    nativeFrameOpen();
+    logInfo("tuyazigbee app main start");
+    clientOpen();
+    while (1)
+    {
+        sleep(1);
+    }
     mainClose();
     return 0;
 }

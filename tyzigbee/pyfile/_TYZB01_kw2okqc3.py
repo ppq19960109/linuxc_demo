@@ -5,18 +5,30 @@ def num_up(inBase64,inLen):
     sum=0
     for element in outBytes:
         sum=sum*0xff+element
-    return str(sum)
+    return sum
 
 ###########################################
-
-def ContactAlarm_up(inBase64,inLen):
-    strVal=num_up(inBase64,inLen)
+def BatteryPercentageup(inBase64,inLen):
+    num=num_up(inBase64,inLen)
+    num=round(num/2)
+    strVal=str(num)
     return strVal,len(strVal)
 
-def TamperAlarm_up(inBase64,inLen):
-    strVal=num_up(inBase64,inLen)
+def ContactAlarmup(inBase64,inLen):
+    num=num_up(inBase64,inLen)
+    num=(num >> 0)& 0x01
+    strVal=str(num)
     return strVal,len(strVal)
 
-def LowBatteryAlarm_up(inBase64,inLen):
-    strVal=num_up(inBase64,inLen)
+def TamperAlarmup(inBase64,inLen):
+    num=num_up(inBase64,inLen)
+    num=(num >> 2)& 0x01
+    strVal=str(num)
     return strVal,len(strVal)
+
+def LowBatteryAlarmup(inBase64,inLen):
+    num=num_up(inBase64,inLen)
+    num=(num >> 3)& 0x01
+    strVal=str(num)
+    return strVal,len(strVal)
+    

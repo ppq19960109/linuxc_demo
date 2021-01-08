@@ -7,6 +7,7 @@
 #include "frameCb.h"
 #include "cJSON.h"
 #include "base64.h"
+#include "commonFunc.h"
 
 #include "scene.h"
 #include "hylinkSend.h"
@@ -30,6 +31,8 @@ enum week
 };
 
 static char *weekDay[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+static char *cloudActive[] = {"==", ">", "<", "!="};
+static char *localActive[] = {"Equ", "Gtr", "Lss", "Not"};
 
 int sceneReport(void *req, unsigned int len)
 {
@@ -48,6 +51,7 @@ int sceneReport(void *req, unsigned int len)
     }
     user_post_event(cloudLinkDev->id, "ReportScene", json);
     cJSON_free(json);
+    return 0;
 fail:
     cJSON_free(json);
     return -1;
@@ -65,22 +69,47 @@ static int sceneHyDispatch(cJSON *DataArray)
     char *json = cJSON_PrintUnformatted(dispatch);
     logInfo("scene send json:%s\n", json);
 
-    hylinkDispatch(json);
+    int res = hylinkDispatch(json);
     cJSON_free(json);
     cJSON_Delete(dispatch);
-    return 0;
+    return res;
 }
 
 int getSceneDevStatus(cJSON *params, cJSON *arrayItem)
 {
-    cJSON *deviceName, *propertyName, *propertyValue;
+    cJSON *deviceName, *propertyName, *propertyValue, *compareType;
+    compareType = cJSON_GetObjectItem(params, "compareType");
+
+    int active = findStrIndex(compareType->valuestring, cloudActive, sizeof(cloudActive));
+    if (active == -1)
+    {
+        logError("compareType active is no exist\n");
+        cJSON_AddStringToObject(arrayItem, "Active", "Equ");
+    }
+    else
+    {
+        cJSON_AddStringToObject(arrayItem, "Active", localActive[active]);
+    }
+
     deviceName = cJSON_GetObjectItem(params, "deviceName");
     propertyName = cJSON_GetObjectItem(params, "propertyName");
-    propertyValue = cJSON_GetObjectItem(params, "propertyValue");
+
+    if (cJSON_HasObjectItem(params, "propertyValue"))
+    {
+        cJSON_AddStringToObject(arrayItem, "TriggerType", "InstantOnce");
+        propertyValue = cJSON_GetObjectItem(params, "propertyValue");
+    }
+    else
+    {
+        cJSON_AddStringToObject(arrayItem, "TriggerType", "InstantEvery");
+        propertyValue = cJSON_GetObjectItem(params, "compareValue");
+    }
+
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(deviceName->valuestring);
     if (cloudLinkDev == NULL)
         return -1;
     int j;
+    char *hyKey = NULL;
     for (j = 0; j < cloudLinkDev->attrLen; ++j)
     {
         if (strcmp(propertyName->valuestring, cloudLinkDev->attr[j].cloudKey) == 0)
@@ -89,14 +118,29 @@ int getSceneDevStatus(cJSON *params, cJSON *arrayItem)
         }
     }
     if (j == cloudLinkDev->attrLen)
-        return -1;
+    {
+        for (j = 0; j < cloudLinkDev->eventAttrLen; ++j)
+        {
+            if (strcmp(propertyName->valuestring, cloudLinkDev->eventAttr[j].key) == 0)
+            {
+                break;
+            }
+        }
+        if (j == cloudLinkDev->eventAttrLen)
+            return -1;
+        hyKey = cloudLinkDev->eventAttr[j].hyKey;
+    }
+    else
+    {
+        hyKey = cloudLinkDev->attr[j].hyKey;
+    }
     //-------------------------------
     cJSON_AddStringToObject(arrayItem, "KeyCoding", "Original");
 
     char strBuf[8];
     cJSON_AddStringToObject(arrayItem, "ActionId", "0");
     cJSON_AddStringToObject(arrayItem, "DevId", deviceName->valuestring);
-    cJSON_AddStringToObject(arrayItem, "Key", cloudLinkDev->attr[j].hyKey);
+    cJSON_AddStringToObject(arrayItem, "Key", hyKey);
     getValueForJson(propertyValue, strBuf);
     cJSON_AddStringToObject(arrayItem, "Value", strBuf);
     return 0;
@@ -160,7 +204,6 @@ int addtriggers(const char *localSceneId, cJSON *triggersItems)
         else if (cJSON_HasObjectItem(params, "deviceName"))
         {
             cJSON_AddStringToObject(arrayItem, "CondType", "Event");
-            cJSON_AddStringToObject(arrayItem, "Active", "Equ");
             getSceneDevStatus(params, arrayItem);
         }
         else
@@ -220,7 +263,6 @@ int addconditions(const char *localSceneId, cJSON *conditionsItems)
         else if (cJSON_HasObjectItem(params, "deviceName"))
         {
             cJSON_AddStringToObject(arrayItem, "CondType", "Event");
-            cJSON_AddStringToObject(arrayItem, "Active", "Equ");
             getSceneDevStatus(params, arrayItem);
         }
         else
@@ -282,66 +324,21 @@ int addActions(const char *localSceneId, cJSON *actions)
     } while (dispatchNum < actionsSize);
 
     return 0;
-fail:
-    return -1;
 }
 
-int addScene(cJSON *rules, const int isUpdate)
+static int delSingleScene(const char *ruleId)
 {
-    int i, delayTime = 0;
+    cJSON *delArray = cJSON_CreateArray();
 
-    cJSON *ruleId = cJSON_GetObjectItem(rules, "ruleId");
-    cJSON *enable = cJSON_GetObjectItem(rules, "enable");
+    cJSON *arrayItem = cJSON_CreateObject();
+    cJSON_AddItemToArray(delArray, arrayItem);
+    cJSON_AddStringToObject(arrayItem, "Op", "DelScene");
+    cJSON_AddStringToObject(arrayItem, "Id", ruleId);
 
-    //---------------------------------
-    cJSON *additionsSub, *params;
-    cJSON *additions = cJSON_GetObjectItem(rules, "additions");
-    int additionsSize = cJSON_GetArraySize(additions);
-    if (additionsSize)
-    {
-        additionsSub = cJSON_GetArrayItem(additions, 0);
-        params = cJSON_GetObjectItem(additionsSub, "params");
-        if (params != NULL)
-        {
-            delayTime = cJSON_GetObjectItem(params, "delayTime")->valueint;
-        }
-    }
-    //-----------------------------------
-    if (isUpdate == 0)
-    {
-        cJSON *updateArray = cJSON_CreateArray();
-        cJSON *arrayItem = cJSON_CreateObject();
-        cJSON_AddItemToArray(updateArray, arrayItem);
-
-        cJSON_AddStringToObject(arrayItem, "Op", "AddScene");
-        char buf[8] = {0};
-        cJSON_AddStringToObject(arrayItem, "Id", ruleId->valuestring);
-        sprintf(buf, "%d", enable->valueint);
-        cJSON_AddStringToObject(arrayItem, "Enable", buf);
-        sprintf(buf, "%d", delayTime);
-        cJSON_AddStringToObject(arrayItem, "ExecDelayed", buf);
-        sceneHyDispatch(updateArray);
-    }
-    //---------------------------------
-    cJSON *triggers = cJSON_GetObjectItem(rules, "triggers");
-    cJSON *triggersItems = cJSON_GetObjectItem(triggers, "items");
-    addtriggers(ruleId->valuestring, triggersItems);
-
-    //---------------------------------
-    cJSON *conditions = cJSON_GetObjectItem(rules, "conditions");
-    cJSON *conditionsItems = cJSON_GetObjectItem(conditions, "items");
-    addconditions(ruleId->valuestring, conditionsItems);
-
-    //---------------------------------
-    cJSON *actions = cJSON_GetObjectItem(rules, "actions");
-    addActions(ruleId->valuestring, actions);
-
-    return 0;
-fail:
-    return -1;
+    return sceneHyDispatch(delArray);
 }
 
-int delScene(cJSON *ruleIds)
+static int delScene(cJSON *ruleIds)
 {
     int ruleIdsSize = cJSON_GetArraySize(ruleIds);
     if (ruleIdsSize == 0)
@@ -362,9 +359,85 @@ int delScene(cJSON *ruleIds)
     return sceneHyDispatch(delArray);
 }
 
+static int triggerScene(cJSON *ruleIds)
+{
+    int ruleIdsSize = cJSON_GetArraySize(ruleIds);
+    if (ruleIdsSize == 0)
+        return 0;
+    cJSON *delArray = cJSON_CreateArray();
+
+    cJSON *ruleIdsSub;
+    for (int i = 0; i < ruleIdsSize; ++i)
+    {
+        ruleIdsSub = cJSON_GetArrayItem(ruleIds, i);
+        if (ruleIdsSub == NULL)
+            continue;
+        cJSON *arrayItem = cJSON_CreateObject();
+        cJSON_AddItemToArray(delArray, arrayItem);
+        cJSON_AddStringToObject(arrayItem, "Op", "ExecScene");
+        cJSON_AddStringToObject(arrayItem, "Id", ruleIdsSub->valuestring);
+        cJSON_AddStringToObject(arrayItem, "Enable", "1");
+    }
+    return sceneHyDispatch(delArray);
+}
+static int addScene(cJSON *rules, const int isUpdate)
+{
+    int delayTime = 0;
+
+    cJSON *ruleId = cJSON_GetObjectItem(rules, "ruleId");
+    cJSON *enable = cJSON_GetObjectItem(rules, "enable");
+
+    //---------------------------------
+    cJSON *additionsSub, *params;
+    cJSON *additions = cJSON_GetObjectItem(rules, "additions");
+    int additionsSize = cJSON_GetArraySize(additions);
+    if (additionsSize)
+    {
+        additionsSub = cJSON_GetArrayItem(additions, 0);
+        params = cJSON_GetObjectItem(additionsSub, "params");
+        if (params != NULL)
+        {
+            delayTime = cJSON_GetObjectItem(params, "delayTime")->valueint;
+        }
+    }
+    //-----------------------------------
+    if (isUpdate == 1)
+    {
+        delSingleScene(ruleId->valuestring);
+    }
+    cJSON *updateArray = cJSON_CreateArray();
+    cJSON *arrayItem = cJSON_CreateObject();
+    cJSON_AddItemToArray(updateArray, arrayItem);
+
+    cJSON_AddStringToObject(arrayItem, "Op", "AddScene");
+    char buf[8] = {0};
+    cJSON_AddStringToObject(arrayItem, "Id", ruleId->valuestring);
+    sprintf(buf, "%d", enable->valueint);
+    cJSON_AddStringToObject(arrayItem, "Enable", buf);
+    sprintf(buf, "%d", delayTime);
+    cJSON_AddStringToObject(arrayItem, "ExecDelayed", buf);
+    sceneHyDispatch(updateArray);
+
+    //---------------------------------
+    cJSON *triggers = cJSON_GetObjectItem(rules, "triggers");
+    cJSON *triggersItems = cJSON_GetObjectItem(triggers, "items");
+    addtriggers(ruleId->valuestring, triggersItems);
+
+    //---------------------------------
+    cJSON *conditions = cJSON_GetObjectItem(rules, "conditions");
+    cJSON *conditionsItems = cJSON_GetObjectItem(conditions, "items");
+    addconditions(ruleId->valuestring, conditionsItems);
+
+    //---------------------------------
+    cJSON *actions = cJSON_GetObjectItem(rules, "actions");
+    addActions(ruleId->valuestring, actions);
+
+    return 0;
+}
+
 int sceneDispatch(const char *str, char **response, int *response_len)
 {
-    int i, res;
+    int res = 0;
     /* Parse Root */
     cJSON *root = cJSON_Parse(str);
     if (root == NULL || !cJSON_IsObject(root))
@@ -423,9 +496,22 @@ int sceneDispatch(const char *str, char **response, int *response_len)
             res = delScene(ruleIds);
         }
     }
+    cJSON *ruleId = cJSON_GetObjectItem(root, "ruleId");
+    if (ruleId != NULL)
+    {
+        if (strcmp("fire", operationType->valuestring) == 0)
+        {
+            res = triggerScene(ruleId);
+        }
+    }
     //-----------------------------------
+    int code = 200;
+    if (res < 0)
+    {
+        code = 400;
+    }
     cJSON *rsp = cJSON_CreateObject();
-    cJSON_AddNumberToObject(rsp, "code", 200);
+    cJSON_AddNumberToObject(rsp, "code", code);
     cJSON_AddStringToObject(rsp, "data", sceneId->valuestring);
     cJSON_AddStringToObject(rsp, "message", "successed");
     char *rspJson = cJSON_PrintUnformatted(rsp);
@@ -447,9 +533,10 @@ int sceneDispatch(const char *str, char **response, int *response_len)
 
     cJSON_free(rspJson);
     //-----------------------------------
-    return 0;
+    return res;
 
 fail:
+    logError("operationType not exist");
     cJSON_Delete(root);
     return -1;
 }
@@ -487,7 +574,7 @@ int localScene(const int devid, const char *serviceid, const int serviceid_len, 
             void *decodeOut = malloc(BASE64_DECODE_OUT_SIZE(encLen) + 1);
             memset(decodeOut, 0, BASE64_DECODE_OUT_SIZE(encLen) + 1);
             int decodeOutlen = base64_decode(sceneRequest->valuestring, encLen, decodeOut);
-            logDebug("sceneRequest:%s", decodeOut);
+            logDebug("sceneRequest:%s,%d", decodeOut, decodeOutlen);
             sceneDispatch(decodeOut, response, response_len);
             free(decodeOut);
         }

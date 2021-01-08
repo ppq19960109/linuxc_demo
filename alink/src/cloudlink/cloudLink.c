@@ -6,12 +6,15 @@
 
 #include "logFunc.h"
 #include "frameCb.h"
+
 #include "hylink.h"
 #include "hylinkRecv.h"
+
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 #include "cloudLink.h"
 #include "cloudLinkListFunc.h"
+
 #include "scene.h"
 
 #include "linkkit_app_gateway.h"
@@ -35,7 +38,6 @@ void cloudLinkDestory(void)
 //-----------------------------------------------------
 int reportGateWayInfo(const char *deviceName, const char *productKey, const int result)
 {
-    int res;
     cJSON *root = cJSON_CreateObject();
 
     cJSON_AddStringToObject(root, "Command", "Report");
@@ -68,7 +70,7 @@ int reportGateWayInfo(const char *deviceName, const char *productKey, const int 
     free(info);
     free(json);
 
-    return res;
+    return 0;
 fail:
     cJSON_Delete(ReportInfo);
     free(info);
@@ -76,7 +78,7 @@ fail:
 
     return -1;
 }
-static int cloudSubDevStatus(CloudLinkDev *cloudLinkDev, int status)
+static int cloudSubDevStatus(CloudLinkDev *cloudLinkDev, unsigned int status)
 {
 
     int res = -1;
@@ -101,6 +103,7 @@ static int cloudSubDevStatus(CloudLinkDev *cloudLinkDev, int status)
     }
     else if (status == SUBDEV_ONLINE)
     {
+        logWarn("cloudLinkDev:%s", cloudLinkDev->alinkInfo.device_name);
         cloudAttrReport(cloudLinkDev, ATTR_REPORT_ALL);
         reportGateWayInfo(cloudLinkDev->alinkInfo.device_name, cloudLinkDev->alinkInfo.product_key, res);
     }
@@ -111,12 +114,13 @@ static int cloudSubDevStatus(CloudLinkDev *cloudLinkDev, int status)
     return 0;
 }
 
-static int cloudSubDevLink(char *sn, int status)
+static int cloudSubDevLink(void *id, unsigned int status)
 {
+    const char *devId = (const char *)id;
     pthread_mutex_lock(&g_CloudLinkControl.mutex);
     int res = 0;
-    CloudLinkDev *cloudLinkDev;
-    if (sn == NULL)
+    CloudLinkDev *cloudLinkDev = NULL;
+    if (devId == NULL)
     {
 
         cloudLink_kh_foreach_value(cloudLinkDev)
@@ -127,10 +131,10 @@ static int cloudSubDevLink(char *sn, int status)
     }
     else
     {
-        cloudLinkDev = cloudLinkListGetById(sn);
+        cloudLinkDev = cloudLinkListGetById(devId);
         if (cloudLinkDev == NULL)
         {
-            logError("cloudSubDevLink sn:%s not exist", sn);
+            logError("cloudSubDevLink devId:%s not exist", devId);
             goto fail;
         }
 
@@ -152,12 +156,11 @@ void cloudLinkClose(void)
     // sleep(2);
 }
 
-void cloudLinkReset(void)
+int cloudLinkReset(void)
 {
     runTransferCb(NULL, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
     runSystemCb(HYLINK_RESET);
-
-    system("sh /userdata/app/restore.sh alink &");
+    return 0;
 }
 
 void cloudLinkMain(void)
@@ -165,7 +168,7 @@ void cloudLinkMain(void)
     registerSystemCb(cloudLinkReset, SYSTEM_RESET);
 
     registerTransferCb(cloudSubDevLink, TRANSFER_SUBDEV_LINE);
-    registerTransferCb(cloudUpdate, TRANSFER_CLOUD_REPORT);
+    registerTransferCb(cloudReport, TRANSFER_CLOUD_REPORT);
     registerTransferCb(sceneReport, TRANSFER_SCENE_REPORT);
     cloudLinkInit();
 }

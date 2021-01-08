@@ -11,9 +11,9 @@
 typedef struct
 {
 #define LED_TIMEER_INDEX 1
-    timer_t ledTimerid;
-#define TIMEER_INDEX 2
     timer_t timerid;
+#define NET_TIMEER_INDEX 2
+    timer_t netTimerid;
 } nativeTimer_t;
 
 static nativeTimer_t nativeTimer;
@@ -24,9 +24,12 @@ static void POSIXTTimerThreadHandler(union sigval v)
     {
         runSystemCb(LED_DRIVER_TIMER_FILP);
     }
-    else if (v.sival_int == TIMEER_INDEX)
+    else if (v.sival_int == NET_TIMEER_INDEX)
     {
-        runSystemCb(CMD_HEART);
+        printf("netTimer time out......\n");
+        unsigned char cmd = 0;
+        runCmdCb(&cmd, NULL, CMD_NETWORK_ACCESS);
+        runCmdCb((void *)1, NULL, LED_DRIVER_LINE);
     }
     else
     {
@@ -85,7 +88,7 @@ timer_t createPOSIXTimer(int sival, void (*timerFunc)(union sigval))
 }
 
 //---------------------------------------------------------------
-int nativeLedTimerOpen(void)
+int nativeTimerOpen(void)
 {
     if (nativeTimer.timerid != NULL)
     {
@@ -95,7 +98,7 @@ int nativeLedTimerOpen(void)
     setPOSIXTimer(nativeTimer.timerid, 1, 1);
     return 0;
 }
-int nativeLedTimerClose(void)
+int nativeTimerClose(void)
 {
     if (nativeTimer.timerid != NULL)
     {
@@ -103,4 +106,16 @@ int nativeLedTimerClose(void)
         nativeTimer.timerid = NULL;
     }
     return 0;
+}
+
+int nativeNetTimer(void *data, void *data2)
+{
+    int sec = *(unsigned char *)data;
+    sec = sec < 60 ? 60 : sec;
+    runSystemCb(LED_DRIVER_FLASH);
+    if (nativeTimer.netTimerid == NULL)
+    {
+        nativeTimer.netTimerid = createPOSIXTimer(NET_TIMEER_INDEX, POSIXTTimerThreadHandler);
+    }
+    return setPOSIXTimer(nativeTimer.netTimerid, 0, sec);
 }

@@ -16,6 +16,8 @@
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 
+#include "scene.h"
+
 void getValueForJson(cJSON *val, char *dst)
 {
     if (val->valuestring != NULL)
@@ -28,7 +30,14 @@ void getValueForJson(cJSON *val, char *dst)
     }
 }
 
-//cloud转换成hanyar的json格式
+/*********************************************************************************
+  *Function:  cloudLinkCtrl
+  * Description： receive cloud control information
+  *Input:  
+    sn:cloud device id
+    payload:cloud control information(json)
+  *Return:  0:success otherwise:fail
+**********************************************************************************/
 int cloudLinkCtrl(void *sn, const char *payload)
 {
     int i, res;

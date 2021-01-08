@@ -1,13 +1,21 @@
 {
     "files.associations": {
         "array": "c",
-        "functional": "c",
+        "string": "c",
+        "string_view": "c",
         "istream": "c",
         "ostream": "c",
+        "functional": "c",
         "tuple": "c",
         "type_traits": "c",
         "utility": "c",
-        "string": "c",
-        "string_view": "c"
-    }
+        "optional": "c",
+        "system_error": "c",
+        "cmath": "c",
+        "*.tcc": "c",
+        "limits": "c",
+        "streambuf": "c",
+        "typeinfo": "c"
+    },
+    "python.formatting.provider": "yapf"
 }

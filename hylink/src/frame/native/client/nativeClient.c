@@ -72,7 +72,7 @@ static void *nativeThreadHander(void *arg)
             exit(EXIT_FAILURE);
         }
 #endif
-
+        
         if (runSystemCb(CMD_DEVSINFO) < 0)
             goto fail;
 
@@ -123,7 +123,6 @@ static void *nativeThreadHander(void *arg)
         Close(pdata->socketfd);
         pdata->socketfd = 0;
 
-        runTransferCb(NULL, SUBDEV_OFFLINE, TRANSFER_SUBDEV_LINE);
     } while (1);
     pthread_exit(0);
 }

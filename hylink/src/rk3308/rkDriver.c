@@ -11,19 +11,16 @@
 #include "rkDriver.h"
 #include "frameCb.h"
 
-#define DRIVER_LED_NAME "/dev/rkled1"
+#define DRIVER_LED_NAME "/dev/rkled0"
 #define DRIVER_KEY_NAME "/dev/rkasync"
 #define LED_ON 0
 #define LED_OFF 1
 
 typedef struct
 {
-    char flip;
+    unsigned char flip;
     int ledfd;
     int keyfd;
-#if USE_LIBUV == 0 && USE_LIBEVENT == 0
-    timer_t timerid;
-#endif
 } rk_driver_t;
 
 rk_driver_t rk_driver;
@@ -97,35 +94,40 @@ int ledDriverWrite(int fd, char status)
 /*-------------------------------------------------------------*/
 int ledTimerCallback(void)
 {
+    if (rk_driver.ledfd <= 0)
+        return -1;
     rk_driver.flip = !rk_driver.flip;
     return ledDriverWrite(rk_driver.ledfd, rk_driver.flip);
 }
 
-void LedStatusForlink(int link)
+int LedStatusForline(void *status, void *status2)
 {
-    printf("LedStatusForlink:%d\n", link);
+    int line = (int)status;
+    printf("LedStatusForline:%d\n", line);
 
     runSystemCb(LED_DRIVER_TIMER_CLOSE);
 
     if (rk_driver.ledfd <= 0)
         rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
 
-    if (link > 0)
+    if (line > 0)
         ledDriverWrite(rk_driver.ledfd, LED_ON);
     else
         ledDriverWrite(rk_driver.ledfd, LED_OFF);
 
     driverClose(rk_driver.ledfd);
     rk_driver.ledfd = 0;
+    return 0;
 }
 
-void LedStatusForUnRegister(void)
+int LedStatusFlash(void)
 {
-    printf("LedStatusForUnRegister\n");
+    printf("LedStatusFlash\n");
     runSystemCb(LED_DRIVER_TIMER_OPEN);
 
     if (rk_driver.ledfd <= 0)
         rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
+    return 0;
 }
 //------------------------------------------
 
@@ -147,7 +149,9 @@ static void sigioFunc(int signum)
         }
         else if (buf == 2)
         {
-            runSystemCb(CMD_NETWORK);
+            unsigned char cmd = 120;
+            runCmdCb(&cmd, NULL, CMD_NETWORK_ACCESS);
+            runCmdCb(&cmd, NULL, CMD_NETWORK_ACCESS_TIME);
         }
         else
         {
@@ -177,17 +181,22 @@ int driverKeyOpen(void)
     return 0;
 }
 
-void rkDriverOpen(void)
+int rkDriverClose(void)
 {
-    registerSystemCb(ledTimerCallback, LED_DRIVER_TIMER_FILP);
-    driverKeyOpen();
-}
-
-void rkDriverClose(void)
-{
-    LedStatusForlink(0);
+    LedStatusForline((void *)0, NULL);
     driverClose(rk_driver.ledfd);
     rk_driver.ledfd = 0;
     driverClose(rk_driver.keyfd);
     rk_driver.keyfd = 0;
+    return 0;
+}
+
+void rkDriverOpen(void)
+{
+    registerSystemCb(rkDriverClose, RK_DRIVER_CLOSE);
+    registerCmdCb(LedStatusForline, LED_DRIVER_LINE);
+    registerSystemCb(LedStatusFlash, LED_DRIVER_FLASH);
+    registerSystemCb(ledTimerCallback, LED_DRIVER_TIMER_FILP);
+    driverKeyOpen();
+    LedStatusForline((void *)1, NULL);
 }

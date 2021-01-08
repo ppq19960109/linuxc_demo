@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include "commonFunc.h"
 
@@ -39,15 +40,53 @@ int operateFile(int action, const char *path, char *buf, int len)
     return ret;
 }
 
+void readFileList(const char *path, int (*readFileFunc)(const char *))
+{
+    DIR *dir;
+    struct dirent *ptr;
+    char base[64] = {0};
+
+    if ((dir = opendir(path)) == NULL)
+    {
+        perror("Open dir error...");
+        return;
+    }
+
+    while ((ptr = readdir(dir)) != NULL)
+    {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) ///current dir OR parrent dir
+            continue;
+        else if (ptr->d_type == 8) ///file
+        {
+            strcpy(base, path);
+            strcat(base, "/");
+            strcat(base, ptr->d_name);
+            printf("d_name:%s,path:%s\n", ptr->d_name, base);
+            readFileFunc(base);
+        }
+        else if (ptr->d_type == 10) ///link file
+            printf("d_name:%s\n", ptr->d_name);
+        else if (ptr->d_type == 4) ///dir
+        {
+            memset(base, 0, sizeof(base));
+            strcpy(base, path);
+            strcat(base, "/");
+            strcat(base, ptr->d_name);
+            readFileList(base, readFileFunc);
+        }
+    }
+    closedir(dir);
+}
+
 long *strToNum(const char *str, int base, long *out)
 {
-    // errno = 0;
+    errno = 0;
     char *endptr;
     long val = strtol(str, &endptr, base);
     if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) || (errno != 0 && val == 0))
     {
         perror("strtol error");
-        printf("strtol endptr:%s\n", endptr);
+        printf("strtol endptr:%s,%ld\n", endptr, val);
         return NULL;
     }
     if (out != NULL)

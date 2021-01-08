@@ -5,11 +5,18 @@
 extern "C"
 {
 #endif
+#define STR_GATEWAY_DEVID "0000000000000000"
+#define STR_GATEWAY_MODELID "000000"
+#define STR_TIME "Time"
+#define STR_ADD "Add"
+
+#define STR_REFACTORY "ReFactory"
 
 #define STR_COMMAND "Command"
 #define STR_REPORT "Report"
 #define STR_DISPATCH "Dispatch"
-#define STR_BEATHEARTRESPONSE "BeatHeartResponse"
+
+#define STR_BEATHEARTRESPONSE "TcpBeatHeart"
 #define STR_FRAMENUMBER "FrameNumber"
 #define STR_TYPE "Type"
 #define STR_DATA "Data"
@@ -20,18 +27,31 @@ extern "C"
 #define STR_VERSION "Version"
 #define STR_PARAMS "Params"
 
+#define STR_REGISTER "Register"
+#define STR_UNREGISTER "UnRegister"
+#define STR_ONOFF "OnOff"
 #define STR_CTRL "Ctrl"
 #define STR_ATTRIBUTE "Attribute"
 #define STR_DELETE "Delete"
 
-#define STR_GATEWAY_DEVID "0000000000000000"
-#define STR_GATEWAY_MODELID "000000"
-#define STR_PERMITJOINING "PermitJoining"
-
 #define STR_KEY "Key"
 #define STR_VALUE "Value"
 
-    int hylinkRecv(void *recv, unsigned int len);
+#define STR_UP "up"
+#define STR_DOWN "down"
+
+#define STR_DEVSINFO "DevsInfo"
+
+    typedef struct
+    {
+        char *const *attr;
+        unsigned short attrLen;
+        char *const *attrCtrl;
+        unsigned short attrCtrlLen;
+    } AttrDesc;
+
+    int hylinkRecvManage(void *data, unsigned int len);
+
 #ifdef __cplusplus
 }
 #endif

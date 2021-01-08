@@ -6,14 +6,10 @@ extern "C"
 {
 #endif
 
-#define ATTR_REPORT_ALL 0xFF
-
     typedef enum
     {
-        SYSTEM_OPEN = 0,
-        SYSTEM_CLOSE = 1,
-        SYSTEM_RESET = 2,
-        HYLINK_OPEN,
+        SYSTEM_CLOSE = 0,
+        SYSTEM_RESET,
         HYLINK_CLOSE,
         HYLINK_RESET,
         LAN_OPEN,
@@ -21,8 +17,10 @@ extern "C"
         LED_DRIVER_TIMER_OPEN,
         LED_DRIVER_TIMER_CLOSE,
         LED_DRIVER_TIMER_FILP,
-        CMD_HEART,
-        CMD_NETWORK,
+        LED_DRIVER_FLASH,
+        RK_DRIVER_CLOSE,
+        DATABASE_CLOSE,
+        DATABASE_RESET,
         CMD_DEVSINFO,
         SYSTEM_LAST,
     } SystemStatus;
@@ -32,27 +30,30 @@ extern "C"
 
     typedef enum
     {
-        SUBDEV_OFFLINE = 0, /* 设备下线 */
-        SUBDEV_ONLINE = 1,  /* 设备上线 */
-        SUBDEV_RESTORE,     /* 删除云端信息 */
-        SUBDEV_LAST,        //
-    } SubDevStatus;
-
-    typedef enum
-    {
         TRANSFER_CLIENT_WRITE = 0,
         TRANSFER_CLIENT_READ,
         TRANSFER_SERVER_HYLINK_WRITE,
         TRANSFER_SERVER_HYLINK_READ,
-        TRANSFER_SUBDEV_LINE,
-        TRANSFER_CLOUD_REPORT,
-        TRANSFER_SCENE_REPORT,
-        TRANSFER_DEVATTR,
+        TRANSFER_SERVER_ZIGBEE_WRITE,
+        TRANSFER_SERVER_ZIGBEE_READ,
         TRANSFER_LAST,
     } TransferStatus;
     typedef int (*transferCb)(void *, unsigned int);
     void registerTransferCb(transferCb cb, TransferStatus status);
     int runTransferCb(void *, unsigned int, TransferStatus status);
+
+    typedef enum
+    {
+        CMD_NETWORK_ACCESS = 0,
+        CMD_NETWORK_ACCESS_TIME,
+        DATABASE_DELETE,
+        DATABASE_INSERT,
+        LED_DRIVER_LINE,
+        CMD_LAST,
+    } CmdStatus;
+    typedef int (*CmdCb)(void *, void *);
+    void registerCmdCb(CmdCb cb, CmdStatus status);
+    int runCmdCb(void *, void *, CmdStatus status);
 
 #ifdef __cplusplus
 }

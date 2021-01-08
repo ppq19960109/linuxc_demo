@@ -8,6 +8,7 @@ extern "C"
 
     unsigned char *getHylinkReportBuf(void);
     void hylinkMain(void);
+
 #ifdef __cplusplus
 }
 #endif
