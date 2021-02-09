@@ -16,6 +16,13 @@ extern "C"
 #define hyLink_kh_foreach_value(vvar) for (khint_t __i = hyLink_kh_begin(); (vvar = hyLink_kh_exist(__i)) || __i != hyLink_kh_end(); ++__i)
 
 #define HYLINK_PROFILE_PATH "hyprofile"
+
+    enum REPORT_STATUS
+    {
+        NON_REPEAT_REPORT = 0x00,
+        REPEAT_REPORT,
+        ONLINE_NON_REPORT_AND_NON_REPEAT_REPORT
+    };
     typedef struct
     {
         /*状态、属性鸿雁协议名称*/
@@ -30,6 +37,7 @@ extern "C"
         char devId[33];
         char modelId[33];
         char online;
+        char first_online_report;
         HyLinkDevAttr *attr;
         unsigned char attrLen;
     } HyLinkDev;
@@ -43,7 +51,7 @@ extern "C"
 
     int getLinkValueType(unsigned char dataType);
     void *hyLinkParseJson(const char *devId, const char *str);
-    void *addProfileDev(const char *path,const char *devId, const char *modelId, void *(*func)(const char *, const char *));
+    void *addProfileDev(const char *path, const char *devId, const char *modelId, void *(*func)(const char *, const char *));
     //-------------------------------------------
     void hylinkListInit(void);
     void hylinkListDestroy(void);

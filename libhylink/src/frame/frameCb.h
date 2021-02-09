@@ -10,18 +10,12 @@ extern "C"
 
     typedef enum
     {
-        SYSTEM_OPEN = 0,
-        SYSTEM_CLOSE = 1,
-        SYSTEM_RESET = 2,
-        HYLINK_OPEN,
+        SYSTEM_CLOSE = 0,
+        SYSTEM_RESET,
         HYLINK_CLOSE,
-        HYLINK_RESET,
-        LAN_OPEN,
-        LAN_CLOSE,
         LED_DRIVER_TIMER_OPEN,
         LED_DRIVER_TIMER_CLOSE,
         LED_DRIVER_TIMER_FILP,
-        LED_DRIVER_FLASH,
         RK_DRIVER_CLOSE,
         CMD_HEART,
         CMD_NETWORK,

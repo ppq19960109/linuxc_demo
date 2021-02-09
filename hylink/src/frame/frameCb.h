@@ -11,13 +11,7 @@ extern "C"
         SYSTEM_CLOSE = 0,
         SYSTEM_RESET,
         HYLINK_CLOSE,
-        HYLINK_RESET,
-        LAN_OPEN,
-        LAN_CLOSE,
-        LED_DRIVER_TIMER_OPEN,
-        LED_DRIVER_TIMER_CLOSE,
         LED_DRIVER_TIMER_FILP,
-        LED_DRIVER_FLASH,
         RK_DRIVER_CLOSE,
         DATABASE_CLOSE,
         DATABASE_RESET,
@@ -46,14 +40,12 @@ extern "C"
     {
         CMD_NETWORK_ACCESS = 0,
         CMD_NETWORK_ACCESS_TIME,
-        DATABASE_DELETE,
-        DATABASE_INSERT,
         LED_DRIVER_LINE,
         CMD_LAST,
     } CmdStatus;
-    typedef int (*CmdCb)(void *, void *);
+    typedef int (*CmdCb)(void *);
     void registerCmdCb(CmdCb cb, CmdStatus status);
-    int runCmdCb(void *, void *, CmdStatus status);
+    int runCmdCb(void *, CmdStatus status);
 
 #ifdef __cplusplus
 }

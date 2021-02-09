@@ -15,9 +15,10 @@
 #include <linux/sockios.h>
 #include <linux/ethtool.h>
 
+#include <arpa/inet.h>
 #include "cJSON.h"
 
-const char *getNetworkIp(const char *eth_inf, char *ip, socklen_t ipLen)
+const char *getNetworkIp(const char *eth_inf, char *ip, unsigned char len)
 {
     // struct sockaddr_in sin;
     struct ifreq ifr;
@@ -40,12 +41,12 @@ const char *getNetworkIp(const char *eth_inf, char *ip, socklen_t ipLen)
     close(fd);
 
     // memcpy(&sin, &ifr.ifr_addr, sizeof(struct sockaddr_in));
-    // snprintf(ip, ipLen, "%s", inet_ntoa(sin.sin_addr));
+    // snprintf(ip, len, "%s", inet_ntoa(sin.sin_addr));
 
-    return inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, ip, ipLen);
+    return inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, ip, len);
 }
 
-char *getNetworkMac(const char *eth_inf, char *mac, unsigned char len)
+char *getNetworkMac(const char *eth_inf, char *mac, unsigned int len, const char *separator)
 {
     struct ifreq ifr;
     int sd;
@@ -67,45 +68,12 @@ char *getNetworkMac(const char *eth_inf, char *mac, unsigned char len)
 
     close(sd);
 
-    snprintf(mac, len, "%02x:%02x:%02x:%02x:%02x:%02x",
-             (unsigned char)ifr.ifr_hwaddr.sa_data[0],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[1],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[2],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[3],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[4],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
-
-    return mac;
-}
-
-char *getNetworkSmallMac(const char *eth_inf, char *mac, unsigned char len)
-{
-    struct ifreq ifr;
-    int sd;
-
-    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("get %s mac address socket creat error\n", eth_inf);
-        return NULL;
-    }
-
-    strncpy(ifr.ifr_name, eth_inf, IFNAMSIZ);
-
-    if (ioctl(sd, SIOCGIFHWADDR, &ifr) < 0)
-    {
-        printf("get %s mac address error\n", eth_inf);
-        close(sd);
-        return NULL;
-    }
-
-    close(sd);
-
-    snprintf(mac, len, "%02x%02x%02x%02x%02x%02x",
-             (unsigned char)ifr.ifr_hwaddr.sa_data[0],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[1],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[2],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[3],
-             (unsigned char)ifr.ifr_hwaddr.sa_data[4],
+    snprintf(mac, len, "%02x%s%02x%s%02x%s%02x%s%02x%s%02x",
+             (unsigned char)ifr.ifr_hwaddr.sa_data[0], separator,
+             (unsigned char)ifr.ifr_hwaddr.sa_data[1], separator,
+             (unsigned char)ifr.ifr_hwaddr.sa_data[2], separator,
+             (unsigned char)ifr.ifr_hwaddr.sa_data[3], separator,
+             (unsigned char)ifr.ifr_hwaddr.sa_data[4], separator,
              (unsigned char)ifr.ifr_hwaddr.sa_data[5]);
 
     return mac;

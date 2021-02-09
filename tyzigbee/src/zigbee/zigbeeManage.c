@@ -31,6 +31,7 @@ int hylinkValueConversion(ConverDesc *converDesc)
             if (strcmp(converDesc->hyKey, "SceName_") == 0 || strcmp(converDesc->hyKey, "ScePhoto_") == 0)
             {
                 int num = (converDesc->in[0] << 8) + converDesc->in[1];
+                num+=1;
                 char buf[8] = {0};
                 sprintf(buf, "%d", num);
                 strcat(converDesc->hyKey, buf);
@@ -63,6 +64,7 @@ int hylinkValueConversion(ConverDesc *converDesc)
                 char *pos = strchr(converDesc->hyKey, '_');
                 long num;
                 strToNum(pos + 1, 10, &num);
+                num-=1;
                 converDesc->out[0] = num >> 8;
                 converDesc->out[1] = num & 0xff;
                 converDesc->out += 2;

@@ -45,7 +45,7 @@
 
 char g_product_key[IOTX_PRODUCT_KEY_LEN + 1] = "";
 char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "";
-char g_device_name[IOTX_DEVICE_NAME_LEN + 1] = "00e099080011";
+char g_device_name[IOTX_DEVICE_NAME_LEN + 1] = "";
 char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "";
 #define USER_EXAMPLE_YIELD_TIMEOUT_MS (200)
 
@@ -161,7 +161,7 @@ static int user_state_dev_bind(int ev, const char *msg)
                     {
                         //SUBDEV_RESTORE
                         runTransferCb(NULL, SUBDEV_OFFLINE, TRANSFER_SUBDEV_LINE);
-                        runSystemCb(LED_DRIVER_FLASH);
+                        runSystemCb(LED_DRIVER_TIMER_OPEN);
                     }
                 }
             }
@@ -261,7 +261,7 @@ void main_before_init(void)
     strcpy(g_device_secret, cloudLinkDev->alinkInfo.device_secret);
     if (strlen(g_device_name) == 0)
     {
-        getNetworkSmallMac(ETH_NAME, g_device_name, sizeof(g_device_name));
+        getNetworkMac(ETH_NAME, g_device_name, sizeof(g_device_name),"");
         // for (int i = 0; i < strlen(g_device_name); i++)
         //     g_device_name[i] = toupper(g_device_name[i]);
     }
@@ -323,17 +323,18 @@ int main(int argc, char **argv)
     memcpy(master_meta_info.device_name, g_device_name, strlen(g_device_name));
     memcpy(master_meta_info.device_secret, g_device_secret, strlen(g_device_secret));
 
-    EXAMPLE_TRACE("product_key:%s\n", g_product_key);
-    EXAMPLE_TRACE("product_secret:%s\n", g_product_secret);
-    EXAMPLE_TRACE("device_name:%s\n", g_device_name);
-    EXAMPLE_TRACE("device_secret:%s\n", g_device_secret);
+    EXAMPLE_TRACE("register product_key:%s\n", master_meta_info.product_key);
+    EXAMPLE_TRACE("register product_secret:%s\n", master_meta_info.product_secret);
+    EXAMPLE_TRACE("register device_name:%s\n", master_meta_info.device_name);
+    EXAMPLE_TRACE("register device_secret:%s\n", master_meta_info.device_secret);
     if (strlen(g_device_secret) == 0)
     {
         iotx_dev_meta_info_t meta;
         memset(&meta, 0, sizeof(iotx_dev_meta_info_t));
-        memcpy(meta.product_key, g_product_key, strlen(g_product_key));
-        memcpy(meta.product_secret, g_product_secret, strlen(g_product_secret));
-        memcpy(meta.device_name, g_device_name, strlen(g_device_name));
+        memcpy(meta.product_key, master_meta_info.product_key, strlen(master_meta_info.product_key));
+        memcpy(meta.product_secret, master_meta_info.product_secret, strlen(master_meta_info.product_secret));
+        memcpy(meta.device_name, master_meta_info.device_name, strlen(master_meta_info.device_name));
+        EXAMPLE_TRACE("IOT_Dynamic_Register start\n");
         res = IOT_Dynamic_Register(IOTX_HTTP_REGION_SHANGHAI, &meta);
         if (res < 0)
         {
@@ -358,8 +359,10 @@ int main(int argc, char **argv)
         }
         else
         {
+            strcpy(master_meta_info.device_secret, meta.device_secret);
+
             cJSON *root = cJSON_CreateObject();
-            cJSON_AddStringToObject(root, "device_secret", master_meta_info.device_secret);
+            cJSON_AddStringToObject(root, "device_secret", meta.device_secret);
             char *json = cJSON_PrintUnformatted(root);
             if (json != NULL)
                 operateFile(1, ALINKGATEWAYFILE, json, strlen(json) + 1);
@@ -367,6 +370,10 @@ int main(int argc, char **argv)
             cJSON_Delete(root);
         }
     }
+    EXAMPLE_TRACE("login product_key:%s\n", master_meta_info.product_key);
+    EXAMPLE_TRACE("login product_secret:%s\n", master_meta_info.product_secret);
+    EXAMPLE_TRACE("login device_name:%s\n", master_meta_info.device_name);
+    EXAMPLE_TRACE("login device_secret:%s\n", master_meta_info.device_secret);
     /* Choose Login Server */
     int domain_type = IOTX_CLOUD_REGION_SHANGHAI;
     IOT_Ioctl(IOTX_IOCTL_SET_DOMAIN, (void *)&domain_type);

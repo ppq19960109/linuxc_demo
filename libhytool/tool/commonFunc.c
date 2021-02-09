@@ -6,8 +6,34 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/stat.h>
 
 #include "commonFunc.h"
+
+int split_str(char *str, const char *delim, void (*cb)(const char*,unsigned int))
+{
+    char *token = strtok(str, delim);
+    int i = 0;
+    for (i = 0; token != NULL; ++i)
+    {
+        cb(token,i);
+        token = strtok(NULL, delim);
+    }
+    return i;
+}
+
+long getFileSize(const char *path)
+{
+    struct stat statbuff;
+    if (stat(path, &statbuff) < 0)
+    {
+        return -1;
+    }
+    else
+    {
+        return statbuff.st_size;
+    }
+}
 
 int operateFile(int action, const char *path, char *buf, int len)
 {

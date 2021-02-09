@@ -41,7 +41,7 @@ extern "C"
 #define STR_DOWN "down"
 
 #define STR_DEVSINFO "DevsInfo"
-
+#define STR_DEVATTRI "DevAttri"
     typedef struct
     {
         char *const *attr;

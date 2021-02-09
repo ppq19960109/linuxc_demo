@@ -133,6 +133,8 @@ static int _gw_upgrade_cb(const char *img)
 static int zigbeeReset(void)
 {
     system("rm -rf " STORAGE_PATH);
+    system("rm -rf *.db*");
+    system("rm -rf *.txt");
     return 0;
 }
 

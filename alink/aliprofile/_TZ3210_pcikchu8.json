@@ -18,17 +18,17 @@
         },
         {
             "hyKey": "LedEnable",
-            "cloudKey": "BackLightMode",
+            "cloudKey": "indicator",
             "valueType": 0
         },
         {
             "hyKey": "PowerOffProtection",
-            "cloudKey": "FailureProtectionSwitch",
+            "cloudKey": "power_off_memory",
             "valueType": 0
         },
         {
             "hyKey": "KeyMode",
-            "cloudKey": "WorkMode",
+            "cloudKey": "switch_type",
             "valueType": 0
         },
         {

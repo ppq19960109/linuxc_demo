@@ -8,7 +8,7 @@ extern "C"
 
     unsigned char *getHylinkSendBuf(void);
     void hylinkMain(void);
-
+    int addDevToHyList(const char *devId, const char *modelId);
 #ifdef __cplusplus
 }
 #endif

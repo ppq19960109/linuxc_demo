@@ -3,6 +3,7 @@
 
 #include "wrappers.h"
 
+#define ETH_NAME "eth0"
 #define ALINKGATEWAYFILE "alinkscret.json"
 
 #define EXAMPLE_TRACE(...)                                      \

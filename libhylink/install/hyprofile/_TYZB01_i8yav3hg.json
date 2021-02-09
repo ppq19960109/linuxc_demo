@@ -22,6 +22,11 @@
             "hyKey": "LedEnable",
             "valueType": 0,
             "repeat": 0
+        },
+        {
+            "hyKey": "PowerOffProtection",
+            "valueType": 0,
+            "repeat": 0
         }
     ]
 }

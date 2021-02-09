@@ -66,7 +66,7 @@ static int zigbeeCmdDelDev(void *id)
     return ret;
 }
 
-int zigbeeClose()
+static int zigbeeClose()
 {
     zigbeeListEmpty();
     return 0;

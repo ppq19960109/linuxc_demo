@@ -95,7 +95,7 @@ int ledDriverWrite(int fd, char status)
 int ledTimerCallback(void)
 {
     if (rk_driver.ledfd <= 0)
-        return -1;
+        rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
     rk_driver.flip = !rk_driver.flip;
     return ledDriverWrite(rk_driver.ledfd, rk_driver.flip);
 }
@@ -120,15 +120,6 @@ int LedStatusForline(void *status)
     return 0;
 }
 
-int LedStatusFlash(void)
-{
-    printf("LedStatusFlash\n");
-    runSystemCb(LED_DRIVER_TIMER_OPEN);
-
-    if (rk_driver.ledfd <= 0)
-        rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
-    return 0;
-}
 //------------------------------------------
 int rkDriverClose(void)
 {
@@ -141,7 +132,6 @@ int rkDriverClose(void)
 void rkDriverOpen(void)
 {
     registerCmdCb(LedStatusForline, LED_DRIVER_LINE);
-    registerSystemCb(LedStatusFlash, LED_DRIVER_FLASH);
     registerSystemCb(ledTimerCallback, LED_DRIVER_TIMER_FILP);
     LedStatusForline(0);
 }

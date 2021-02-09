@@ -93,12 +93,6 @@
             "repeat": 0
         },
         {
-            "keyName": "按键名称0",
-            "hyKey": "SceName_0",
-            "valueType": 2,
-            "repeat": 0
-        },
-        {
             "keyName": "按键名称1",
             "hyKey": "SceName_1",
             "valueType": 2,
@@ -201,9 +195,9 @@
             "repeat": 0
         },
         {
-            "keyName": "按键图片0",
-            "hyKey": "ScePhoto_0",
-            "valueType": 0,
+            "keyName": "按键名称18",
+            "hyKey": "SceName_18",
+            "valueType": 2,
             "repeat": 0
         },
         {
@@ -305,6 +299,12 @@
         {
             "keyName": "按键图片17",
             "hyKey": "ScePhoto_17",
+            "valueType": 0,
+            "repeat": 0
+        },
+        {
+            "keyName": "按键图片18",
+            "hyKey": "ScePhoto_18",
             "valueType": 0,
             "repeat": 0
         }

@@ -1,7 +1,6 @@
 #include "tcp.h"
 #include "epollClient.h"
 
-
 typedef struct
 {
     int epollfd;
@@ -20,7 +19,11 @@ int epollClientSend(struct EpollTcpEvent *myevents, void *send, unsigned int len
         printf("send socketfd is null\n");
         return -1;
     }
-
+#if 1
+    // pthread_mutex_lock(&myevents->mutex);
+    myevents->send_len = Send(myevents->fd, send, len, 0);
+    // pthread_mutex_unlock(&myevents->mutex);
+#elif
     pthread_mutex_lock(&myevents->mutex);
 
     myevents->events |= EPOLLOUT;
@@ -31,7 +34,7 @@ int epollClientSend(struct EpollTcpEvent *myevents, void *send, unsigned int len
     memcpy(myevents->send_buf, recv, myevents->send_len);
 
     pthread_mutex_unlock(&myevents->mutex);
-
+#endif
     return myevents->send_len;
 }
 
@@ -45,11 +48,11 @@ int epollClientCb(int fd, int events, void *arg)
 
         if (len <= 0)
         {
+            printf("recv[fd=%d] error[%d]:%s\n", fd, errno, strerror(errno));
             eventdel(myevent->epollfd, myevent); //将该节点从红黑树上摘除
             close(myevent->fd);
             myevent->fd = 0;
             pthread_mutex_destroy(&myevent->mutex);
-            printf("recv[fd=%d] error[%d]:%s\n", fd, errno, strerror(errno));
             if (myevent->disconnect_cb != NULL)
                 myevent->disconnect_cb();
         }
@@ -85,7 +88,9 @@ void epollClientInit(int efd, struct EpollTcpEvent *event, Epoll_cb epoll_cb)
     event->epoll_cb = epoll_cb;
     event->epollfd = efd;
     /* void eventadd(int efd, int events, struct EpollTcpEvent *ev) */
-    eventadd(efd, EPOLLIN, event); //将lfd添加到监听树上，监听读事件
+    eventadd(efd, EPOLLIN | EPOLLHUP | EPOLLERR, event); //将lfd添加到监听树上，监听读事件
+    if (event->connect_cb != NULL)
+        event->connect_cb();
 }
 
 static void epollListConnect(struct EpollTcpEvent *event)
@@ -146,6 +151,14 @@ int epollHandle(struct epoll_event *events, int nfd)
         //这里epoll_wait返回的时候，同样会返回对应fd的myevents_t类型的指针
         struct EpollTcpEvent *ev = (struct EpollTcpEvent *)events[i].data.ptr;
         //如果监听的是读事件，并返回的是读事件
+        if (events[i].events & EPOLLERR)
+        {
+            printf("----EPOLLERR\n");
+        }
+        if (events[i].events & EPOLLHUP)
+        {
+            printf("----EPOLLHUP\n");
+        }
         if ((events[i].events & EPOLLIN) && (ev->events & EPOLLIN))
         {
             res = ev->epoll_cb(ev->fd, events[i].events, ev->arg);

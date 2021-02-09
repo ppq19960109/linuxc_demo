@@ -5,17 +5,16 @@
 
 #include "frameCb.h"
 #include "logFunc.h"
-#include "nativeFrame.h"
 
-#include "database.h"
 #include "hylink.h"
 #include "rkDriver.h"
 
+#include "hytool.h"
 int mainClose(void)
 {
-    runSystemCb(LAN_CLOSE);
+    hytoolClose();
+ 
     runSystemCb(HYLINK_CLOSE);
-    runSystemCb(DATABASE_CLOSE);
     runSystemCb(RK_DRIVER_CLOSE);
     return 0;
 }
@@ -25,10 +24,9 @@ int main()
     registerSystemCb(mainClose, SYSTEM_CLOSE);
 
     hylinkMain();
-    databaseInit();
     rkDriverOpen();
     logInfo("hylinkapp main start");
-    nativeFrameOpen();
+    hytoolOpen();
     mainClose();
     return 0;
 }

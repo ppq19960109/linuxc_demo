@@ -1,0 +1,46 @@
+{
+    "modelId": "_TZ3210_pcikchu8",
+    "devName": "二路开关模块",
+    "deviceType": "0",
+    "prodId": "2AOY",
+    "model": "IHC1239HW",
+    "devType": "064",
+    "attr": [
+        {
+            "hyKey": "Switch_1",
+            "cloudSid": "switch1",
+            "cloudKey": "on",
+            "valueType": 0
+        },
+        {
+            "hyKey": "Switch_2",
+            "cloudSid": "switch2",
+            "cloudKey": "on",
+            "valueType": 0
+        },
+        {
+            "hyKey": "LedEnable",
+            "cloudSid": "indicator",
+            "cloudKey": "mode",
+            "valueType": 0
+        },
+        {
+            "hyKey": "PowerOffProtection",
+            "cloudSid": "",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "KeyMode",
+            "cloudSid": "",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "Switch_All",
+            "cloudSid": "switch",
+            "cloudKey": "on",
+            "valueType": 0
+        }
+    ]
+}

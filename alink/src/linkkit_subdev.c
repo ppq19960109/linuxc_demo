@@ -212,7 +212,7 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         user_example_ctx_t *user_example_ctx = user_example_get_ctx();
         if (*id == user_example_ctx->master_devid)
         {
-            EXAMPLE_TRACE("gw device online");
+            EXAMPLE_TRACE("gw device online.......");
             return -1;
         }
     }
@@ -222,6 +222,7 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         devid = *id;
         if (devid < 0)
         {
+            EXAMPLE_TRACE("subdev already logout...\n");
             goto fail;
         }
         res = IOT_Linkkit_Report(devid, ITM_MSG_LOGOUT, NULL, 0);
@@ -231,20 +232,14 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
             goto fail;
         }
         EXAMPLE_TRACE("subdev logout success: devid = %d,%d\n", devid, res);
-
+        *id = -1;
         break;
     case SUBDEV_ONLINE:
     {
-        int online = 0;
         EXAMPLE_TRACE("subdev meta_info->device_secret %s\n", meta_info->device_secret);
-        if (id != NULL && *id > 0)
-        {
-            EXAMPLE_TRACE("subdev already login: devid = %d\n", *id);
-            online = 1;
-        }
 
         devid = IOT_Linkkit_Open(IOTX_LINKKIT_DEV_TYPE_SLAVE, meta_info);
-        if (devid < 0)
+        if (devid == FAIL_RETURN)
         {
             EXAMPLE_TRACE("subdev open Failed\n");
             goto fail;
@@ -253,24 +248,16 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         *id = devid;
 
         res = IOT_Linkkit_Connect(devid);
-        if (res < 0)
+        if (res == FAIL_RETURN)
         {
             EXAMPLE_TRACE("subdev connect Failed\n");
-            if (online == 0)
-            {
-                goto fail;
-            }
         }
         EXAMPLE_TRACE("subdev connect success: devid = %d,%d\n", devid, res);
 
         res = IOT_Linkkit_Report(devid, ITM_MSG_LOGIN, NULL, 0);
-        if (res < 0)
+        if (res == FAIL_RETURN)
         {
             EXAMPLE_TRACE("subdev login Failed\n");
-            if (online == 0)
-            {
-                goto fail;
-            }
         }
         EXAMPLE_TRACE("subdev login success: devid = %d,%d,%s\n", devid, res, meta_info->device_secret);
         res = 0;
@@ -278,7 +265,6 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
     break;
     case SUBDEV_RESTORE:
     {
-        devid = *id;
         // res = IOT_Linkkit_Report(devid, ITM_MSG_DELETE_TOPO, NULL, 0);
         // if (res == FAIL_RETURN)
         // {
@@ -299,6 +285,13 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
             goto fail;
         }
         EXAMPLE_TRACE("subdev IOT_DevReset_Report success: device_name = %s\n", meta_info->device_name);
+
+        devid = *id;
+        if (devid < 0)
+        {
+            EXAMPLE_TRACE("subdev already restore...\n");
+            goto fail;
+        }
         res = IOT_Linkkit_Close(devid);
         EXAMPLE_TRACE("subdev IOT_Linkkit_Close:%d\n", res);
         *id = -1;

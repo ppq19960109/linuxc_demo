@@ -76,6 +76,7 @@ static int epollAccetpCb(int lfd, int events, void *arg)
         getsockname(lfd, (struct sockaddr *)&cin, &len);
 
         epollTcpEventSet(&clientEvents[i], inet_ntoa(cin.sin_addr), ntohs(cin.sin_port), serverEvent->recv_cb, serverEvent->disconnect_cb, serverEvent->connect_cb, -1);
+        clientEvents[i].fd = cfd;
         epollClientInit(epollfd, &clientEvents[i], epollClientCb);
 
         printf("new connect[%s:%d]\n", inet_ntoa(cin.sin_addr), ntohs(cin.sin_port));
@@ -91,7 +92,7 @@ static void epollServerInit(int efd, struct EpollTcpEvent *event, Epoll_cb epoll
     ++epollServer.listenNum;
     event->epoll_cb = epoll_cb;
     /* void eventadd(int efd, int events, struct EpollTcpEvent *ev) */
-    eventadd(efd, EPOLLIN, event); //将lfd添加到监听树上，监听读事件
+    eventadd(efd, EPOLLIN | EPOLLHUP | EPOLLERR, event); //将lfd添加到监听树上，监听读事件
 
     return;
 }
@@ -104,7 +105,7 @@ static void epollListListen(struct EpollTcpEvent *event)
 
 static void epollListClose(struct EpollTcpEvent *event)
 {
-    if (event->fd != 0)
+    if (event->status > 0 && event->fd != 0)
         Close(event->fd);
 }
 
@@ -116,7 +117,10 @@ int epollServerClose(void)
         epollServer.epollfd = 0;
     }
     epoll_list_for_each(epollListClose, &epollServerList);
-
+    for (int i = 0; i < CLIENT_MAX_EVENTS + SERVER_MAX_EVENTS; ++i)
+    {
+        epollListClose(&epollServer.events[i]);
+    }
     return 0;
 }
 

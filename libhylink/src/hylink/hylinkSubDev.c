@@ -38,6 +38,12 @@ int hylinkSubDevAttrUpdate(HyLinkDev *hyLinkDev, cJSON *Data)
     cJSON *value = cJSON_GetObjectItem(Data, STR_VALUE);
     if (value == NULL)
     {
+        logError("value is NULL");
+        goto fail;
+    }
+    if (strlen(value->valuestring) == 0)
+    {
+        logError("value string len is 0");
         goto fail;
     }
     switch (hyLinkDev->attr[i].valueType)
@@ -48,7 +54,7 @@ int hylinkSubDevAttrUpdate(HyLinkDev *hyLinkDev, cJSON *Data)
         int num = atoi(value->valuestring);
         if (num == *hyVal)
         {
-            if (hyLinkDev->attr[i].repeat == 0)
+            if (hyLinkDev->attr[i].repeat != REPEAT_REPORT)
                 goto repeat;
         }
         else
@@ -61,7 +67,7 @@ int hylinkSubDevAttrUpdate(HyLinkDev *hyLinkDev, cJSON *Data)
         int num = atoi(value->valuestring);
         if (num == *hyVal)
         {
-            if (hyLinkDev->attr[i].repeat == 0)
+            if (hyLinkDev->attr[i].repeat != REPEAT_REPORT)
                 goto repeat;
         }
         else
@@ -74,7 +80,7 @@ int hylinkSubDevAttrUpdate(HyLinkDev *hyLinkDev, cJSON *Data)
 
         if (strcmp(hyVal, value->valuestring) == 0)
         {
-            if (hyLinkDev->attr[i].repeat == 0)
+            if (hyLinkDev->attr[i].repeat != REPEAT_REPORT)
                 goto repeat;
         }
         else

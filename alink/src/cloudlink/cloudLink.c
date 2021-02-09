@@ -87,8 +87,6 @@ static int cloudSubDevStatus(CloudLinkDev *cloudLinkDev, unsigned int status)
 
     HyLinkDev *hylinkDev = hylinkListGetById(cloudLinkDev->alinkInfo.device_name);
     logWarn("cloudSubDevStatus:id:%s,%d,%d\n", cloudLinkDev->alinkInfo.device_name, hylinkDev->online, status);
-    if (hylinkDev->online == SUBDEV_OFFLINE && status != SUBDEV_RESTORE)
-        return res;
 
     res = linkkit_subdev_status(&cloudLinkDev->alinkInfo, &cloudLinkDev->id, status);
     if (res < 0)
@@ -149,26 +147,29 @@ fail:
 
 void cloudLinkClose(void)
 {
-    // runTransferCb(NULL, SUBDEV_OFFLINE, TRANSFER_SUBDEV_LINE);
+    runTransferCb(NULL, SUBDEV_OFFLINE, TRANSFER_SUBDEV_LINE);
     runSystemCb(HYLINK_CLOSE);
 
+    databaseClose();
     cloudLinkDestory();
-    // sleep(2);
 }
 
-int cloudLinkReset(void)
+static int systemReset(void)
 {
     runTransferCb(NULL, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
-    runSystemCb(HYLINK_RESET);
+    databseReset();
+    cloudLinkClose();
+    exit(0);
     return 0;
 }
 
 void cloudLinkMain(void)
 {
-    registerSystemCb(cloudLinkReset, SYSTEM_RESET);
+    registerSystemCb(systemReset, SYSTEM_RESET);
 
     registerTransferCb(cloudSubDevLink, TRANSFER_SUBDEV_LINE);
     registerTransferCb(cloudReport, TRANSFER_CLOUD_REPORT);
     registerTransferCb(sceneReport, TRANSFER_SCENE_REPORT);
     cloudLinkInit();
+    databaseInit();
 }

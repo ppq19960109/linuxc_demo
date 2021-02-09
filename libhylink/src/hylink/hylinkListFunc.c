@@ -68,6 +68,7 @@ void *hyLinkParseJson(const char *devId, const char *str)
     strcpy(dev->devId, devId);
     strcpy(dev->modelId, modelId->valuestring);
     dev->online = SUBDEV_ONLINE;
+    dev->first_online_report = 1;
     cJSON *arraySub, *hyKey, *valueType, *repeat;
     for (int i = 0; i < arraySize; i++)
     {

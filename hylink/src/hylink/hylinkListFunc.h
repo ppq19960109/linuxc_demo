@@ -20,7 +20,6 @@ extern "C"
         char DeviceId[33];
         char ModelId[33];
         char online;
-        long time;
     } HylinkDev;
 
     void hylinkListInit(void);

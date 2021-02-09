@@ -11,11 +11,11 @@
 #include "cpython.h"
 #include "heartbeat.h"
 
-#include "client.h"
+#include "hytool.h"
 
 static int mainClose(void)
 {
-    runSystemCb(LAN_CLOSE);
+    hytoolClose();
     runSystemCb(ZIGBEE_CLOSE);
     runSystemCb(HYLINK_CLOSE);
     cpythonDestroy();
@@ -31,7 +31,7 @@ int main()
     hylinkMain();
     zigbeeMain();
     logInfo("tuyazigbee app main start");
-    clientOpen();
+    hytoolOpen();
     while (1)
     {
         sleep(1);

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/reboot.h>
 
 #include "frameCb.h"
 #include "logFunc.h"
@@ -12,6 +13,8 @@
 #include "hylinkRecv.h"
 #include "hylinkListFunc.h"
 #include "hylinkSend.h"
+
+#include "database.h"
 
 typedef struct
 {
@@ -27,6 +30,32 @@ unsigned char *getHylinkSendBuf(void)
   return hylinkHandle.reportBuf;
 }
 
+//------------------------------
+static int hylinkSendQueryVersion(void *devId)
+{
+  HylinkSend hylinkSend = {0};
+  hylinkSend.Command = 1;
+  strcpy(hylinkSend.Type, STR_DEVATTRI);
+  hylinkSend.DataSize = 1;
+  HylinkSendData hylinkSendData = {0};
+  hylinkSend.Data = &hylinkSendData;
+
+  strcpy(hylinkSendData.DeviceId, devId);
+  strcpy(hylinkSendData.Key, STR_VERSION);
+  return hylinkSendFunc(&hylinkSend);
+}
+int addDevToHyList(const char *devId, const char *modelId)
+{
+  if (devId == NULL || modelId == NULL)
+    return -1;
+  HylinkDev *hylinkDev = (HylinkDev *)malloc(sizeof(HylinkDev));
+  memset(hylinkDev, 0, sizeof(HylinkDev));
+  strcpy(hylinkDev->DeviceId, devId);
+  strcpy(hylinkDev->ModelId, modelId);
+  hylinkListAdd(hylinkDev);
+  hylinkSendQueryVersion(hylinkDev->DeviceId);
+  return 0;
+}
 /*********************************************************************************
   *Function:  hylinkDevJoin
   * Description： report zigbee device registriation information
@@ -37,7 +66,7 @@ unsigned char *getHylinkSendBuf(void)
     manuName:tuya zigbee device model id
   *Return:  0:success -1:fail
 **********************************************************************************/
-int hylinkNetAccess(void *data, void *data2)
+int hylinkNetAccess(void *data)
 {
   int sec = *(unsigned char *)data;
 
@@ -56,7 +85,7 @@ int hylinkNetAccess(void *data, void *data2)
   return hylinkSendFunc(&hylinkSend);
 }
 
-int hylinkSendReset(void)
+int systemReset(void)
 {
   HylinkSend hylinkSend = {0};
   hylinkSend.Command = 0;
@@ -66,24 +95,32 @@ int hylinkSendReset(void)
   hylinkSend.Command = 1;
 
   hylinkSendFunc(&hylinkSend);
-  sleep(2);
-  system("sh /userdata/app/restore.sh alink &");
+  sleep(1);
+  databseReset();
+  runSystemCb(SYSTEM_CLOSE);
+  sleep(5);
+  sync();
+  reboot(RB_AUTOBOOT);
   return 0;
 }
 //--------------------------------------------------------
 int hylinkClose(void)
 {
   hylinkListEmpty();
+  databaseClose();
   return 0;
 }
 
 void hylinkMain(void)
 {
   registerSystemCb(hylinkClose, HYLINK_CLOSE);
-  registerSystemCb(hylinkSendReset, SYSTEM_RESET);
+  registerSystemCb(systemReset, SYSTEM_RESET);
 
   registerTransferCb(hylinkRecvManage, TRANSFER_SERVER_HYLINK_READ);
   registerTransferCb(hylinkRecvManage, TRANSFER_SERVER_ZIGBEE_READ);
   registerCmdCb(hylinkNetAccess, CMD_NETWORK_ACCESS);
   hylinkListInit();
+
+  databaseInit();
+  selectDatabse(addDevToHyList);
 }

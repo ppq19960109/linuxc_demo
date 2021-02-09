@@ -31,7 +31,7 @@ LDFLAGS += -L$(TOPDIR)
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic -lhytool -ltuya_gw_ext_sdk	\
-		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lpython3.6m \
+		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lpython3.6m -lsqlite3 \
 		-Wl,--end-group
 
 SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))

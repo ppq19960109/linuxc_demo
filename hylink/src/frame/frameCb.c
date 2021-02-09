@@ -37,10 +37,10 @@ void registerCmdCb(CmdCb callback, CmdStatus status)
     s_cmdCb[status] = callback;
 }
 
-int runCmdCb(void *data, void *data2, CmdStatus status)
+int runCmdCb(void *data, CmdStatus status)
 {
     if (s_cmdCb[status] != NULL)
-        return s_cmdCb[status](data, data2);
+        return s_cmdCb[status](data);
     return -1;
 }
 //--------------------------------------------------------

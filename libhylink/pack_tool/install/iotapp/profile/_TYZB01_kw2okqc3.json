@@ -1,0 +1,72 @@
+{
+    "modelId": "TS0203",
+    "manuName": "_TYZB01_kw2okqc3",
+    "heartbeatTime": 43200,
+    "devName": "门窗磁传感器",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Version",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 0,
+            "AttributeId": 1
+        },
+        {
+            "hyKey": "BatteryVoltage",
+            "hyKeyPrivate": 0,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 1,
+            "AttributeId": 32,
+            "z3CmdType": 1,
+            "z3CmdId": 1,
+            "dataType": 32
+        },
+        {
+            "hyKey": "BatteryPercentage",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 1,
+            "AttributeId": 33,
+            "z3CmdType": 1,
+            "z3CmdId": 1,
+            "dataType": 32
+        },
+        {
+            "hyKey": "ContactAlarm",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 1280,
+            "AttributeId": 2,
+            "z3CmdType": 2,
+            "z3CmdId": 0,
+            "dataType": 25
+        },
+        {
+            "hyKey": "TamperAlarm",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 1280,
+            "AttributeId": 2,
+            "z3CmdType": 2,
+            "z3CmdId": 0,
+            "dataType": 25
+        },
+        {
+            "hyKey": "LowBatteryAlarm",
+            "hyKeyPrivate": 1,
+            "srcEndpoint": 1,
+            "dstEndpoint": 1,
+            "ClusterId": 1280,
+            "AttributeId": 2,
+            "z3CmdType": 2,
+            "z3CmdId": 0,
+            "dataType": 25
+        }
+    ]
+}

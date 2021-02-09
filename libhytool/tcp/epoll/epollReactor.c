@@ -42,7 +42,7 @@ void epollTcpEventSet(struct EpollTcpEvent *ev, const char *addr, const short po
     ev->recv_cb = recv_cb;
     ev->disconnect_cb = disconnect_cb;
     ev->connect_cb = connect_cb;
-    if (isServer)
+    if (isServer > 0)
     {
         epoll_list_add(ev, &epollServerList);
     }

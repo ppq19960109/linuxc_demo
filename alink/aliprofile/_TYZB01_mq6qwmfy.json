@@ -13,7 +13,12 @@
         },
         {
             "hyKey": "LedEnable",
-            "cloudKey": "BackLightMode",
+            "cloudKey": "indicator",
+            "valueType": 0
+        },
+        {
+            "hyKey": "PowerOffProtection",
+            "cloudKey": "power_off_memory",
             "valueType": 0
         }
     ]

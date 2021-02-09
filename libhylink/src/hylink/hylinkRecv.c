@@ -85,7 +85,10 @@ void hylinkAnalyDevInfo(cJSON *root, cJSON *Data)
             res = hylinkSubDevAttrUpdate(hyLinkDevBuf, array_sub);
             if (res < 0)
             {
-                logError("hylinkSubDevAttrUpdate error:%s", hyLinkDevBuf->attr[i].hyKey);
+                if (res == -1)
+                    logError("hylinkSubDevAttrUpdate error:%d:%s", res, hyLinkDevBuf->attr[i].hyKey);
+                else
+                    logWarn("hylinkSubDevAttrUpdate repeat:%d:%s", res, hyLinkDevBuf->attr[i].hyKey);
             }
         }
     }
@@ -224,6 +227,10 @@ int hylinkRecvAnaly(const char *json)
             {
                 if (online != hyLinkDevBuf->online)
                 {
+                    if (online)
+                        hyLinkDevBuf->first_online_report = 1;
+                    else
+                        hyLinkDevBuf->first_online_report = 0;
                     getByteForJson(array_sub, STR_VALUE, &hyLinkDevBuf->online);
                     runTransferCb(hyLinkDevBuf->devId, hyLinkDevBuf->online, TRANSFER_SUBDEV_LINE);
                 }

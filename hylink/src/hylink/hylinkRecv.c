@@ -9,9 +9,12 @@
 #include "cJSON.h"
 #include "commonFunc.h"
 
+#include "hylink.h"
 #include "hylinkRecv.h"
 #include "hylinkSend.h"
 #include "hylinkListFunc.h"
+
+#include "database.h"
 
 static char *s_dispatchTypeAttr[] = {
     "Add",
@@ -114,36 +117,46 @@ int hylinkRecvJson(char *data)
             cJSON *value = cJSON_GetObjectItem(array_sub, STR_VALUE);
             if (key == NULL || value == NULL)
                 goto fail;
-            long num;
-            strToNum(value->valuestring, 10, &num);
-            unsigned char cmd = num;
-            if (cmd > 0)
-                runCmdCb(&cmd, NULL, CMD_NETWORK_ACCESS_TIME);
+            if (commandDir)
+            {
+                long num;
+                strToNum(value->valuestring, 10, &num);
+                unsigned char cmd = num;
+
+                runCmdCb(&cmd, CMD_NETWORK_ACCESS_TIME);
+            }
         }
         break;
         case REGISTER:
         {
             char hyModelId[33] = {0};
             getStrForJson(array_sub, STR_MODELID, hyModelId);
-            runCmdCb(hyDevId, hyModelId, DATABASE_INSERT);
+            addDevToHyList(hyDevId, hyModelId);
+            insertDatabse(hyDevId, hyModelId);
         }
         break;
         case ONOFF:
         {
-            time_t curTime = time(NULL);
             HylinkDev *hyDev = (HylinkDev *)hylinkListGet(hyDevId);
             if (hyDev == NULL)
             {
                 logError("hyDev is null");
                 break;
             }
-            hyDev->time = curTime;
+            getByteForJson(array_sub, STR_ONLINE, &hyDev->online);
         }
         break;
         case UNREGISTER:
         case DELETE:
         {
-            runCmdCb(hyDevId, NULL, DATABASE_DELETE);
+            HylinkDev *hyDev = (HylinkDev *)hylinkListGet(hyDevId);
+            if (hyDev == NULL)
+            {
+                logError("hyDev is null");
+                break;
+            }
+            hylinkListDel(hyDevId);
+            deleteDatabse(hyDevId);
         }
         break;
         case DEVSINFO:

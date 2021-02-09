@@ -93,7 +93,7 @@ int Close(int fd)
     }
     int n;
     if ((n = close(fd)) == -1)
-        perrPrintf("close error\n");
+        perrPrintf("close error:");
 
     return n;
 }
@@ -133,7 +133,7 @@ again:
 ssize_t Write(int fd, const void *ptr, size_t nbytes)
 {
     ssize_t n;
-    char repeat = 2;
+    char repeat = 0;
     int outQueueSize = -1;
 again:
     if ((n = write(fd, ptr, nbytes)) == -1)
@@ -156,7 +156,7 @@ again:
 ssize_t Send(int fd, const void *ptr, size_t nbytes, int flag)
 {
     ssize_t n;
-    char repeat = 2;
+    char repeat = 0;
     int outQueueSize = -1;
 again:
     if ((n = send(fd, ptr, nbytes, flag)) == -1)

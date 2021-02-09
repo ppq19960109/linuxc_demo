@@ -124,6 +124,9 @@ int hylinkRecvJson(char *data)
         }
         break;
         case REFACTORY:
+            runSystemCb(HYLINK_RESET);
+            runSystemCb(ZIGBEE_RESET);
+            exit(0);
             break;
         case RESTART:
             break;

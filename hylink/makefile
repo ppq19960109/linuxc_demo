@@ -17,6 +17,9 @@ CFLAGS += -I$(HYTOOL_PATH)/include
 CFLAGS += -I$(HYTOOL_PATH)/include/base64
 CFLAGS += -I$(HYTOOL_PATH)/include/cJSON
 CFLAGS += -I$(HYTOOL_PATH)/include/klib
+CFLAGS += -I$(HYTOOL_PATH)/include/tcp
+CFLAGS += -I$(HYTOOL_PATH)/include/timer
+CFLAGS += -I$(HYTOOL_PATH)/include/signal
 CFLAGS += -Wall
 
 LDFLAGS += -L$(HYTOOL_PATH)/lib

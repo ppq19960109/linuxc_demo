@@ -9,23 +9,9 @@
 #include <time.h>
 #include <syslog.h>
 
-#ifdef ALINK
-#define LINKAPP "alinkapp"
-#elif defined HLINK
-#define LINKAPP "hlinkapp"
-#else
-#define LINKAPP ""
-#endif
-
-// #ifndef LINKAPP
-// #define LINKAPP ""
-// #endif
-
-#define DAEMON_FILE "/userdata/app/daemon.log"
-
 static char cmd[96];
 
-int initDaemon(void)
+static int initDaemon(void)
 {
     int pid;
     int i;
@@ -91,36 +77,29 @@ int initDaemon(void)
     return 0;
 }
 
-long getFileSize(const char *path)
+static int popenRun(const char *cmd, const char *mode, char *buf, int bufSize)
 {
-    struct stat statbuff;
-    if (stat(path, &statbuff) < 0)
+    FILE *pFile = popen(cmd, mode);
+    if (pFile == NULL)
     {
         return -1;
     }
-
-    return statbuff.st_size;
+    char *str = fgets(buf, bufSize, pFile);
+    if (str == NULL)
+    {
+        pclose(pFile);
+        return -1;
+    }
+    pclose(pFile);
+    return 0;
 }
 
-int getProcessNum(char *Name)
+static int getProcessNum(char *Name)
 {
     char buf[8] = {0};
 
-    sprintf(cmd, "%s", DAEMON_FILE);
-    if ((access(cmd, F_OK)) != 0)
-    {
-        sprintf(cmd, "touch %s", DAEMON_FILE);
-        system(cmd);
-    }
-    sprintf(cmd, "pidof %s | awk '{print NF}' > %s", Name, DAEMON_FILE);
-    system(cmd);
-
-    int fd = open(DAEMON_FILE, O_CREAT | O_RDONLY, 0777);
-    int nread = read(fd, buf, sizeof(buf));
-    close(fd);
-
-    if (nread > 2)
-        return -1;
+    sprintf(cmd, "pidof %s | awk '{print NF}'", Name);
+    popenRun(cmd, "r", buf, sizeof(buf));
     return buf[0];
 }
 
@@ -133,17 +112,18 @@ struct pidInfo_t
 static const struct pidInfo_t pidInfo[] = {
     {.pidName = "hydevapp", .pidPath = "/userdata/hyapp"},
     {.pidName = "hy_server_iot", .pidPath = "/userdata/iotapp"},
-    {.pidName = LINKAPP, .pidPath = "/userdata/app"},
+    {.pidName = "hilinkapp", .pidPath = "/userdata/app"},
+    {.pidName = "alilinkapp", .pidPath = "/userdata/app"},
 };
 
 int main()
 {
-    int i;
+    unsigned char i, pidCount;
     const int pidInfoNum = sizeof(pidInfo) / sizeof(pidInfo[0]);
 
     time_t now;
     initDaemon();
-    syslog(LOG_USER | LOG_INFO, "DaemonProcess Start!:%s\n", LINKAPP);
+    syslog(LOG_USER | LOG_INFO, "DaemonProcess Start!\n");
 
     while (1)
     {
@@ -152,7 +132,7 @@ int main()
         // signal(SIGCHLD, SIG_DFL);
         for (i = 0; i < pidInfoNum; i++)
         {
-            int pidCount = getProcessNum(pidInfo[i].pidName);
+            pidCount = getProcessNum(pidInfo[i].pidName);
 
             if (pidCount != '1')
             {
@@ -176,7 +156,7 @@ int main()
                 }
                 else
                 {
-                    sprintf(cmd, "killall %s", pidInfo[i].pidName);
+                    sprintf(cmd, "killall -9 %s", pidInfo[i].pidName);
                     system(cmd);
                     sprintf(cmd, "cd %s;./%s &", pidInfo[i].pidPath, pidInfo[i].pidName);
                     system(cmd);

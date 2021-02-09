@@ -95,17 +95,16 @@ int ledDriverWrite(int fd, char status)
 int ledTimerCallback(void)
 {
     if (rk_driver.ledfd <= 0)
-        return -1;
+         rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
     rk_driver.flip = !rk_driver.flip;
     return ledDriverWrite(rk_driver.ledfd, rk_driver.flip);
 }
 
-int LedStatusForline(void *status, void *status2)
+int LedStatusForline(void *status)
 {
     int line = (int)status;
     printf("LedStatusForline:%d\n", line);
 
-    runSystemCb(LED_DRIVER_TIMER_CLOSE);
 
     if (rk_driver.ledfd <= 0)
         rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
@@ -117,16 +116,6 @@ int LedStatusForline(void *status, void *status2)
 
     driverClose(rk_driver.ledfd);
     rk_driver.ledfd = 0;
-    return 0;
-}
-
-int LedStatusFlash(void)
-{
-    printf("LedStatusFlash\n");
-    runSystemCb(LED_DRIVER_TIMER_OPEN);
-
-    if (rk_driver.ledfd <= 0)
-        rk_driver.ledfd = driverOpen(DRIVER_LED_NAME);
     return 0;
 }
 //------------------------------------------
@@ -150,8 +139,8 @@ static void sigioFunc(int signum)
         else if (buf == 2)
         {
             unsigned char cmd = 120;
-            runCmdCb(&cmd, NULL, CMD_NETWORK_ACCESS);
-            runCmdCb(&cmd, NULL, CMD_NETWORK_ACCESS_TIME);
+            runCmdCb(&cmd, CMD_NETWORK_ACCESS);
+            runCmdCb(&cmd, CMD_NETWORK_ACCESS_TIME);
         }
         else
         {
@@ -183,7 +172,7 @@ int driverKeyOpen(void)
 
 int rkDriverClose(void)
 {
-    LedStatusForline((void *)0, NULL);
+    LedStatusForline((void *)0);
     driverClose(rk_driver.ledfd);
     rk_driver.ledfd = 0;
     driverClose(rk_driver.keyfd);
@@ -195,8 +184,7 @@ void rkDriverOpen(void)
 {
     registerSystemCb(rkDriverClose, RK_DRIVER_CLOSE);
     registerCmdCb(LedStatusForline, LED_DRIVER_LINE);
-    registerSystemCb(LedStatusFlash, LED_DRIVER_FLASH);
     registerSystemCb(ledTimerCallback, LED_DRIVER_TIMER_FILP);
     driverKeyOpen();
-    LedStatusForline((void *)1, NULL);
+    LedStatusForline((void *)1);
 }

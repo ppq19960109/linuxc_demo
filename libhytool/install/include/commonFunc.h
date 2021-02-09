@@ -7,6 +7,8 @@ extern "C"
 #endif
 
 #include "cJSON.h"
+    int split_str(char *str, const char *delim, void (*cb)(const char*,unsigned int));
+    long getFileSize(const char *path);
     int operateFile(int action, const char *path, char *buf, int len);
     void readFileList(const char *path, int (*readFileFunc)(const char *));
     long *strToNum(const char *str, int base, long *out);

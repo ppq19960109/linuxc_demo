@@ -2,7 +2,7 @@
 #define _THREADCLIENT_H_
 
 #include <pthread.h>
-#define BUF_LEN 4096
+#define BUF_LEN (16 * 1024)
 
 typedef int (*Recv_cb)(char *data, unsigned int len);
 typedef int (*Connect_cb)(void);

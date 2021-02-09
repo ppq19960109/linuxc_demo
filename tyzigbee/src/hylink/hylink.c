@@ -15,6 +15,7 @@
 #include "hylinkSend.h"
 
 #include "zigbeeListFunc.h"
+#include "database.h"
 
 typedef struct
 {
@@ -30,6 +31,18 @@ unsigned char *getHylinkReportBuf(void)
     return hylinkHandle.reportBuf;
 }
 
+//------------------------------
+static int addDevToHyList(const char *devId, const char *modelId)
+{
+    if (devId == NULL || modelId == NULL)
+        return -1;
+    HylinkDev *hylinkDev = (HylinkDev *)malloc(sizeof(HylinkDev));
+    memset(hylinkDev, 0, sizeof(HylinkDev));
+    strcpy(hylinkDev->DeviceId, devId);
+    strcpy(hylinkDev->ModelId, modelId);
+    hylinkListAdd(hylinkDev);
+    return 0;
+}
 /*********************************************************************************
   *Function:  hylinkDevJoin
   * Description： report zigbee device registriation information
@@ -55,6 +68,7 @@ static int hylinkDevJoin(void *devId, void *modelId, void *version, void *manuNa
     strcpy(hyDev->ModelId, manuName);
     strcpy(hyDev->Version, version);
     hylinkListAdd(hyDev);
+    insertDatabse(hyDev->DeviceId, hyDev->ModelId);
 
     HylinkSend hylinkSend = {0};
     HylinkSendData hylinkSendData = {0};
@@ -130,6 +144,7 @@ static int hylinkDevLeave(void *devId, void *null, void *null1, void *null2)
 
     hylinkSendFunc(&hylinkSend);
     hylinkListDel(hyDev->DeviceId);
+    deleteDatabse(hyDev->DeviceId);
     return 0;
 }
 
@@ -176,6 +191,8 @@ static int hylinkReportDevInfo(void)
 static int hylinkReportNetAccess(void *data)
 {
     unsigned char sec = *(unsigned char *)data;
+    if (sec)
+        sec = 1;
     HylinkSend hylinkSend = {0};
     HylinkSendData hylinkSendData = {0};
     hylinkSend.Data = &hylinkSendData;
@@ -221,13 +238,28 @@ static int hylinkZigbeeChannel(void)
 //--------------------------------------------------------
 static int hylinkClose(void)
 {
+    databaseClose();
     hylinkListEmpty();
+    return 0;
+}
+
+static int hylinkReset(void)
+{
+    HylinkDev *hylinkDev;
+    hyLink_kh_foreach_value(hylinkDev)
+    {
+        runCmdCb(hylinkDev->DeviceId, CMD_DELETE_DEV);
+    }
+
+    hylinkClose();
+    databseReset();
     return 0;
 }
 
 void hylinkMain(void)
 {
     registerSystemCb(hylinkClose, HYLINK_CLOSE);
+    registerSystemCb(hylinkReset, HYLINK_RESET);
     registerSystemCb(hylinkZigbeeChannel, HYLINK_ZB_CHANNEL);
     registerSystemCb(hylinkReportDevInfo, HYLINK_DEVSINFO);
 
@@ -241,4 +273,6 @@ void hylinkMain(void)
     registerZigbeeCb(hylinkDevZclReport, ZIGBEE_DEV_REPORT);
 
     hylinkListInit();
+    databaseInit();
+    selectDatabse(addDevToHyList);
 }

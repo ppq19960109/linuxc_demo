@@ -66,7 +66,7 @@ DevNameEn g_devNameEn = {
 /* 服务信息定义 */
 int gSvcNum = 1;
 svc_info_t gSvcInfo[] = {
-    {"switch", "switch"}};
+    {"binarySwitch", "switch"}};
 
 /* AC信息，大小为48 */
 unsigned char A_C[48] = {
@@ -106,7 +106,7 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
 
     if (svcId == NULL)
         return -1;
-        
+
     if (strcmp("switch", svcId) == 0)
     {
         if (payload != NULL)

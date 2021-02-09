@@ -37,6 +37,5 @@
 
 void logPrintf(char *format, ...);
 void logPrintfHex(char *title,unsigned char *data, unsigned int len);
-const int consoleRun(const char *cmdline);
-int popenRun(const char *cmd, const char *mode, char *buf, int bufSize);
+
 #endif

@@ -1,5 +1,5 @@
 
-CROSS_COMPILE =/home/ppq/arm32-rk3308/bin/arm-rockchip-linux-gnueabihf-
+CROSS_COMPILE =arm-rockchip-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -8,7 +8,6 @@ INC_PATH = $(TOPDIR)
 SRC_PATH = $(TOPDIR)
 
 CFLAGS += -I$(INC_PATH) 
-# CFLAGS += -DALINK
 CFLAGS += -Wall
 
 LDFLAGS += -L$(TOPDIR)
