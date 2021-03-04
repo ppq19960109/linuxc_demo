@@ -1,39 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/reboot.h>
-
-#include "logFunc.h"
-#include "frameCb.h"
-
-#include "hylink.h"
-#include "hylinkRecv.h"
-
+#include "cloudLinkListFunc.h"
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 #include "cloudLink.h"
-#include "cloudLinkListFunc.h"
 
 #include "scene.h"
 
-#include "linkkit_app_gateway.h"
-#include "linkkit_subdev.h"
-
-static CloudLinkControl g_CloudLinkControl;
-
-void cloudLinkInit(void)
-{
-    pthread_mutex_init(&g_CloudLinkControl.mutex, NULL);
-    cloudLinkListInit();
-}
-
-void cloudLinkDestory(void)
-{
-    cloudLinkListEmpty();
-    cloudLinkListDestroy();
-    pthread_mutex_destroy(&g_CloudLinkControl.mutex);
-}
+static pthread_mutex_t cloudLink_mutex;
 
 //-----------------------------------------------------
 int reportGateWayInfo(const char *deviceName, const char *productKey, const int result)
@@ -115,12 +87,11 @@ static int cloudSubDevStatus(CloudLinkDev *cloudLinkDev, unsigned int status)
 static int cloudSubDevLink(void *id, unsigned int status)
 {
     const char *devId = (const char *)id;
-    pthread_mutex_lock(&g_CloudLinkControl.mutex);
+    pthread_mutex_lock(&cloudLink_mutex);
     int res = 0;
     CloudLinkDev *cloudLinkDev = NULL;
     if (devId == NULL)
     {
-
         cloudLink_kh_foreach_value(cloudLinkDev)
         {
             logWarn("cloudLink_kh_foreach_value");
@@ -138,10 +109,10 @@ static int cloudSubDevLink(void *id, unsigned int status)
 
         res = cloudSubDevStatus(cloudLinkDev, status);
     }
-    pthread_mutex_unlock(&g_CloudLinkControl.mutex);
+    pthread_mutex_unlock(&cloudLink_mutex);
     return res;
 fail:
-    pthread_mutex_unlock(&g_CloudLinkControl.mutex);
+    pthread_mutex_unlock(&cloudLink_mutex);
     return -1;
 }
 
@@ -151,7 +122,10 @@ void cloudLinkClose(void)
     runSystemCb(HYLINK_CLOSE);
 
     databaseClose();
-    cloudLinkDestory();
+
+    cloudLinkListEmpty();
+    cloudLinkListDestroy();
+    pthread_mutex_destroy(&cloudLink_mutex);
 }
 
 static int systemReset(void)
@@ -163,13 +137,16 @@ static int systemReset(void)
     return 0;
 }
 
-void cloudLinkMain(void)
+void cloudLinkOpen(void)
 {
     registerSystemCb(systemReset, SYSTEM_RESET);
 
     registerTransferCb(cloudSubDevLink, TRANSFER_SUBDEV_LINE);
     registerTransferCb(cloudReport, TRANSFER_CLOUD_REPORT);
     registerTransferCb(sceneReport, TRANSFER_SCENE_REPORT);
-    cloudLinkInit();
+
+    pthread_mutex_init(&cloudLink_mutex, NULL);
+    cloudLinkListInit();
+
     databaseInit();
 }

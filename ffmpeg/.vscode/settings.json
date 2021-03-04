@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "avcodec.h": "c",
+        "swresample.h": "c",
+        "avformat.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c",
+        "type_traits": "c",
+        "stat.h": "c",
+        "enc_video.h": "c",
+        "samplefmt.h": "c",
+        "mman.h": "c",
+        "types.h": "c",
+        "imgutils.h": "c",
+        "push_stream.h": "c",
+        "fcntl.h": "c",
+        "stdbool.h": "c",
+        "timestamp.h": "c",
+        "opt.h": "c"
+    }
+}

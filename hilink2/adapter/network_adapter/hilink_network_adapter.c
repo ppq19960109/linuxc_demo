@@ -14,9 +14,11 @@
  */
 int HILINK_GetLocalIp(char *localIp, unsigned char len)
 {
-    const char *ip = getNetworkIp(ETH_NAME, localIp, len);
-    if (ip == NULL)
+    if (getNetworkIp(ETH_NAME, localIp, len) == NULL)
+    {
+        printf("HILINK_GetLocalIp fail\n");
         return -1;
+    }
     return 0;
 }
 
@@ -32,12 +34,13 @@ int HILINK_GetMacAddr(unsigned char *mac, unsigned char len)
     char mac_str[18];
     const char *delim = ":";
 
-    if (getNetworkMac(ETH_NAME, mac_str, len, delim) != 0)
+    if (getNetworkMac(ETH_NAME, mac_str, sizeof(mac_str), delim) == NULL)
     {
         printf("HILINK_GetMacAddr fail\n");
         return -1;
     }
     //----------------------
+    printf("HILINK_GetMacAddr %s\n", mac_str);
     char *token = strtok(mac_str, delim);
     int i = 0;
     for (i = 0; token != NULL && i < len; ++i)
@@ -47,7 +50,7 @@ int HILINK_GetMacAddr(unsigned char *mac, unsigned char len)
     }
     if (i != len)
     {
-        printf("HILINK_GetMacAddr len fail\n");
+        printf("HILINK_GetMacAddr len fail,i=%d,len=%d\n", i, len);
         return -1;
     }
     //----------------------
@@ -103,6 +106,10 @@ int HILINK_ConnectWiFi(void)
 int HILINK_GetNetworkState(int *state)
 {
     int ret = getNetlink(ETH_NAME);
+    if (ret == 0)
+        *state = 1;
+    else
+        *state = 0;
     return ret;
 }
 
@@ -135,8 +142,7 @@ int HILINK_GetWiFiRssi(signed char *rssi)
 int HILINK_Restart(void)
 {
     printf("HILINK_Restart\n");
-    sync();
-    reboot(RB_AUTOBOOT);
+    runSystemCb(SYSTEM_RESTART);
     return 0;
 }
 

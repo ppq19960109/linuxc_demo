@@ -168,12 +168,14 @@ int tyZigbeeInit(void)
     if (ret != 0)
     {
         log_err("tyZigbeeZcl3Init failed");
+        exit(1);
         return ret;
     }
     ret = tuya_user_iot_init(&gw_attr, &gw_infra_cbs);
     if (ret != 0)
     {
         log_err("tuya_user_iot_init failed");
+        exit(1);
         return ret;
     }
     ret = tuya_user_iot_unactive_gw();

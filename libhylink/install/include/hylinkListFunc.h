@@ -21,7 +21,7 @@ extern "C"
     {
         NON_REPEAT_REPORT = 0x00,
         REPEAT_REPORT,
-        ONLINE_NON_REPORT_AND_NON_REPEAT_REPORT
+        NON_REPORT,
     };
     typedef struct
     {
@@ -37,7 +37,6 @@ extern "C"
         char devId[33];
         char modelId[33];
         char online;
-        char first_online_report;
         HyLinkDevAttr *attr;
         unsigned char attrLen;
     } HyLinkDev;
@@ -48,8 +47,8 @@ extern "C"
         LINK_VALUE_TYPE_NUM = 0x01,
         LINK_VALUE_TYPE_STRING = 0x02,
     };
-
-    int getLinkValueType(unsigned char dataType);
+    char *generateCloudJson(const char *cloudKey, const char *hyValue, const unsigned char valueType);
+    int getHyLinkValueType(unsigned char dataType);
     void *hyLinkParseJson(const char *devId, const char *str);
     void *addProfileDev(const char *path, const char *devId, const char *modelId, void *(*func)(const char *, const char *));
     //-------------------------------------------

@@ -27,7 +27,7 @@ int HILINK_rebootHardware(void)
 static int main_close(void)
 {
   cloudLinkClose();
-
+  exit(0);
   return 0;
 }
 int main(void)
@@ -58,8 +58,8 @@ int main(void)
   hilink_main();
   //-------------------------------------------------
   registerSystemCb(main_close, SYSTEM_CLOSE);
-  cloudLinkMain();
-  hylinkMain();
+  cloudLinkOpen();
+  hylinkOpen();
 
   while (1)
   {

@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-#include "linkkit_subdev.h"
+#include "main.h"
 
 #include "khash.h"
     khint_t cloudLink_kh_begin();
@@ -15,7 +15,6 @@ extern "C"
 #define cloudLink_kh_foreach_value(vvar) \
     for (khint_t __i = cloudLink_kh_begin(); (vvar = cloudLink_kh_exist(__i)) || __i != cloudLink_kh_end(); ++__i)
 
-#define ALILINK_PROFILE_PATH "aliprofile"
     typedef struct
     {
         char hyKey[33];

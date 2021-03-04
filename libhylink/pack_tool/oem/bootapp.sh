@@ -44,3 +44,4 @@ if [ -e "/userdata/app/hlinkapp" ];then
 fi
 
 /userdata/app/hydaemon
+/userdata/app/dhcp60.sh &

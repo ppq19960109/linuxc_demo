@@ -21,55 +21,29 @@ extern "C"
         char hyType[8];
         char cloudSid[33];
         char cloudKey[33];
-        char *value;
-        char valueType;
         char repeat;
     } CloudLinkDevAttr;
 
     typedef struct
     {
-        char eventId[33];
-        char hyKey[33];
-        char key[33];
-        char value;
-    } CloudLinkEventAttr;
-
-    typedef struct
-    {
-        char serverId[33];
-        char hyKey[33];
-        char key[33];
-        char value[33];
-    } CloudLinkServerAttr;
-
-    typedef struct
-    {
         CloudLinkDevAttr *attr;
         char attrLen;
-        CloudLinkServerAttr *serverAttr;
-        char serverAttrLen;
-        CloudLinkEventAttr *eventAttr;
-        char eventAttrLen;
-
         BrgDevInfo brgDevInfo;
     } CloudLinkSubDev;
 
     typedef struct
     {
-        char mac[33];
         char modelId[33];
 
         CloudLinkDevAttr *attr;
         char attrLen;
-        CloudLinkServerAttr *serverAttr;
-        char serverAttrLen;
-        CloudLinkEventAttr *eventAttr;
-        char eventAttrLen;
-
         BrgDevInfo brgDevInfo;
 
         CloudLinkSubDev *cloudLinkSubDev;
         char cloudLinkSubDevLen;
+#ifdef HILINK_REPORT_SYNC
+        char hilink_now_online;
+#endif
     } CloudLinkDev;
 
     void *cloudLinkParseJson(const char *devId, const char *str);
@@ -78,7 +52,6 @@ extern "C"
     void cloudLinkListDestroy(void);
     void cloudLinkListAdd(void *node);
 
-    void cloudLinkDevFree(CloudLinkDev *ptr);
     void cloudLinkListDelDev(CloudLinkDev *ptr);
     void cloudLinkListEmpty(void);
     CloudLinkDev *cloudLinkListGetById(const char *id);

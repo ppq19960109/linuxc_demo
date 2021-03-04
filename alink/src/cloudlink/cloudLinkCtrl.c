@@ -1,34 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "logFunc.h"
-#include "cJSON.h"
-#include "base64.h"
-#include "commonFunc.h"
-#include "frameCb.h"
-#include "hylinkListFunc.h"
-#include "hylinkSubDev.h"
-#include "hylinkSend.h"
-#include "hylinkRecv.h"
+#include "main.h"
 
 #include "cloudLink.h"
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 
 #include "scene.h"
-
-void getValueForJson(cJSON *val, char *dst)
-{
-    if (val->valuestring != NULL)
-    {
-        strcpy(dst, val->valuestring);
-    }
-    else
-    {
-        sprintf(dst, "%d", val->valueint);
-    }
-}
 
 /*********************************************************************************
   *Function:  cloudLinkCtrl
@@ -40,49 +16,24 @@ void getValueForJson(cJSON *val, char *dst)
 **********************************************************************************/
 int cloudLinkCtrl(void *sn, const char *payload)
 {
-    int i, res;
+    int i, res = -1;
     CloudLinkDev *cloudLinkDev = cloudLinkListGetBySn((int)sn);
     if (cloudLinkDev == NULL)
         return -1;
 
-    HylinkDevSendData hylinkDevSend = {0};
-
-    hylinkDevSend.FrameNumber = 0;
-
-    strcpy(hylinkDevSend.Data.DeviceId, cloudLinkDev->alinkInfo.device_name);
-    strcpy(hylinkDevSend.Data.ModelId, cloudLinkDev->modelId);
-
     cJSON *root = cJSON_Parse(payload);
-    cJSON *val;
-
-    strcpy(hylinkDevSend.Type, STR_CTRL);
 
     for (i = 0; i < cloudLinkDev->attrLen; ++i)
     {
         if (cJSON_HasObjectItem(root, cloudLinkDev->attr[i].cloudKey))
         {
-            break;
+            res = hyCloudCtrlSend(cloudLinkDev->alinkInfo.device_name, cloudLinkDev->modelId, cloudLinkDev->attr[i].hyType, cloudLinkDev->attr[i].hyKey, root, cloudLinkDev->attr[i].cloudKey);
+            goto end;
         }
     }
-    if (i == cloudLinkDev->attrLen)
-    {
-        logError("cloudKey not exist");
-        goto fail;
-    }
-    if (strlen(cloudLinkDev->attr[i].hyType) != 0)
-        strcpy(hylinkDevSend.Type, cloudLinkDev->attr[i].hyType);
-
-    strcpy(hylinkDevSend.Data.Key, cloudLinkDev->attr[i].hyKey);
-
-    val = cJSON_GetObjectItem(root, cloudLinkDev->attr[i].cloudKey);
-
-    getValueForJson(val, hylinkDevSend.Data.Value);
-    res = hylinkSend(&hylinkDevSend);
+end:
     cJSON_Delete(root);
     return res;
-fail:
-    cJSON_Delete(root);
-    return -1;
 }
 
 int cloudLinkServicCtrl(const int devid, const char *serviceid, const int serviceid_len, const char *request, char **response, int *response_len)
@@ -119,21 +70,19 @@ int cloudLinkServicCtrl(const int devid, const char *serviceid, const int servic
         logError("server cloudKey not exist:%s", serviceid);
         goto fail;
     }
+    cJSON *key = NULL, *cloud_value;
+    if (cJSON_HasObjectItem(root, cloudLinkDev->serverAttr[i].key))
+    {
+        key = cJSON_GetObjectItem(root, cloudLinkDev->serverAttr[i].key);
+    }
+    cloud_value = cJSON_GetObjectItem(root, cloudLinkDev->serverAttr[i].value);
+    //------------------------------------
     HylinkDevSendData hylinkDevSend = {0};
     hylinkDevSend.FrameNumber = 0;
     strcpy(hylinkDevSend.Data.DeviceId, cloudLinkDev->alinkInfo.device_name);
     strcpy(hylinkDevSend.Data.ModelId, cloudLinkDev->modelId);
     strcpy(hylinkDevSend.Type, STR_CTRL);
-
     strcpy(hylinkDevSend.Data.Key, cloudLinkDev->serverAttr[i].hyKey);
-    cJSON *key = NULL;
-    cJSON *value;
-    if (cJSON_HasObjectItem(root, cloudLinkDev->serverAttr[i].key))
-    {
-        key = cJSON_GetObjectItem(root, cloudLinkDev->serverAttr[i].key);
-    }
-    //------------------------------------
-    value = cJSON_GetObjectItem(root, cloudLinkDev->serverAttr[i].value);
     if (strcmp(cloudLinkDev->alinkInfo.product_key, "a1aqqjEXCWa") == 0)
     {
         int keyNum = key->valueint - 1;
@@ -143,7 +92,7 @@ int cloudLinkServicCtrl(const int devid, const char *serviceid, const int servic
 
         if (strncmp(serviceid, "WordsCfg", serviceid_len) == 0)
         {
-            getValueForJson(value, buf);
+            cjson_to_str(cloud_value, buf);
             int encLen = strlen(buf);
             void *decodeOut = malloc(BASE64_DECODE_OUT_SIZE(encLen));
             int decodeOutlen = base64_decode(buf, encLen, decodeOut);
@@ -152,7 +101,7 @@ int cloudLinkServicCtrl(const int devid, const char *serviceid, const int servic
         }
         else if (strncmp(serviceid, "PictureCfg", serviceid_len) == 0)
         {
-            getValueForJson(value, hylinkDevSend.Data.Value);
+            cjson_to_str(cloud_value, hylinkDevSend.Data.Value);
         }
     }
     else
@@ -160,14 +109,13 @@ int cloudLinkServicCtrl(const int devid, const char *serviceid, const int servic
         if (key != NULL)
         {
             char buf[24];
-            getValueForJson(key, buf);
+            cjson_to_str(key, buf);
             strcat(hylinkDevSend.Data.Key, buf);
         }
-        getValueForJson(value, hylinkDevSend.Data.Value);
+        cjson_to_str(cloud_value, hylinkDevSend.Data.Value);
     }
-    //------------------------------------
     res = hylinkSend(&hylinkDevSend);
-
+    //------------------------------------
     /* Send Service Response To Cloud */
     // *response_len = 0;
     // *response = (char *)HAL_Malloc(*response_len);
@@ -190,8 +138,11 @@ int cloudLinkDevDel(void *sn)
 {
     logWarn("cloudLinkDevDel:%s", sn);
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
-    if (cloudLinkDev != NULL)
-        runTransferCb(cloudLinkDev->alinkInfo.device_name, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
-
+    if (cloudLinkDev == NULL)
+    {
+        logWarn("cloudLink Dev not exits:%s", sn);
+        return -1;
+    }
+    runTransferCb(cloudLinkDev->alinkInfo.device_name, SUBDEV_RESTORE, TRANSFER_SUBDEV_LINE);
     return hylinkDelDev(sn);
 }

@@ -42,7 +42,7 @@ extern "C"
 
     int hylinkSendDevInfo(void);
     int hylinkSendDevAttr(void *devId, unsigned int len);
-
+    int hyCloudCtrlSend(const char *sn, const char *modelId, const char *hyType, const char *hyKey, cJSON *cloud_payload, const char *cloudKey);
 #ifdef __cplusplus
 }
 #endif

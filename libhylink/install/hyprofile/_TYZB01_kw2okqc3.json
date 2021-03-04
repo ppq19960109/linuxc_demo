@@ -21,7 +21,7 @@
         {
             "hyKey": "ContactAlarm",
             "valueType": 0,
-            "repeat": 2
+            "repeat": 0
         },
         {
             "hyKey": "TamperAlarm",

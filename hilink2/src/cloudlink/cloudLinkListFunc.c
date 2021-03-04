@@ -17,7 +17,7 @@ static void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
 
 #define _PARSEJSON_DEVATTR(T) PARSEJSON_DEVATTR$_##T
 #define PARSEJSON_DEVATTR(T) _PARSEJSON_DEVATTR(T)
-#define _PARSEJSON_DEVATTR_DEF(T)                                                         \
+#define _PARSEJSON_DEVATTR_DEF(T)                                                        \
     void PARSEJSON_DEVATTR(T)(const char *devId, T *dev, cJSON *root)                    \
     {                                                                                    \
         int i;                                                                           \
@@ -59,7 +59,7 @@ static void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
         dev->attrLen = arraySize;                                                        \
         dev->attr = (CloudLinkDevAttr *)malloc(sizeof(CloudLinkDevAttr) * dev->attrLen); \
         memset(dev->attr, 0, sizeof(CloudLinkDevAttr) * dev->attrLen);                   \
-        cJSON *arraySub, *hyKey, *hyType, *cloudSid, *cloudKey, *valueType, *repeat;     \
+        cJSON *arraySub, *hyKey, *hyType, *cloudSid, *cloudKey, *repeat;                 \
         for (i = 0; i < arraySize; i++)                                                  \
         {                                                                                \
             arraySub = cJSON_GetArrayItem(attr, i);                                      \
@@ -87,11 +87,6 @@ static void BrgDevInfo_init(BrgDevInfo *brgDevInfo)
                 repeat = cJSON_GetObjectItem(arraySub, "repeat");                        \
                 dev->attr[i].repeat = repeat->valueint;                                  \
             }                                                                            \
-            valueType = cJSON_GetObjectItem(arraySub, "valueType");                      \
-            dev->attr[i].valueType = valueType->valueint;                                \
-            int valueLen = getLinkValueType(dev->attr[i].valueType);                     \
-            if (valueLen < 0)                                                            \
-                continue;                                                                \
         }                                                                                \
     fail:                                                                                \
         return;                                                                          \
@@ -119,7 +114,8 @@ void *cloudLinkParseJson(const char *devId, const char *str)
 
     CloudLinkDev *dev = (CloudLinkDev *)malloc(sizeof(CloudLinkDev));
     memset(dev, 0, sizeof(CloudLinkDev));
-
+    strcpy(dev->modelId, modelId->valuestring);
+    //----------------------------------------
     PARSEJSON_DEVATTR(CloudLinkDev)
     (devId, dev, root);
     //----------------------------------------
@@ -140,7 +136,7 @@ void *cloudLinkParseJson(const char *devId, const char *str)
         int arraySize = cJSON_GetArraySize(attr);
         if (arraySize == 0)
         {
-            logError("attr arraySize is 0\n");
+            logError("subdev attr arraySize is 0\n");
             goto fail;
         }
 
@@ -168,31 +164,17 @@ fail:
 }
 
 //--------------------------------------------------------
-void cloudLinkDevFree(CloudLinkDev *dev)
+static void cloudLinkDevFree(CloudLinkDev *dev)
 {
     if (dev == NULL)
         return;
-    int i, j;
-    for (i = 0; i < dev->attrLen; ++i)
-    {
-        if (dev->attr[i].value != NULL)
-            free(dev->attr[i].value);
-    }
 
-    for (i = 0; i < dev->cloudLinkSubDevLen; ++i)
-    {
-        for (j = 0; j < dev->cloudLinkSubDev[i].attrLen; ++j)
-        {
-            if (dev->cloudLinkSubDev[i].attr[j].value != NULL)
-                free(dev->cloudLinkSubDev[i].attr[j].value);
-        }
-    }
+    if (dev->attr != NULL)
+        free(dev->attr);
 
-    free(dev->attr);
-    if (dev->serverAttr != NULL)
-        free(dev->serverAttr);
-    if (dev->eventAttr != NULL)
-        free(dev->eventAttr);
+    if (dev->cloudLinkSubDev != NULL)
+        free(dev->cloudLinkSubDev);
+
     free(dev);
     dev = NULL;
 }

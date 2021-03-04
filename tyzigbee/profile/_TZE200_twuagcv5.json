@@ -160,7 +160,7 @@
         {
             "keyName": "场景按键",
             "hyKey": "KeyFobValue",
-            "hyKeyPrivate": 0,
+            "hyKeyPrivate": 1,
             "srcEndpoint": 1,
             "dstEndpoint": 1,
             "ClusterId": 61184,

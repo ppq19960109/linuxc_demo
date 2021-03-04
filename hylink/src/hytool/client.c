@@ -6,6 +6,7 @@
 #include "frameCb.h"
 
 #include "epollServer.h"
+static int zigbee_connecting_num = 0;
 static struct EpollTcpEvent hylink_myevents;
 static struct EpollTcpEvent zigbee_myevents;
 
@@ -26,14 +27,31 @@ static int zigbee_recv(char *data, unsigned int len)
     return 0;
 }
 
-static int disconnect(void)
+static int hylink_disconnect(void)
 {
     printf("---disconnect ...\n");
     return 0;
 }
-static int connect(void)
+
+static int zigbee_disconnect(void)
 {
-    printf("---connect ...\n");
+    printf("---disconnect ...\n");
+    if (zigbee_connecting_num > 0 && --zigbee_connecting_num == 0)
+        runCmdCb((void *)0, LED_DRIVER_LINE);
+    return 0;
+}
+
+static int hylink_connect(void)
+{
+    printf("---hylink_connect ...\n");
+    return 0;
+}
+
+static int zigbee_connect(void)
+{
+    printf("---zigbee_connect ...\n");
+    if (++zigbee_connecting_num == 1)
+        runCmdCb((void *)1, LED_DRIVER_LINE);
     return 0;
 }
 
@@ -58,8 +76,8 @@ int clientOpen(void)
     registerTransferCb(hylink_send, TRANSFER_SERVER_HYLINK_WRITE);
     registerTransferCb(zigbee_send, TRANSFER_SERVER_ZIGBEE_WRITE);
     //"127.0.0.1"
-    epollTcpEventSet(&hylink_myevents, TCP_ADDR, 7000, hylink_recv, disconnect, connect, 1);
-    epollTcpEventSet(&zigbee_myevents, TCP_ADDR, 12580, zigbee_recv, disconnect, connect, 1);
+    epollTcpEventSet(&hylink_myevents, TCP_ADDR, 7000, hylink_recv, hylink_disconnect, hylink_connect, 1);
+    epollTcpEventSet(&zigbee_myevents, TCP_ADDR, 12580, zigbee_recv, zigbee_disconnect, zigbee_connect, 1);
     epollServerOpen(3000);
     epollServerClose();
 

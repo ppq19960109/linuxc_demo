@@ -1,0 +1,28 @@
+{
+    "modelId": "_TYZB01_kw2okqc3",
+    "devName": "门窗磁传感器",
+    "deviceType": "0",
+    "prodId": "2AN8",
+    "model": "IHG5201HW",
+    "devType": "018",
+    "attr": [
+        {
+            "hyKey": "BatteryPercentage",
+            "cloudSid": "",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "ContactAlarm",
+            "cloudSid": "status",
+            "cloudKey": "status",
+            "valueType": 0
+        },
+        {
+            "hyKey": "ContactAlarm",
+            "cloudSid": "doorEvent",
+            "cloudKey": "on",
+            "valueType": 0
+        }
+    ]
+}

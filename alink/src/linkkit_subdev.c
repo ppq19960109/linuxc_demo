@@ -1,20 +1,8 @@
-#include <string.h>
-
-#include "linkkit_subdev.h"
-#include "linkkit_app_gateway.h"
-
-#include "infra_defs.h"
-#include "dev_reset_api.h"
-#include "infra_compat.h"
-
-#include "scene.h"
-#include "base64.h"
-#include "cJSON.h"
-#include "frameCb.h"
-#include "hylinkListFunc.h"
+#include "cloudLinkListFunc.h"
 #include "cloudLink.h"
 #include "cloudLinkCtrl.h"
-#include "cloudLinkListFunc.h"
+
+#include "scene.h"
 
 static int user_property_set_event_handler(const int devid, const char *request, const int request_len)
 {
@@ -173,7 +161,7 @@ void linkkit_subdev_register(void)
 #endif
 }
 
-static void linkkit_devrst_evt_handle(iotx_devrst_evt_type_t evt, void *msg)
+void linkkit_devrst_evt_handle(iotx_devrst_evt_type_t evt, void *msg)
 {
     switch (evt)
     {
@@ -251,6 +239,7 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         if (res == FAIL_RETURN)
         {
             EXAMPLE_TRACE("subdev connect Failed\n");
+            goto fail;
         }
         EXAMPLE_TRACE("subdev connect success: devid = %d,%d\n", devid, res);
 
@@ -258,6 +247,7 @@ int linkkit_subdev_status(iotx_linkkit_dev_meta_info_t *meta_info, int *id, SubD
         if (res == FAIL_RETURN)
         {
             EXAMPLE_TRACE("subdev login Failed\n");
+            goto fail;
         }
         EXAMPLE_TRACE("subdev login success: devid = %d,%d,%s\n", devid, res, meta_info->device_secret);
         res = 0;

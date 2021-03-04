@@ -7,20 +7,22 @@
 #include "logFunc.h"
 #include "commonFunc.h"
 #include "frameCb.h"
-#include "hylink.h"
-#include "hylinkRecv.h"
 
+#include "hylink.h"
+#include "hylinkListFunc.h"
+#include "hylinkRecv.h"
 #include "hylinkSend.h"
 
+
+static char hyLinkSendBuf[1024];
 int hylinkDispatch(const char *str)
 {
-    char *dispatchBuf = (char *)getHyDispatchBuf();
     int jsonLen = strlen(str);
-    dispatchBuf[0] = 0x02;
-    strncpy(&dispatchBuf[1], str, jsonLen);
-    dispatchBuf[jsonLen + 1] = 0x03;
+    hyLinkSendBuf[0] = 0x02;
+    strncpy(&hyLinkSendBuf[1], str, jsonLen);
+    hyLinkSendBuf[jsonLen + 1] = 0x03;
 
-    return runTransferCb(dispatchBuf, jsonLen + 2, TRANSFER_CLIENT_WRITE);
+    return runTransferCb(hyLinkSendBuf, jsonLen + 2, TRANSFER_CLIENT_WRITE);
 }
 int hylinkSend(void *ptr)
 {
@@ -86,7 +88,6 @@ int hylinkSendDevAttr(void *devId, unsigned int len)
     return hylinkSend(&hylinkDevSendData);
 }
 
-
 int hylinkDelDev(const char *sn)
 {
     if (sn == NULL)
@@ -102,4 +103,26 @@ int hylinkDelDev(const char *sn)
     }
 
     return ret;
+}
+
+int hyCloudCtrlSend(const char *sn, const char *modelId, const char *hyType, const char *hyKey, cJSON *cloud_payload, const char *cloudKey)
+{
+    HylinkDevSendData hylinkDevSend = {0};
+
+    hylinkDevSend.FrameNumber = 0;
+
+    strcpy(hylinkDevSend.Data.DeviceId, sn);
+    strcpy(hylinkDevSend.Data.ModelId, modelId);
+
+    strcpy(hylinkDevSend.Type, STR_CTRL);
+
+    if (strlen(hyType) != 0)
+        strcpy(hylinkDevSend.Type, hyType);
+
+    strcpy(hylinkDevSend.Data.Key, hyKey);
+
+    cJSON *cloud_value = cJSON_GetObjectItem(cloud_payload, cloudKey);
+
+    cjson_to_str(cloud_value, hylinkDevSend.Data.Value);
+    return hylinkSend(&hylinkDevSend);
 }

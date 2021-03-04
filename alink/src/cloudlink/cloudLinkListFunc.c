@@ -1,12 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "cJSON.h"
-#include "frameCb.h"
-#include "logFunc.h"
 #include "cloudLinkListFunc.h"
-#include "hylinkListFunc.h"
 
 void *cloudLinkParseJson(const char *devId, const char *str)
 {
@@ -93,7 +85,7 @@ void *cloudLinkParseJson(const char *devId, const char *str)
         }
         valueType = cJSON_GetObjectItem(arraySub, "valueType");
         dev->attr[i].valueType = valueType->valueint;
-        int valueLen = getLinkValueType(dev->attr[i].valueType);
+        int valueLen = getHyLinkValueType(dev->attr[i].valueType);
         if (valueLen < 0)
             continue;
     }

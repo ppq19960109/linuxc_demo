@@ -13,7 +13,7 @@
 #include "hylinkSubDev.h"
 #include "hylinkListFunc.h"
 
-static char *s_typeReport[] = {
+static char *hylink_report_type[] = {
     "Register",
     "UnRegister",
     "OnOff",
@@ -25,10 +25,6 @@ static char *s_typeReport[] = {
     "Ack",
     "LocalScene",
 };
-
-static const SAttrInfo s_StypeReport = {
-    .attr = s_typeReport,
-    .attrLen = sizeof(s_typeReport) / sizeof(s_typeReport[0])};
 
 void hylinkAnalyDevInfo(cJSON *root, cJSON *Data)
 {
@@ -144,7 +140,7 @@ int hylinkRecvAnaly(const char *json)
         goto fail;
     }
     //从type数组中查找type
-    int type = findStrIndex(Type->valuestring, s_StypeReport.attr, s_StypeReport.attrLen);
+    int type = findStrIndex(Type->valuestring, hylink_report_type, sizeof(hylink_report_type) / sizeof(hylink_report_type[0]));
     if (type == -1)
     {
         logError("Type is no exist\n");
@@ -227,10 +223,6 @@ int hylinkRecvAnaly(const char *json)
             {
                 if (online != hyLinkDevBuf->online)
                 {
-                    if (online)
-                        hyLinkDevBuf->first_online_report = 1;
-                    else
-                        hyLinkDevBuf->first_online_report = 0;
                     getByteForJson(array_sub, STR_VALUE, &hyLinkDevBuf->online);
                     runTransferCb(hyLinkDevBuf->devId, hyLinkDevBuf->online, TRANSFER_SUBDEV_LINE);
                 }

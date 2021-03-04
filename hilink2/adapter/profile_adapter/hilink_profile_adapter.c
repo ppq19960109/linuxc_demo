@@ -9,7 +9,7 @@
 #include "cloudLinkListFunc.h"
 #include "cloudLink.h"
 #include "cloudLinkReport.h"
-#include "cloudLinkCtrl.h"
+
 /* 设备类型定义 */
 typedef struct
 {
@@ -94,7 +94,45 @@ char *hilink_get_auto_bi_rsa_cipher(void)
  */
 int hilink_put_char_state(const char *svcId, const char *payload, unsigned int len)
 {
-    return cloudLinkCtrl((void *)STR_GATEWAY_DEVID, svcId, payload);
+    logInfo("hilink_put_char_state svcId:%s,payload:%s", svcId, payload);
+    int res = -1;
+    int i;
+    CloudLinkDev *cloudLinkDev = cloudLinkListGetById(STR_GATEWAY_DEVID);
+    if (cloudLinkDev == NULL)
+        return -1;
+    cJSON *root = cJSON_Parse(payload);
+    for (i = 0; i < cloudLinkDev->attrLen; ++i)
+    {
+        if (strcmp(cloudLinkDev->attr[i].cloudSid, svcId) == 0)
+        {
+            if (strcmp("switch", svcId) == 0)
+            {
+                cJSON *cloud_value = cJSON_GetObjectItem(root, cloudLinkDev->attr[i].cloudKey);
+                if (cloud_value->valueint == 0)
+                {
+                    res = 0;
+                    HyLinkDev *hyLinkDev = hylinkListGetById(STR_GATEWAY_DEVID);
+                    if (hyLinkDev == NULL)
+                        goto end;
+                    for (int j = 0; j < hyLinkDev->attrLen; ++j)
+                    {
+                        if (strcmp(hyLinkDev->attr[j].hyKey, cloudLinkDev->attr[i].hyKey) == 0)
+                        {
+                            *hyLinkDev->attr[j].value = 0;
+                        }
+                    }
+                    goto end;
+                }
+            }
+            res = hyCloudCtrlSend(cloudLinkDev->brgDevInfo.sn, cloudLinkDev->modelId, cloudLinkDev->attr[i].hyType, cloudLinkDev->attr[i].hyKey, root, cloudLinkDev->attr[i].cloudKey);
+            goto end;
+        }
+    }
+end:
+    cJSON_Delete(root);
+    if (res > 0)
+        res = -111;
+    return res;
 }
 
 /*
@@ -108,10 +146,14 @@ int hilink_put_char_state(const char *svcId, const char *payload, unsigned int l
  */
 int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen, char **out, unsigned int *outLen)
 {
+    logInfo("hilink_get_char_state svcId:%s,in:%s", svcId, in);
     int i, j;
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(STR_GATEWAY_DEVID);
     if (cloudLinkDev == NULL)
         return -1;
+#ifdef HILINK_REPORT_SYNC
+    cloudLinkDev->hilink_now_online = SUBDEV_ONLINE;
+#endif
     for (i = 0; i < cloudLinkDev->attrLen; ++i)
     {
         if (strcmp(cloudLinkDev->attr[i].cloudSid, svcId) == 0)
@@ -123,11 +165,12 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
             {
                 if (strcmp(hyLinkDev->attr[j].hyKey, cloudLinkDev->attr[i].hyKey) == 0)
                 {
-                    char *json = getCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[j].value, hyLinkDev->attr[j].valueType);
+                    char *json = generateCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[j].value, hyLinkDev->attr[j].valueType);
                     if (json != NULL)
                     {
                         *outLen = strlen(json) + 1;
                         *out = json;
+                        logInfo("hilink_get_char_state out:%s,outLen:%d", *out, *outLen);
                         return 0;
                     }
                 }
@@ -136,6 +179,7 @@ int hilink_get_char_state(const char *svcId, const char *in, unsigned int inLen,
     }
     if (i == cloudLinkDev->attrLen)
         return -1;
+
     return 0;
 }
 

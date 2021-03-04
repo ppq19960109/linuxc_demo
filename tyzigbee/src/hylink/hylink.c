@@ -8,6 +8,7 @@
 #include "logFunc.h"
 #include "cJSON.h"
 #include "commonFunc.h"
+#include "cmd_run.h"
 
 #include "hylink.h"
 #include "hylinkRecv.h"

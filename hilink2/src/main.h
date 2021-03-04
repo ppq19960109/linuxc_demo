@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/reboot.h>
+#include <pthread.h>
 
 #include "cJSON.h"
 
@@ -37,7 +38,7 @@
 #define PROFILE_PATH "hilinkprofile"
 #define ETH_NAME "eth0"
 
-// #define HILINK_REPORT_ASYNC
+#define HILINK_REPORT_SYNC
 #define HILINK_OTA_PATH "/userdata/update/upgrade.bin"
 #define HILINK_OTA_MAX_FILE_SIZE (8 * 1024 * 1024)
 #endif

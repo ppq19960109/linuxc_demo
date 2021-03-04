@@ -89,6 +89,13 @@ def WindSpeed_down(inStrVal,inLen):
     outBase64=base64.b64encode(speed.to_bytes(1,'little')).decode('utf-8')
     return outBase64,len(outBase64)
 
+def KeyFobValueup(inBase64,inLen):
+    outBytes=base64.b64decode(inBase64.encode("utf-8"))
+    key=int.from_bytes(outBytes,'little') 
+    key+=1
+    strVal= str(key)
+    return strVal,len(strVal)
+
 # print(WindSpeed_up('AQ==',1))
 # print(WorkMode_down('2',1))
 # print(ScePhoto_up('ABg=',2))

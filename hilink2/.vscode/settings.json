@@ -9,6 +9,7 @@
         "cloudlinkctrl.h": "c",
         "hilink_profile_adapter.h": "c",
         "cloudlinkreport.h": "c",
-        "cloudlinklistfunc.h": "c"
+        "cloudlinklistfunc.h": "c",
+        "commonfunc.h": "c"
     }
 }

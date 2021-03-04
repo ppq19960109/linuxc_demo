@@ -116,7 +116,25 @@ static int decode_packet(int *got_frame, int cached)
                           pix_fmt, width, height);
 
             /* write to rawvideo file */
-            fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
+            // fwrite(video_dst_data[0], 1, video_dst_bufsize, video_dst_file);
+            // fwrite(video_dst_data[0], (video_dst_linesize[0]) * (frame->height), 1, video_dst_file);
+            // fwrite(video_dst_data[1], (video_dst_linesize[1]) * (frame->height) / 4, 1, video_dst_file);
+            // fwrite(video_dst_data[2], (video_dst_linesize[2]) * (frame->height) / 4, 1, video_dst_file);
+
+            for (int i = 0; i < frame->height; i++)
+            {
+                fwrite(video_dst_data[0] + i * video_dst_linesize[0], frame->width, 1, video_dst_file);
+            }
+
+            for (int i = 0; i < frame->height / 2; i++)
+            {
+                fwrite(video_dst_data[1] + i * video_dst_linesize[1], frame->width / 2, 1, video_dst_file);
+            }
+
+            for (int i = 0; i < frame->height / 2; i++)
+            {
+                fwrite(video_dst_data[2] + i * video_dst_linesize[2], frame->width / 2, 1, video_dst_file);
+            }
         }
     }
     else if (pkt.stream_index == audio_stream_idx)
@@ -344,6 +362,7 @@ int main(int argc, char **argv)
         width = video_dec_ctx->width;
         height = video_dec_ctx->height;
         pix_fmt = video_dec_ctx->pix_fmt;
+        printf("video fmt YUV420P...:%d\n", video_dec_ctx->pix_fmt);
         ret = av_image_alloc(video_dst_data, video_dst_linesize,
                              width, height, pix_fmt, 1);
         if (ret < 0)
@@ -368,7 +387,7 @@ int main(int argc, char **argv)
         out_buffer[1] = (uint8_t *)av_malloc(24000 * 4);
         outChannel = audio_dec_ctx->channels;
         outSampleRate = audio_dec_ctx->sample_rate;
-        outFormat = AV_SAMPLE_FMT_S32;//AV_SAMPLE_FMT_FLT;      //audio_dec_ctx->sample_fmt;
+        outFormat = AV_SAMPLE_FMT_S32;      //AV_SAMPLE_FMT_FLT;      //audio_dec_ctx->sample_fmt;
         pSwrContext = swr_alloc_set_opts(0, // 输入为空，则会分配
                                          av_get_default_channel_layout(outChannel),
                                          outFormat,     // 输出的采样频率

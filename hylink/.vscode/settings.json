@@ -15,7 +15,8 @@
         "*.tcc": "c",
         "limits": "c",
         "streambuf": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "epollserver.h": "c"
     },
     "python.formatting.provider": "yapf"
 }

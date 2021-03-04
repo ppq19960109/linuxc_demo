@@ -1,49 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "cJSON.h"
-#include "logFunc.h"
-#include "commonFunc.h"
-#include "frameCb.h"
-#include "hylinkListFunc.h"
-#include "hylinkSubDev.h"
+#include "main.h"
 #include "cloudLinkReport.h"
 #include "cloudLink.h"
-
 #include "linkkit_subdev.h"
 
-char *getCloudJson(char *cloudKey, char *hyValue, unsigned char valueType)
-{
-    if (strlen(cloudKey) == 0)
-    {
-        logError("cloudKey is len 0");
-        return NULL;
-    }
-    cJSON *root = cJSON_CreateObject();
-
-    switch (valueType)
-    {
-    case LINK_VALUE_TYPE_ENUM:
-        cJSON_AddNumberToObject(root, cloudKey, *hyValue);
-        break;
-    case LINK_VALUE_TYPE_NUM:
-        cJSON_AddNumberToObject(root, cloudKey, *(int *)hyValue);
-        break;
-    case LINK_VALUE_TYPE_STRING:
-        cJSON_AddStringToObject(root, cloudKey, hyValue);
-        break;
-    default:
-        goto fail;
-        break;
-    }
-    char *json = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
-    return json;
-fail:
-    cJSON_Delete(root);
-    return NULL;
-}
 static int cloudSingleEventReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDev, const int hyAttr)
 {
     if (cloudLinkDev->eventAttr != NULL)
@@ -61,7 +20,7 @@ static int cloudSingleEventReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkD
         char *json = NULL;
         if (strlen(cloudLinkDev->eventAttr[i].key) != 0)
         {
-            json = getCloudJson(cloudLinkDev->eventAttr[i].key, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
+            json = generateCloudJson(cloudLinkDev->eventAttr[i].key, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
         }
         if (hyLinkDev->attr[hyAttr].valueType == LINK_VALUE_TYPE_ENUM)
         {
@@ -97,7 +56,7 @@ static int cloudSingleAttrReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDe
     if (i == cloudLinkDev->attrLen)
         goto event;
     logInfo("attr report cloudKey %s", cloudLinkDev->attr[i].cloudKey);
-    char *json = getCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
+    char *json = generateCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
     if (json != NULL)
     {
         linkkit_user_post_property(cloudLinkDev->id, json);
@@ -151,7 +110,7 @@ int cloudReport(void *hydev, unsigned int hyAttr)
 
     if (cloudLinkDev == NULL)
     {
-        cloudLinkDev = (CloudLinkDev *)addProfileDev(ALILINK_PROFILE_PATH, hyLinkDev->devId, hyLinkDev->modelId, cloudLinkParseJson);
+        cloudLinkDev = (CloudLinkDev *)addProfileDev(PROFILE_PATH, hyLinkDev->devId, hyLinkDev->modelId, cloudLinkParseJson);
         if (cloudLinkDev == NULL)
         {
             logError("addProfileDev error : The corresponding file is missing");

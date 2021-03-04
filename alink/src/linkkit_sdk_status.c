@@ -1,10 +1,3 @@
-#include "linkkit_sdk_status.h"
-#include "linkkit_app_gateway.h"
-
-#include "dev_model_api.h"
-#include "infra_compat.h"
-
-#include "frameCb.h"
 #include "cloudLinkListFunc.h"
 
 static int user_initialized(const int devid)

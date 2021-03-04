@@ -10,13 +10,25 @@
 
 #include "commonFunc.h"
 
-int split_str(char *str, const char *delim, void (*cb)(const char*,unsigned int))
+void cjson_to_str(cJSON *in, char *out)
+{
+    if (in->valuestring != NULL)
+    {
+        strcpy(out, in->valuestring);
+    }
+    else
+    {
+        sprintf(out, "%d", in->valueint);
+    }
+}
+
+int split_str(char *str, const char *delim, void (*cb)(const char *, unsigned int))
 {
     char *token = strtok(str, delim);
     int i = 0;
     for (i = 0; token != NULL; ++i)
     {
-        cb(token,i);
+        cb(token, i);
         token = strtok(NULL, delim);
     }
     return i;

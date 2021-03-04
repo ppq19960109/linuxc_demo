@@ -23,7 +23,7 @@ menu "Device Model Configurations"
         bool "FEATURE_DEVICE_MODEL_GATEWAY"
         select INFRA_SHA256
         select DEVICE_MODEL_MULTI_THREAD
-        default n
+        default y
         help
             Switching Thing-Model related implementations provided in gateway oriented way
 

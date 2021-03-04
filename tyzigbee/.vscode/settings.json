@@ -15,7 +15,8 @@
         "*.tcc": "c",
         "limits": "c",
         "streambuf": "c",
-        "hylinklistfunc.h": "c"
+        "hylinklistfunc.h": "c",
+        "hylink.h": "c"
     },
     "python.formatting.provider": "yapf"
 }

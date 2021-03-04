@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "algorithm": "c",
-        "unordered_map": "c"
+        "unordered_map": "c",
+        "stat.h": "c"
     }
 }

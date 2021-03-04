@@ -23,7 +23,7 @@ typedef struct
 
 } rk_driver_t;
 
-rk_driver_t rk_driver;
+static rk_driver_t rk_driver;
 
 int driverOpen(const char *driverPath)
 {

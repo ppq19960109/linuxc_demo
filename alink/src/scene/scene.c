@@ -1,22 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "logFunc.h"
-#include "frameCb.h"
-#include "cJSON.h"
-#include "base64.h"
-#include "commonFunc.h"
-
-#include "hylinkSend.h"
-#include "hylinkRecv.h"
+#include "cloudLinkListFunc.h"
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 #include "cloudLink.h"
-#include "cloudLinkListFunc.h"
 
-#include "linkkit_subdev.h"
 #include "scene.h"
 
 int sceneReport(void *req, unsigned int len)

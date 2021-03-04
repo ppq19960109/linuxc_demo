@@ -1,21 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#include "logFunc.h"
-#include "frameCb.h"
-#include "base64.h"
-#include "commonFunc.h"
-
-#include "hylinkSend.h"
-#include "hylinkRecv.h"
+#include "cloudLinkListFunc.h"
 #include "cloudLinkReport.h"
 #include "cloudLinkCtrl.h"
 #include "cloudLink.h"
-#include "cloudLinkListFunc.h"
 
-#include "linkkit_subdev.h"
 #include "scene.h"
 #include "scene_add.h"
 
@@ -112,7 +99,7 @@ static int getSceneDevStatus(cJSON *params, cJSON *arrayItem)
     cJSON_AddStringToObject(arrayItem, "ActionId", "0");
     cJSON_AddStringToObject(arrayItem, "DevId", deviceName->valuestring);
     cJSON_AddStringToObject(arrayItem, "Key", hyKey);
-    getValueForJson(propertyValue, strBuf);
+    cjson_to_str(propertyValue, strBuf);
     cJSON_AddStringToObject(arrayItem, "Value", strBuf);
     return 0;
 }

@@ -43,7 +43,7 @@ config INFRA_LIST
 
 config INFRA_LOG_NETWORK_PAYLOAD
     bool "FEATURE_INFRA_NETWORK_PAYLOAD"
-    default y if MQTT_COMM_ENABLED || COAP_COMM_ENABLED || HTTP_COMM_ENABLED || DEVICE_MODEL_ENABLED
+    default n if MQTT_COMM_ENABLED || COAP_COMM_ENABLED || HTTP_COMM_ENABLED || DEVICE_MODEL_ENABLED
     help
         Parse and print JSON format upstream and downstream network packet payload when SDK communicates with cloud
         

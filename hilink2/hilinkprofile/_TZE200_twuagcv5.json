@@ -14,13 +14,6 @@
             "valueType": 0
         },
         {
-            "keyName": "模式选择",
-            "hyKey": "ModeSelect",
-            "cloudSid": "",
-            "cloudKey": "",
-            "valueType": 0
-        },
-        {
             "keyName": "按键名称1",
             "hyKey": "SceName_1",
             "cloudSid": "button1",
@@ -61,6 +54,13 @@
             "cloudSid": "button6",
             "cloudKey": "name",
             "valueType": 2
+        },
+        {
+            "keyName": "模式选择",
+            "hyKey": "ModeSelect",
+            "cloudSid": "",
+            "cloudKey": "",
+            "valueType": 0
         }
     ],
     "subdev": [
@@ -79,8 +79,8 @@
                 {
                     "keyName": "空调风速",
                     "hyKey": "WindSpeed_1",
-                    "cloudSid": "button6",
-                    "cloudKey": "WindSpeed",
+                    "cloudSid": "fan",
+                    "cloudKey": "gear",
                     "valueType": 0
                 },
                 {
@@ -98,17 +98,45 @@
                     "valueType": 0
                 },
                 {
+                    "keyName": "当前环境温度",
+                    "hyKey": "CurrentTemperature_1",
+                    "cloudSid": "temperature",
+                    "cloudKey": "current",
+                    "valueType": 0
+                },
+                {
                     "keyName": "空调启用",
                     "hyKey": "Enable_1",
                     "cloudSid": "",
                     "cloudKey": "",
                     "valueType": 0
+                }
+            ]
+        },
+        {
+            "prodId": "2ANI",
+            "model": "U2-86QMP-Z02(HW)",
+            "devType": "030",
+            "attr": [
+                {
+                    "keyName": "新风开关",
+                    "hyKey": "Switch_2",
+                    "cloudSid": "switch",
+                    "cloudKey": "on",
+                    "valueType": 0
                 },
                 {
-                    "keyName": "当前环境温度",
-                    "hyKey": "CurrentTemperature_1",
-                    "cloudSid": "temperature",
-                    "cloudKey": "current",
+                    "keyName": "新风风速",
+                    "hyKey": "WindSpeed_2",
+                    "cloudSid": "fan",
+                    "cloudKey": "gear",
+                    "valueType": 0
+                },
+                {
+                    "keyName": "新风启用",
+                    "hyKey": "Enable_2",
+                    "cloudSid": "",
+                    "cloudKey": "",
                     "valueType": 0
                 }
             ]
@@ -142,33 +170,6 @@
                 {
                     "keyName": "地暖启用",
                     "hyKey": "Enable_3",
-                    "cloudKey": "FloorHeating",
-                    "valueType": 0
-                }
-            ]
-        },
-        {
-            "prodId": "2ANI",
-            "model": "U2-86QMP-Z02(HW)",
-            "devType": "030",
-            "attr": [
-                {
-                    "keyName": "新风开关",
-                    "hyKey": "Switch_2",
-                    "cloudSid": "switch",
-                    "cloudKey": "on",
-                    "valueType": 0
-                },
-                {
-                    "keyName": "新风风速",
-                    "hyKey": "WindSpeed_2",
-                    "cloudSid": "fan",
-                    "cloudKey": "gear",
-                    "valueType": 0
-                },
-                {
-                    "keyName": "新风启用",
-                    "hyKey": "Enable_2",
                     "cloudSid": "",
                     "cloudKey": "",
                     "valueType": 0

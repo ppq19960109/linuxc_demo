@@ -40,7 +40,8 @@
             "hyKey": "Switch_All",
             "cloudSid": "switch",
             "cloudKey": "on",
-            "valueType": 0
+            "valueType": 0,
+            "repeat": 2
         }
     ]
 }

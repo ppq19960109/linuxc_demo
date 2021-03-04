@@ -1,36 +1,9 @@
 /*
  * Copyright (C) 2015-2018 Alibaba Group Holding Limited
  */
-#include "infra_config.h"
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <time.h>
-#include <ctype.h>
-#include <pthread.h>
-#include "cJSON.h"
-#include "infra_types.h"
-#include "infra_defs.h"
-#include "infra_state.h"
-#include "infra_compat.h"
-#include "infra_log.h"
-#include "dev_model_api.h"
-#include "dynreg_api.h"
-#include "wrappers.h"
-//--------------------------------
-#include "linkkit_app_gateway.h"
-#include "linkkit_subdev.h"
-#include "linkkit_sdk_status.h"
-//--------------------------------
-#include "logFunc.h"
-#include "networkFunc.h"
-#include "commonFunc.h"
-#include "frameCb.h"
 
-#include "hylink.h"
-#include "hylinkRecv.h"
+#include "main.h"
+
 #include "cloudLink.h"
 #include "cloudLinkCtrl.h"
 #include "cloudLinkListFunc.h"
@@ -249,8 +222,8 @@ int main_close(void)
 void main_before_init(void)
 {
     registerSystemCb(main_close, SYSTEM_CLOSE);
-    cloudLinkMain();
-    CloudLinkDev *cloudLinkDev = (CloudLinkDev *)addProfileDev(ALILINK_PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, cloudLinkParseJson);
+    cloudLinkOpen();
+    CloudLinkDev *cloudLinkDev = (CloudLinkDev *)addProfileDev(PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, cloudLinkParseJson);
     if (cloudLinkDev == NULL)
     {
         EXAMPLE_TRACE("gw cloudLinkDev is NULL");
@@ -261,7 +234,7 @@ void main_before_init(void)
     strcpy(g_device_secret, cloudLinkDev->alinkInfo.device_secret);
     if (strlen(g_device_name) == 0)
     {
-        getNetworkMac(ETH_NAME, g_device_name, sizeof(g_device_name),"");
+        getNetworkMac(ETH_NAME, g_device_name, sizeof(g_device_name), "");
         // for (int i = 0; i < strlen(g_device_name); i++)
         //     g_device_name[i] = toupper(g_device_name[i]);
     }
@@ -280,7 +253,7 @@ void main_init(void)
         return;
     }
     cloudLinkDev->id = user_example_ctx->master_devid;
-    hylinkMain();
+    hylinkOpen();
     // HAL_MutexLock();
     // HAL_MutexUnlock();
 }
@@ -322,7 +295,7 @@ int main(int argc, char **argv)
     memcpy(master_meta_info.product_secret, g_product_secret, strlen(g_product_secret));
     memcpy(master_meta_info.device_name, g_device_name, strlen(g_device_name));
     memcpy(master_meta_info.device_secret, g_device_secret, strlen(g_device_secret));
-
+reconnect:
     EXAMPLE_TRACE("register product_key:%s\n", master_meta_info.product_key);
     EXAMPLE_TRACE("register product_secret:%s\n", master_meta_info.product_secret);
     EXAMPLE_TRACE("register device_name:%s\n", master_meta_info.device_name);
@@ -402,7 +375,7 @@ int main(int argc, char **argv)
 
     int fota_timeout = 60;
     IOT_Ioctl(IOTX_IOCTL_FOTA_TIMEOUT_MS, (void *)&fota_timeout);
-
+    int reconnect_num = 0;
     /* Start Connect Aliyun Server */
     do
     {
@@ -413,6 +386,11 @@ int main(int argc, char **argv)
         }
         EXAMPLE_TRACE("IOT_Linkkit_Connect failed! retry after %d ms\n", 5000);
         HAL_SleepMs(5000);
+        if (++reconnect_num > 3)
+        {
+            EXAMPLE_TRACE("IOT_Linkkit_Connect reconnect...\n");
+            goto reconnect;
+        }
     } while (1);
 
     int dynamic_register = 1;

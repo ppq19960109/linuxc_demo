@@ -4,7 +4,7 @@
     "deviceType": "0",
     "prodId": "2AN8",
     "model": "IHG5201HW",
-    "devType": "IHG5201HW",
+    "devType": "018",
     "attr": [
         {
             "hyKey": "BatteryPercentage",
@@ -22,22 +22,7 @@
             "hyKey": "ContactAlarm",
             "cloudSid": "doorEvent",
             "cloudKey": "on",
-            "valueType": 0,
-            "repeat": 2
-        }
-    ],
-    "events": [
-        {
-            "eventId": "TamperAlarm",
-            "hyKey": "TamperAlarm",
-            "key": "",
-            "value": 0
-        },
-        {
-            "eventId": "lowBatteryEvent",
-            "hyKey": "LowBatteryAlarm",
-            "key": "power",
-            "value": 0
+            "valueType": 0
         }
     ]
 }

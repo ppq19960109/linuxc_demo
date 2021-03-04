@@ -8,7 +8,6 @@
 #include "cloudLinkListFunc.h"
 #include "cloudLink.h"
 #include "cloudLinkReport.h"
-#include "cloudLinkCtrl.h"
 #include "hilink_profile_bridge.h"
 
 #ifndef NULL
@@ -31,6 +30,7 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
     {
         return -1;
     }
+    logInfo("HilinkGetBrgDevInfo sn:%s", sn);
     int i;
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
     if (cloudLinkDev == NULL)
@@ -39,22 +39,27 @@ int HilinkGetBrgDevInfo(const char *sn, BrgDevInfo *devInfo)
         int devIdLen = strlen(sn);
         strcpy(masterdevId, sn);
         masterdevId[devIdLen - 1] = '\0';
+        logInfo("HilinkGetBrgDevInfo master sn:%s", masterdevId);
         cloudLinkDev = cloudLinkListGetById(masterdevId);
         if (cloudLinkDev == NULL)
             return -1;
+        //------
         for (i = 0; i < cloudLinkDev->cloudLinkSubDevLen; ++i)
         {
-            if (strcmp(sn, cloudLinkDev->cloudLinkSubDev[i].brgDevInfo.sn))
+            if (strcmp(sn, cloudLinkDev->cloudLinkSubDev[i].brgDevInfo.sn) == 0)
             {
                 memcpy(devInfo, &cloudLinkDev->cloudLinkSubDev[i].brgDevInfo, sizeof(BrgDevInfo));
-                break;
+                logInfo("sub sn:%s,prodId:%s,model:%s,devType:%s", devInfo->sn, devInfo->prodId, devInfo->model, devInfo->devType);
+                return 0;
             }
         }
-        if (i == cloudLinkDev->cloudLinkSubDevLen)
-            return -1;
-        return 0;
+        return -1;
+        //------
     }
+    //------
     memcpy(devInfo, &cloudLinkDev->brgDevInfo, sizeof(BrgDevInfo));
+    logInfo("sn:%s,prodId:%s,model:%s,devType:%s", devInfo->sn, devInfo->prodId, devInfo->model, devInfo->devType);
+    //------
     return 0;
 }
 
@@ -74,7 +79,9 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
     {
         return -1;
     }
+    logInfo("HilinkGetBrgSvcInfo sn:%s", sn);
     int i, j;
+    int valid_svcNum = 0;
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
     if (cloudLinkDev == NULL)
     {
@@ -82,35 +89,72 @@ int HilinkGetBrgSvcInfo(const char *sn, BrgDevSvcInfo *svcInfo, unsigned int *sv
         int devIdLen = strlen(sn);
         strcpy(masterdevId, sn);
         masterdevId[devIdLen - 1] = '\0';
+        logInfo("HilinkGetBrgSvcInfo master sn:%s", masterdevId);
         cloudLinkDev = cloudLinkListGetById(masterdevId);
         if (cloudLinkDev == NULL)
             return -1;
+        //------
         for (i = 0; i < cloudLinkDev->cloudLinkSubDevLen; ++i)
         {
-            if (strcmp(sn, cloudLinkDev->cloudLinkSubDev[i].brgDevInfo.sn))
+            if (strcmp(sn, cloudLinkDev->cloudLinkSubDev[i].brgDevInfo.sn) == 0)
             {
                 for (j = 0; j < cloudLinkDev->cloudLinkSubDev[i].attrLen; ++j)
                 {
-                    strcpy(svcInfo->st[j], cloudLinkDev->cloudLinkSubDev[i].attr[j].cloudSid);
-                    strcpy(svcInfo->svcId[j], cloudLinkDev->cloudLinkSubDev[i].attr[j].cloudSid);
+                    if (strlen(cloudLinkDev->cloudLinkSubDev[i].attr[j].cloudSid) == 0 || cloudLinkDev->cloudLinkSubDev[i].attr[j].repeat == NON_REPORT)
+                    {
+                        continue;
+                    }
+                    strcpy(svcInfo->st[valid_svcNum], cloudLinkDev->cloudLinkSubDev[i].attr[j].cloudSid);
+                    strcpy(svcInfo->svcId[valid_svcNum], cloudLinkDev->cloudLinkSubDev[i].attr[j].cloudSid);
+                    logInfo("HilinkGetBrgSvcInfo svcId:%s", svcInfo->svcId[valid_svcNum]);
+                    ++valid_svcNum;
                 }
-                *svcNum = cloudLinkDev->cloudLinkSubDev[i].attrLen;
-                break;
+                *svcNum = valid_svcNum;
+                logInfo("HilinkGetBrgSvcInfo sub sn:%s,svcNum:%d", sn, *svcNum);
+                return 0;
             }
         }
-        if (i == cloudLinkDev->cloudLinkSubDevLen)
-            return -1;
-        return 0;
+        return -1;
+        //------
     }
+    //------
     for (i = 0; i < cloudLinkDev->attrLen; ++i)
     {
-        strcpy(svcInfo->st[i], cloudLinkDev->attr[i].cloudSid);
-        strcpy(svcInfo->svcId[i], cloudLinkDev->attr[i].cloudSid);
+        if (strlen(cloudLinkDev->attr[i].cloudSid) == 0 || cloudLinkDev->attr[i].repeat == NON_REPORT)
+        {
+            continue;
+        }
+        strcpy(svcInfo->st[valid_svcNum], cloudLinkDev->attr[i].cloudSid);
+        strcpy(svcInfo->svcId[valid_svcNum], cloudLinkDev->attr[i].cloudSid);
+        logInfo("HilinkGetBrgSvcInfo svcId:%s", svcInfo->svcId[valid_svcNum]);
+        ++valid_svcNum;
     }
-    *svcNum = cloudLinkDev->attrLen;
+    *svcNum = valid_svcNum;
+    //------
+    logInfo("HilinkGetBrgSvcInfo sn:%s,svcNum:%d", sn, *svcNum);
     return 0;
 }
 
+static int cloudLinkSubDevCtrl(CloudLinkDev *cloudLinkDev, const char *svcId, cJSON *root)
+{
+    CloudLinkSubDev *subDev = cloudLinkDev->cloudLinkSubDev;
+    char subDevLen = cloudLinkDev->cloudLinkSubDevLen;
+    if (subDev == NULL || subDevLen == 0)
+        return -1;
+
+    int i, j;
+    for (i = 0; i < subDevLen; ++i)
+    {
+        for (j = 0; j < subDev[i].attrLen; ++j)
+        {
+            if (strcmp(subDev[i].attr[j].cloudSid, svcId) == 0)
+            {
+                return hyCloudCtrlSend(cloudLinkDev->brgDevInfo.sn, cloudLinkDev->modelId, subDev[i].attr[j].hyType, subDev[i].attr[j].hyKey, root, subDev[i].attr[j].cloudKey);
+            }
+        }
+    }
+    return -1;
+}
 /*
  * 设置服务状态
  * 该函数由设备开发者或厂商实现
@@ -129,29 +173,66 @@ int HilinkPutBrgDevCharState(const char *sn, const char *svcId, const char *payl
     {
         return -1;
     }
+    logInfo("HilinkPutBrgDevCharState sn:%s,svcId:%s,payload:%s", sn, svcId, payload);
+    int res = -1;
+    cJSON *root = cJSON_Parse(payload);
 
-    return cloudLinkCtrl((void *)sn, svcId, payload);
+    int i;
+    CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
+    if (cloudLinkDev == NULL)
+    {
+        char masterdevId[33] = {0};
+        int devIdLen = strlen(sn);
+        strcpy(masterdevId, sn);
+        masterdevId[devIdLen - 1] = '\0';
+
+        logInfo("HilinkPutBrgDevCharState master sn:%s", masterdevId);
+        cloudLinkDev = cloudLinkListGetById(masterdevId);
+        if (cloudLinkDev == NULL)
+            return -1;
+        //------
+        res = cloudLinkSubDevCtrl(cloudLinkDev, svcId, root);
+        //------
+        goto end;
+    }
+    //------
+    for (i = 0; i < cloudLinkDev->attrLen; ++i)
+    {
+        if (strcmp(cloudLinkDev->attr[i].cloudSid, svcId) == 0)
+        {
+            res = hyCloudCtrlSend(cloudLinkDev->brgDevInfo.sn, cloudLinkDev->modelId, cloudLinkDev->attr[i].hyType, cloudLinkDev->attr[i].hyKey, root, cloudLinkDev->attr[i].cloudKey);
+            goto end;
+        }
+    }
+end:
+    cJSON_Delete(root);
+    if (res >= 0)
+        res = -111;
+    logInfo("HilinkPutBrgDevCharState return:%d", res);
+    return res;
+    //------
 }
 
-static int subdevGetBrgDevCharState(CloudLinkSubDev *cloudLinkDev, const char *svcId, char **out, unsigned int *outLen)
+static int cloudLinkSubDevGetState(const char *master_sn, CloudLinkSubDev *cloudLinkDev, const char *svcId, char **out, unsigned int *outLen)
 {
     int i, j;
     for (i = 0; i < cloudLinkDev->attrLen; ++i)
     {
         if (strcmp(cloudLinkDev->attr[i].cloudSid, svcId) == 0)
         {
-            HyLinkDev *hyLinkDev = hylinkListGetById(cloudLinkDev->brgDevInfo.sn);
+            HyLinkDev *hyLinkDev = hylinkListGetById(master_sn);
             if (hyLinkDev == NULL)
                 return -1;
             for (j = 0; j < hyLinkDev->attrLen; ++j)
             {
                 if (strcmp(hyLinkDev->attr[j].hyKey, cloudLinkDev->attr[i].hyKey) == 0)
                 {
-                    char *json = getCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[j].value, hyLinkDev->attr[j].valueType);
+                    char *json = generateCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[j].value, hyLinkDev->attr[j].valueType);
                     if (json != NULL)
                     {
                         *outLen = strlen(json) + 1;
                         *out = json;
+                        logInfo("subdevGetBrgDevCharState out:%s,outLen:%d", *out, *outLen);
                         return 0;
                     }
                 }
@@ -179,6 +260,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
     {
         return -1;
     }
+    logInfo("HilinkGetBrgDevCharState sn:%s,svcId:%s", sn, in->svcId);
     int i, j;
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
     if (cloudLinkDev == NULL)
@@ -190,16 +272,21 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
         cloudLinkDev = cloudLinkListGetById(masterdevId);
         if (cloudLinkDev == NULL)
             return -1;
+        //------
         for (i = 0; i < cloudLinkDev->cloudLinkSubDevLen; ++i)
         {
-            if (subdevGetBrgDevCharState(&cloudLinkDev->cloudLinkSubDev[i], in->svcId, out, outLen) == 0)
+            if (cloudLinkSubDevGetState(cloudLinkDev->brgDevInfo.sn, &cloudLinkDev->cloudLinkSubDev[i], in->svcId, out, outLen) == 0)
                 break;
         }
         if (i == cloudLinkDev->cloudLinkSubDevLen)
             return -1;
+        //------
         return 0;
     }
-
+#ifdef HILINK_REPORT_SYNC
+    cloudLinkDev->hilink_now_online = SUBDEV_ONLINE;
+#endif
+    //------
     for (i = 0; i < cloudLinkDev->attrLen; ++i)
     {
         if (strcmp(cloudLinkDev->attr[i].cloudSid, in->svcId) == 0)
@@ -211,11 +298,12 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
             {
                 if (strcmp(hyLinkDev->attr[j].hyKey, cloudLinkDev->attr[i].hyKey) == 0)
                 {
-                    char *json = getCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[j].value, hyLinkDev->attr[j].valueType);
+                    char *json = generateCloudJson(cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[j].value, hyLinkDev->attr[j].valueType);
                     if (json != NULL)
                     {
                         *outLen = strlen(json) + 1;
                         *out = json;
+                        logInfo("HilinkGetBrgDevCharState out:%s,outLen:%d", *out, *outLen);
                         return 0;
                     }
                 }
@@ -223,6 +311,7 @@ int HilinkGetBrgDevCharState(const char *sn, GetBrgDevCharState *in, char **out,
             return -1;
         }
     }
+    //------
     return -1;
 }
 
@@ -263,6 +352,7 @@ int HilinkDelBrgDev(const char *sn)
     {
         return -1;
     }
+    logInfo("HilinkDelBrgDev sn:%s", sn);
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(sn);
     if (cloudLinkDev == NULL)
     {
@@ -273,11 +363,13 @@ int HilinkDelBrgDev(const char *sn)
         cloudLinkDev = cloudLinkListGetById(masterdevId);
         if (cloudLinkDev == NULL)
             return -1;
-        runTransferCb(masterdevId, DEV_RESTORE, TRANSFER_SUBDEV_LINE);
-        return cloudLinkDevDel(masterdevId);
+        //------
+        runTransferCb((void *)masterdevId, DEV_RESTORE, TRANSFER_SUBDEV_LINE);
+        return hylinkDelDev(masterdevId);
     }
+    //------
     runTransferCb((void *)sn, DEV_RESTORE, TRANSFER_SUBDEV_LINE);
-    return cloudLinkDevDel(sn);
+    return hylinkDelDev(sn);
 }
 
 /*

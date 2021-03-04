@@ -10,7 +10,36 @@
 #include "logFunc.h"
 #include "hylinkListFunc.h"
 
-int getLinkValueType(unsigned char dataType)
+char *generateCloudJson(const char *cloudKey, const char *hyValue, const unsigned char valueType)
+{
+    if (cloudKey == NULL || hyValue == NULL)
+        return NULL;
+    cJSON *root = cJSON_CreateObject();
+
+    switch (valueType)
+    {
+    case LINK_VALUE_TYPE_ENUM:
+        cJSON_AddNumberToObject(root, cloudKey, *hyValue);
+        break;
+    case LINK_VALUE_TYPE_NUM:
+        cJSON_AddNumberToObject(root, cloudKey, *(int *)hyValue);
+        break;
+    case LINK_VALUE_TYPE_STRING:
+        cJSON_AddStringToObject(root, cloudKey, hyValue);
+        break;
+    default:
+        goto fail;
+        break;
+    }
+    char *json = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return json;
+fail:
+    cJSON_Delete(root);
+    return NULL;
+}
+
+int getHyLinkValueType(unsigned char dataType)
 {
     int byteLen;
     switch (dataType)
@@ -25,7 +54,7 @@ int getLinkValueType(unsigned char dataType)
         byteLen = 18;
         break;
     default:
-        byteLen = -1;
+        byteLen = 0;
         break;
     }
     return byteLen;
@@ -68,7 +97,7 @@ void *hyLinkParseJson(const char *devId, const char *str)
     strcpy(dev->devId, devId);
     strcpy(dev->modelId, modelId->valuestring);
     dev->online = SUBDEV_ONLINE;
-    dev->first_online_report = 1;
+
     cJSON *arraySub, *hyKey, *valueType, *repeat;
     for (int i = 0; i < arraySize; i++)
     {
@@ -83,7 +112,7 @@ void *hyLinkParseJson(const char *devId, const char *str)
         repeat = cJSON_GetObjectItem(arraySub, "repeat");
         dev->attr[i].repeat = repeat->valueint;
 
-        int valueLen = getLinkValueType(dev->attr[i].valueType);
+        int valueLen = getHyLinkValueType(dev->attr[i].valueType);
         if (valueLen < 0)
             continue;
         dev->attr[i].value = (char *)malloc(valueLen);
@@ -99,7 +128,7 @@ fail:
 
 void *addProfileDev(const char *path, const char *devId, const char *modelId, void *(*func)(const char *, const char *))
 {
-    char filePath[33] = {0};
+    char filePath[64] = {0};
     snprintf(filePath, sizeof(filePath), "%s/%s.json", path, modelId);
     struct stat statfile;
     if (stat(filePath, &statfile) < 0)

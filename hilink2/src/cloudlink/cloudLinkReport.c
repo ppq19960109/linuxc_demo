@@ -1,150 +1,88 @@
 #include "cloudLinkReport.h"
 
-char *getCloudJson(const char *cloudKey, const char *hyValue, const unsigned char valueType)
+static int hilink_report(const char *sn, const char *svcId, const char *key, const char *value, unsigned char valueType, const char hilink_now_online)
 {
-    cJSON *root = cJSON_CreateObject();
-
-    switch (valueType)
-    {
-    case LINK_VALUE_TYPE_ENUM:
-        cJSON_AddNumberToObject(root, cloudKey, *hyValue);
-        break;
-    case LINK_VALUE_TYPE_NUM:
-        cJSON_AddNumberToObject(root, cloudKey, *(int *)hyValue);
-        break;
-    case LINK_VALUE_TYPE_STRING:
-        cJSON_AddStringToObject(root, cloudKey, hyValue);
-        break;
-    default:
-        goto fail;
-        break;
-    }
-    char *json = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
-    return json;
-fail:
-    cJSON_Delete(root);
-    return NULL;
-}
-static int hilink_report(const char *sn, const char *svcId, const char *key, const char *value, unsigned char valueType)
-{
+    char *json;
     if (strlen(svcId) == 0 || strlen(key) == 0)
     {
         logError("cloudSid cloudKey is len 0");
         return -1;
     }
-#ifdef HILINK_REPORT_ASYNC
-    HilinkUploadBrgDevCharState(sn, svcId);
+    logInfo("hilink_report sn:%s,svcId:%s,key:%s", sn, svcId, key);
+#ifdef HILINK_REPORT_SYNC
+    goto sync;
 #else
-    logInfo("hilink_report key:%s", key);
-    char *json = getCloudJson(key, value, valueType);
+    if (strcmp(STR_GATEWAY_DEVID, sn) == 0)
+        goto sync;
+    else
+        HilinkUploadBrgDevCharState(sn, svcId);
+#endif
+sync:
+#ifdef HILINK_REPORT_SYNC
+    if (!hilink_now_online)
+    {
+        logWarn("cloud dev offline");
+        return 0;
+    }
+#endif
+    json = generateCloudJson(key, value, valueType);
     if (json != NULL)
     {
+        logInfo("sync hilink_report json:%s", json);
         HilinkReportBrgDevCharState(sn, svcId, json, strlen(json), getpid());
         cJSON_free(json);
     }
-#endif
+
     return 0;
 }
 
-static int cloudSingleEventReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDev, const int hyAttr)
-{
-    if (cloudLinkDev->eventAttr != NULL)
-    {
-        int i;
-        for (i = 0; i < cloudLinkDev->eventAttrLen; ++i)
-        {
-            if (strcmp(hyLinkDev->attr[hyAttr].hyKey, cloudLinkDev->eventAttr[i].hyKey) == 0)
-            {
-                break;
-            }
-        }
-        if (i == cloudLinkDev->eventAttrLen)
-            return -1;
-        char *json = NULL;
-        if (strlen(cloudLinkDev->eventAttr[i].key) != 0)
-        {
-            json = getCloudJson(cloudLinkDev->eventAttr[i].key, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
-        }
-        if (hyLinkDev->attr[hyAttr].valueType == LINK_VALUE_TYPE_ENUM)
-        {
-            if (*hyLinkDev->attr[hyAttr].value == 0)
-                goto quit;
-        }
-        else if (hyLinkDev->attr[hyAttr].valueType == LINK_VALUE_TYPE_NUM)
-        {
-            if (*(int *)hyLinkDev->attr[hyAttr].value == 0)
-                goto quit;
-        }
-        //event
-    quit:
-        if (json != NULL)
-        {
-            cJSON_free(json);
-        }
-        return i;
-    }
-    return -1;
-}
 static int cloudSingleSubDevAttrReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDev, const int hyAttr)
 {
     CloudLinkSubDev *subDev = cloudLinkDev->cloudLinkSubDev;
     char subDevLen = cloudLinkDev->cloudLinkSubDevLen;
     if (subDev == NULL || subDevLen == 0)
+    {
+        logError("subDev is NULL");
         return -1;
-
+    }
+    int report_num = 0;
     int i, j;
     for (i = 0; i < subDevLen; ++i)
     {
         for (j = 0; j < subDev[i].attrLen; ++j)
         {
-            if (strcmp(hyLinkDev->attr[hyAttr].hyKey, cloudLinkDev->attr[i].hyKey) == 0)
+            if (strcmp(hyLinkDev->attr[hyAttr].hyKey, subDev[i].attr[j].hyKey) == 0)
             {
-                break;
+                hilink_report(subDev[i].brgDevInfo.sn, subDev[i].attr[j].cloudSid, subDev[i].attr[j].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType, cloudLinkDev->hilink_now_online);
+                ++report_num;
             }
         }
-
-        hilink_report(subDev[i].brgDevInfo.sn, subDev[i].attr[j].cloudSid, subDev[i].attr[j].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
     }
-    return 0;
+    if (report_num)
+        return 0;
+    logError("subDev is hyKey Not found");
+    return -1;
 }
 static int cloudSingleAttrReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDev, const int hyAttr)
 {
+    int report_num = 0;
     int i;
-
     for (i = 0; i < cloudLinkDev->attrLen; ++i)
     {
         if (strcmp(hyLinkDev->attr[hyAttr].hyKey, cloudLinkDev->attr[i].hyKey) == 0)
         {
-            if (hyLinkDev->first_online_report == 1 && cloudLinkDev->attr[i].repeat == ONLINE_NON_REPORT_AND_NON_REPEAT_REPORT)
-            {
-                continue;
-            }
-            hilink_report(cloudLinkDev->brgDevInfo.sn, cloudLinkDev->attr[i].cloudSid, cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType);
+            hilink_report(cloudLinkDev->brgDevInfo.sn, cloudLinkDev->attr[i].cloudSid, cloudLinkDev->attr[i].cloudKey, hyLinkDev->attr[hyAttr].value, hyLinkDev->attr[hyAttr].valueType, cloudLinkDev->hilink_now_online);
         }
+        ++report_num;
     }
-    if (i == cloudLinkDev->attrLen)
-    {
-        cloudSingleSubDevAttrReport(hyLinkDev, cloudLinkDev, hyAttr);
-        goto event;
-    }
-
-    cloudSingleEventReport(hyLinkDev, cloudLinkDev, hyAttr);
-    return i;
-event:
-    return cloudSingleEventReport(hyLinkDev, cloudLinkDev, hyAttr);
+    if (report_num)
+        return 0;
+    return cloudSingleSubDevAttrReport(hyLinkDev, cloudLinkDev, hyAttr);
 }
 
-int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr)
+int cloudAttrReport(HyLinkDev *hyLinkDev, CloudLinkDev *cloudLinkDev, const int hyAttr)
 {
     int res = 0;
-    HyLinkDev *hyLinkDev = hylinkListGetById(cloudLinkDev->brgDevInfo.sn);
-    if (hyLinkDev == NULL)
-    {
-        logError("hyLinkDev is null");
-        return -1;
-    }
-
     if (hyAttr == ATTR_REPORT_ALL)
     {
         for (int i = 0; i < hyLinkDev->attrLen; ++i)
@@ -156,7 +94,6 @@ int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr)
     {
         res = cloudSingleAttrReport(hyLinkDev, cloudLinkDev, hyAttr);
     }
-    hyLinkDev->first_online_report = 0;
     return res;
 }
 /*********************************************************************************
@@ -169,10 +106,15 @@ int cloudAttrReport(CloudLinkDev *cloudLinkDev, const int hyAttr)
 **********************************************************************************/
 int cloudReport(void *hydev, unsigned int hyAttr)
 {
+    if (hydev == NULL)
+    {
+        logError("cloudReport error : hydev is NULL");
+        return -1;
+    }
     HyLinkDev *hyLinkDev = (HyLinkDev *)hydev;
     logInfo("cloudReport hyAttr:%d,devid:%s,modelid:%s", hyAttr, hyLinkDev->devId, hyLinkDev->modelId);
 
-    int res = 0;
+    int res;
 
     CloudLinkDev *cloudLinkDev = cloudLinkListGetById(hyLinkDev->devId);
 
@@ -188,16 +130,20 @@ int cloudReport(void *hydev, unsigned int hyAttr)
         {
             res = runTransferCb(cloudLinkDev->brgDevInfo.sn, hyLinkDev->online, TRANSFER_SUBDEV_LINE);
             if (res < 0)
-                logError("cloudReport TRANSFER_SUBDEV_LINE error:%d", res);
+                logError("cloudReport online error:%d", res);
             else
-                logInfo("cloudReport TRANSFER_SUBDEV_LINE success:%d", res);
+                logInfo("cloudReport online success:%d", res);
         }
         return res;
     }
-
+    // if (strcmp(STR_GATEWAY_MODELID, hyLinkDev->modelId) == 0)
+    // {
+    //     logInfo("gatway not cloudReport");
+    //     return 0;
+    // }
     if (hyLinkDev->online == SUBDEV_ONLINE)
     {
-        res = cloudAttrReport(cloudLinkDev, hyAttr);
+        res = cloudAttrReport(hyLinkDev, cloudLinkDev, hyAttr);
     }
 
     return res;

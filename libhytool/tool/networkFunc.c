@@ -170,7 +170,7 @@ int getNetlink(const char *if_name)
         return 2;
     }
 
-    fprintf(stderr, "DEVICE_LINKED\n");
+    // fprintf(stderr, "DEVICE_LINKED\n");
 
     return 0;
 }
