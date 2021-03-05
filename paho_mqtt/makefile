@@ -10,7 +10,6 @@ TOPDIR = .
 
 HYTOOL_PATH:=libhytool
 HYLINK_PATH:=libhylink
-
 SRC_DIRS := $(shell find src -maxdepth 3 -type d)
 
 CFLAGS += $(addprefix -I , $(SRC_DIRS))
@@ -31,9 +30,9 @@ LDFLAGS += -L$(TOPDIR)
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic  -lhytool -lhylink	\
-		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lpaho-mqtt3a -lpaho-mqtt3as -lpaho-mqtt3c -lpaho-mqtt3cs	\
+		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lpaho-mqtt3cs	\
 		-Wl,--end-group
-
+#-lpaho-mqtt3a -lpaho-mqtt3as -lpaho-mqtt3c 
 SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 
 OBJ += $(SRC:%.c=%.o)

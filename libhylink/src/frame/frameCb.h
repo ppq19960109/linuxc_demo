@@ -13,11 +13,9 @@ extern "C"
         SYSTEM_CLOSE = 0,
         SYSTEM_RESTART,
         SYSTEM_RESET,
-        HYLINK_CLOSE,
         LED_DRIVER_TIMER_OPEN,
         LED_DRIVER_TIMER_CLOSE,
         LED_DRIVER_TIMER_FILP,
-        RK_DRIVER_CLOSE,
         CMD_HEART,
         CMD_NETWORK,
         CMD_DEVSINFO,
@@ -54,6 +52,7 @@ extern "C"
         TRANSFER_CLOUD_REPORT,
         TRANSFER_SCENE_REPORT,
         TRANSFER_DEVATTR,
+        TRANSFER_MQTT_REPORT,
         TRANSFER_LAST,
     } TransferStatus;
     typedef int (*transferCb)(void *, unsigned int);

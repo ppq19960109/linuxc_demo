@@ -24,8 +24,6 @@
 #include "hylinkSend.h"
 #include "hylinkRecv.h"
 
-
-#define PROFILE_PATH "mqttprofile"
 #define ETH_NAME "eth0"
 
 #endif

@@ -20,7 +20,6 @@
 int hylinkInit(void)
 {
     hylinkListInit();
-    rkDriverOpen();
 
     HyLinkDev *gwHyLinkDev = addProfileDev(HYLINK_PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, hyLinkParseJson);
     if (gwHyLinkDev != NULL)
@@ -28,19 +27,17 @@ int hylinkInit(void)
     return 0;
 }
 
-static int hylinkClose(void)
+int hylinkClose(void)
 {
     hytoolClose();
 
     hylinkListEmpty();
-    runSystemCb(RK_DRIVER_CLOSE);
+    rkDriverClose();
     return 0;
 }
 
 void hylinkOpen(void)
 {
-    registerSystemCb(hylinkClose, HYLINK_CLOSE);
-
     registerTransferCb(hylinkRecv, TRANSFER_CLIENT_READ);
     registerTransferCb(hylinkSendDevAttr, TRANSFER_DEVATTR);
     registerSystemCb(hylinkHeart, CMD_HEART);
@@ -48,5 +45,6 @@ void hylinkOpen(void)
     registerSystemCb(hylinkSendDevInfo, CMD_DEVSINFO);
 
     hylinkInit();
+    rkDriverOpen();
     hytoolOpen();
 }

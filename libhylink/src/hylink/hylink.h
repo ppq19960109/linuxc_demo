@@ -7,7 +7,7 @@ extern "C"
 #endif
 
     void hylinkOpen(void);
-
+    int hylinkClose(void);
 #ifdef __cplusplus
 }
 #endif

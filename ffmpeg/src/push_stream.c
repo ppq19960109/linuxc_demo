@@ -37,6 +37,7 @@ int push_stream_open(const char *in_filename, const char *out_url)
     char *ofmt_name = NULL;
     if (strstr(out_url, "rtmp://") != NULL)
     {
+        // ofmt_name = "hls";
         ofmt_name = "flv";
     }
     else if (strstr(out_url, "udp://") != NULL)
@@ -88,7 +89,8 @@ int push_stream_open(const char *in_filename, const char *out_url)
 
             duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational){frame_rate.den, frame_rate.num}) : 0);
             printf("input stream frame num:%d,den:%d,duration:%f\n", frame_rate.num, frame_rate.den, duration);
-            rtp_stream = 2;
+            if (rtp_stream)
+                rtp_stream = 2;
         }
         else
         {
@@ -122,7 +124,9 @@ int push_stream_open(const char *in_filename, const char *out_url)
             break;
     }
     av_dump_format(ofmt_ctx, 0, out_url, 1);
-
+    // av_opt_set(ofmt_ctx->priv_data, "hls_time", "5", AV_OPT_SEARCH_CHILDREN);
+    // av_opt_set(ofmt_ctx->priv_data, "hls_list_size" ,"10" , AV_OPT_SEARCH_CHILDREN);
+    // av_opt_set(ofmt_ctx->priv_data, "hls_wrap", "5", AV_OPT_SEARCH_CHILDREN);
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE))
     {
         // TODO: 研究AVFMT_NOFILE标志
@@ -153,7 +157,7 @@ int push_stream_open(const char *in_filename, const char *out_url)
     ret = avformat_write_header(ofmt_ctx, NULL);
     if (ret < 0)
     {
-        printf("Error occurred when opening output file\n");
+        printf("Error occurred when opening output file,err2str:%s\n", av_err2str(ret));
         goto end;
     }
     AVPacket pkt;

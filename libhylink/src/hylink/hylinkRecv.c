@@ -299,6 +299,7 @@ int hylinkRecvAnaly(const char *json)
             break;
         }
     }
+    runTransferCb((void *)json, strlen(json), TRANSFER_MQTT_REPORT);
 heart:
     cJSON_Delete(root);
     return 0;
