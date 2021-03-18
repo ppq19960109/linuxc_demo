@@ -52,14 +52,15 @@ int operateFile(int action, const char *path, char *buf, int len)
     if (buf == NULL || len == 0)
         return -1;
     int ret = -1;
-    int fd = open(path, O_RDWR | O_CREAT, 0777);
-    if (fd < 0)
-    {
-        printf("open %s fail\n", path);
-        return -1;
-    }
+    int fd;
     if (action)
     {
+        fd = open(path, O_RDWR | O_CREAT, 0777);
+        if (fd < 0)
+        {
+            printf("open %s fail\n", path);
+            return -1;
+        }
         ret = write(fd, buf, len);
         if (ret < 0)
         {
@@ -68,13 +69,19 @@ int operateFile(int action, const char *path, char *buf, int len)
     }
     else
     {
+        fd = open(path, O_RDWR, 0777);
+        if (fd < 0)
+        {
+            printf("open %s fail\n", path);
+            return -1;
+        }
         ret = read(fd, buf, len);
         if (ret < 0)
         {
             printf("read %s fail,%s\n", path, strerror(ret));
         }
     }
-
+    close(fd);
     return ret;
 }
 

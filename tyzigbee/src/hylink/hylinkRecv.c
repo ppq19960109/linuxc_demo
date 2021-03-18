@@ -12,7 +12,7 @@
 #include "hylinkSend.h"
 #include "hylinkListFunc.h"
 
-static char *s_dispatchTypeAttr[] = {
+static char *hylink_recv_type[] = {
     "Add",
     "Delete",
     "ReFactory",
@@ -23,11 +23,7 @@ static char *s_dispatchTypeAttr[] = {
     "Attribute",
 };
 
-static const AttrDesc s_dispatchType = {
-    .attr = s_dispatchTypeAttr,
-    .attrLen = sizeof(s_dispatchTypeAttr) / sizeof(s_dispatchTypeAttr[0])};
-
-enum DispatchType
+enum Hylink_Type
 {
     ADD = 0,
     DELETE,
@@ -66,6 +62,7 @@ int hylinkRecvJson(char *data)
     else
     {
         logError("Command is value invaild:%s\n", Command->valuestring);
+        goto fail;
     }
 
     //Type字段
@@ -83,7 +80,7 @@ int hylinkRecvJson(char *data)
         goto fail;
     }
     //从type数组中查找type
-    int type = findStrIndex(Type->valuestring, s_dispatchType.attr, s_dispatchType.attrLen);
+    int type = findStrIndex(Type->valuestring, hylink_recv_type, sizeof(hylink_recv_type) / sizeof(hylink_recv_type[0]));
     if (type == -1)
     {
         logError("Type is no exist\n");

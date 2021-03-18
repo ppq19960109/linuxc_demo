@@ -9,9 +9,7 @@ extern "C"
     typedef enum
     {
         SYSTEM_CLOSE = 0,
-        HYLINK_CLOSE,
         HYLINK_RESET,
-        ZIGBEE_CLOSE,
         ZIGBEE_RESET,
         HYLINK_DEVSINFO,
         HYLINK_ZB_CHANNEL,

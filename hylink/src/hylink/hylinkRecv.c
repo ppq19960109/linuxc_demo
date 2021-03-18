@@ -15,21 +15,19 @@
 #include "hylinkListFunc.h"
 
 #include "database.h"
+#include "scene_adapter.h"
 
-static char *s_dispatchTypeAttr[] = {
+static char *hylink_recv_type[] = {
     "Add",
     "Register",
     "UnRegister",
     "OnOff",
     "Delete",
     "DevsInfo",
+    "LocalScene",
 };
 
-static const AttrDesc s_dispatchType = {
-    .attr = s_dispatchTypeAttr,
-    .attrLen = sizeof(s_dispatchTypeAttr) / sizeof(s_dispatchTypeAttr[0])};
-
-enum DispatchType
+enum Hylink_Type
 {
     ADD = 0,
     REGISTER,
@@ -37,6 +35,7 @@ enum DispatchType
     ONOFF,
     DELETE,
     DEVSINFO,
+    LOCAL_SCENE,
 };
 
 int hylinkRecvJson(char *data)
@@ -58,6 +57,9 @@ int hylinkRecvJson(char *data)
     if (strcmp(STR_REPORT, Command->valuestring) == 0)
     {
         logDebug("Command is report\n");
+        char *json = cJSON_PrintUnformatted(root);
+        scene_adapter_report(json, strlen(json));
+        cJSON_free(json);
     }
     else if (strcmp(STR_DISPATCH, Command->valuestring) == 0)
     {
@@ -82,7 +84,7 @@ int hylinkRecvJson(char *data)
         goto fail;
     }
     //从type数组中查找type
-    int type = findStrIndex(Type->valuestring, s_dispatchType.attr, s_dispatchType.attrLen);
+    int type = findStrIndex(Type->valuestring, hylink_recv_type, sizeof(hylink_recv_type) / sizeof(hylink_recv_type[0]));
     if (type == -1)
     {
         logError("Type is no exist");
@@ -184,6 +186,13 @@ int hylinkRecvJson(char *data)
                 }
             }
             hylinkSendFunc(&hylinkSend);
+        }
+        break;
+        case LOCAL_SCENE:
+        {
+            char *json = cJSON_PrintUnformatted(root);
+            scene_adapter_cmd(json, strlen(json));
+            cJSON_free(json);
         }
         break;
         default:

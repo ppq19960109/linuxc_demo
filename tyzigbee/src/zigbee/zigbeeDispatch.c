@@ -46,7 +46,7 @@ static int zigbeeZclQuery(ZigbeeAttr *attr, ty_z3_aps_frame_s *frame)
     if (attr->ClusterId == ZCL_PRIVATE_CLUSTER)
     {
         frame->cmd_type = Z3_CMD_TYPE_PRIVATE;
-        frame->cmd_id = attr->z3CmdId >> 4;
+        frame->cmd_id = attr->z3CmdId >> 4; //tuya common TY_DATA_QUERY:3,high 4 query
         // frame->msg_length = 0;
         unsigned short squ = 0;
         memcpy(frame->message, &squ, 2);
@@ -82,10 +82,10 @@ static int zigbeeZclCtrl(ZigbeeAttr *attr, ty_z3_aps_frame_s *frame, char *model
 
     int shift;
     int dataTypeLen = 0;
-    cmdType = attr->z3CmdType;
+    cmdType = attr->z3CmdType; //tuya zigbee cmdtype:Z3_CMD_TYPE_GLOBAL Z3_CMD_TYPE_PRIVATE Z3_CMD_TYPE_ZDO
     if (attr->ClusterId == ZCL_PRIVATE_CLUSTER)
     {
-        cmdId = attr->z3CmdId & 0x0f;
+        cmdId = attr->z3CmdId & 0x0f; //tuya common TY_DATA_REQUEST:0,low 4 ctrl
         unsigned short sequence = 0;
         memcpy(msg, &sequence, 2);
         msg[2] = attr->AttributeId;

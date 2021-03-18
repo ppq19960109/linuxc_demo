@@ -5,8 +5,8 @@
 extern "C"
 {
 #endif
-    void zigbeeMain(void);
-
+    void zigbeeOpen(void);
+    int zigbeeClose(void);
 #ifdef __cplusplus
 }
 #endif

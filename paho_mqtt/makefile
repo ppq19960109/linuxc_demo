@@ -1,5 +1,13 @@
-
+ifeq ($(VER), 0)
 CROSS_COMPILE =arm-rockchip-linux-gnueabihf-
+
+else
+CROSS_COMPILE =/home/ppq/lede-toolchain-ramips-mt7688_gcc-5.4.0_musl-1.1.16.Linux-x86_64/toolchain-mipsel_24kc_gcc-5.4.0_musl-1.1.16/bin/mipsel-openwrt-linux-
+PAHOMQTT_PATH:=libpahomqtt_u86
+CFLAGS += -I$(PAHOMQTT_PATH)/include
+LDFLAGS += -L$(PAHOMQTT_PATH)/lib
+endif
+
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -rf
 AR = ar -rcs
@@ -30,9 +38,9 @@ LDFLAGS += -L$(TOPDIR)
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic  -lhytool -lhylink	\
-		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lpaho-mqtt3cs	\
+		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lpaho-mqtt3c	\
 		-Wl,--end-group
-#-lpaho-mqtt3a -lpaho-mqtt3as -lpaho-mqtt3c 
+#-lpaho-mqtt3a -lpaho-mqtt3as -lpaho-mqtt3c -lpaho-mqtt3cs
 SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))
 
 OBJ += $(SRC:%.c=%.o)

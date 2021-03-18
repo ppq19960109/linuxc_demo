@@ -66,15 +66,14 @@ static int zigbeeCmdDelDev(void *id)
     return ret;
 }
 
-static int zigbeeClose()
+int zigbeeClose(void)
 {
     zigbeeListEmpty();
     return 0;
 }
 
-void zigbeeMain(void)
+void zigbeeOpen(void)
 {
-    registerSystemCb(zigbeeClose, ZIGBEE_CLOSE);
     registerCmdCb(zigbeeCmdNetAccess, CMD_NETWORK_ACCESS);
     registerCmdCb(zigbeeCmdDelDev, CMD_DELETE_DEV);
     registerCmdCb(zigbeeZclReport, CMD_ZCL_FRAME_REPORT);

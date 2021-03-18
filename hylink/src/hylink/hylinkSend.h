@@ -26,6 +26,7 @@ extern "C"
     } HylinkSend;
 
     int hylinkSendFunc(HylinkSend *hylinkSend);
+    int hylinkDispatch(const char *str, const int str_len, const char dir);
 #ifdef __cplusplus
 }
 #endif

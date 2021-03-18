@@ -8,7 +8,7 @@
     "attr": [
         {
             "hyKey": "Switch_1",
-            "cloudKey": "PowerSwitch_1",
+            "cloudKey": "powerstate_1",
             "valueType": 0
         },
         {

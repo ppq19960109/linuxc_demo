@@ -39,4 +39,7 @@ void signalQuit(void)
 
     sigaction(SIGINT, &act, &oldact);
     sigaction(SIGHUP, &act, &oldact);
+
+    act.sa_handler = SIG_IGN;
+    sigaction(SIGPIPE, &act, &oldact);
 }

@@ -26,4 +26,9 @@
 
 #define ETH_NAME "eth0"
 
+#define MQTT_ADDRESS "post-cn-oew22m4al1d.mqtt.aliyuncs.com"
+#define MQTT_CLIENTID "GID_HONYAR@@@0001"
+#define MQTT_USERNAME "Signature|JNKMaQHBiFiwGPQJ|post-cn-oew22m4al1d"
+#define MQTT_PASSWORD "j4ihmBX0vZtWIMOdCHFtHDnOLIw="
+
 #endif

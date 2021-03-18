@@ -1,5 +1,12 @@
-
+ifeq ($(VER), 0)
 CROSS_COMPILE =arm-rockchip-linux-gnueabihf-
+
+else
+CROSS_COMPILE =/home/ppq/lede-toolchain-ramips-mt7688_gcc-5.4.0_musl-1.1.16.Linux-x86_64/toolchain-mipsel_24kc_gcc-5.4.0_musl-1.1.16/bin/mipsel-openwrt-linux-
+SQLITE_PATH:=libsqlite3_u86
+CFLAGS += -I$(SQLITE_PATH)/include
+LDFLAGS += -L$(SQLITE_PATH)/lib
+endif
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -rf
 AR = ar -rcs
@@ -23,11 +30,12 @@ CFLAGS += -I$(HYTOOL_PATH)/include/signal
 CFLAGS += -Wall
 
 LDFLAGS += -L$(HYTOOL_PATH)/lib
+LDFLAGS += -L$(TOPDIR)/libs
 LDFLAGS += -L$(TOPDIR)
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic -lhytool\
-		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lsqlite3	\
+		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lsqlite3	-lhytoolsdk \
 		-Wl,--end-group
 
 SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))

@@ -18,21 +18,6 @@
 #include "zigbeeListFunc.h"
 #include "database.h"
 
-typedef struct
-{
-    unsigned char reportBuf[2048];
-    char mac[24];
-
-} hylinkHandle_t;
-
-hylinkHandle_t hylinkHandle;
-
-unsigned char *getHylinkReportBuf(void)
-{
-    return hylinkHandle.reportBuf;
-}
-
-//------------------------------
 static int addDevToHyList(const char *devId, const char *modelId)
 {
     if (devId == NULL || modelId == NULL)
@@ -237,7 +222,7 @@ static int hylinkZigbeeChannel(void)
     return hylinkSendFunc(&hylinkSend);
 }
 //--------------------------------------------------------
-static int hylinkClose(void)
+int hylinkClose(void)
 {
     databaseClose();
     hylinkListEmpty();
@@ -257,9 +242,8 @@ static int hylinkReset(void)
     return 0;
 }
 
-void hylinkMain(void)
+void hylinkOpen(void)
 {
-    registerSystemCb(hylinkClose, HYLINK_CLOSE);
     registerSystemCb(hylinkReset, HYLINK_RESET);
     registerSystemCb(hylinkZigbeeChannel, HYLINK_ZB_CHANNEL);
     registerSystemCb(hylinkReportDevInfo, HYLINK_DEVSINFO);

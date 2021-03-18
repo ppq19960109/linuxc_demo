@@ -30,7 +30,7 @@ LDFLAGS += -L$(TOPDIR)
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic  -lhytool -lhylink -liot_hal -liot_sdk -liot_tls	\
-		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lsqlite3	\
+		-Wl,-Bdynamic -ldl -lm -lpthread -lrt -lsqlite3	-lcurl \
 		-Wl,--end-group
 
 SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))

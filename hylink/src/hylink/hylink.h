@@ -6,8 +6,8 @@ extern "C"
 {
 #endif
 
-    unsigned char *getHylinkSendBuf(void);
-    void hylinkMain(void);
+    void hylinkOpen(void);
+    int hylinkClose(void);
     int addDevToHyList(const char *devId, const char *modelId);
 #ifdef __cplusplus
 }

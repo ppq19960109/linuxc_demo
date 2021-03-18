@@ -13,11 +13,31 @@
 #include "hylinkRecv.h"
 #include "hylinkSend.h"
 
+static char hyLinkSendBuf[1024];
+int hylinkDispatch(const char *str, const int str_len, const char dir)
+{
+    int ret = 0;
+
+    hyLinkSendBuf[0] = 0x02;
+    strncpy(&hyLinkSendBuf[1], str, str_len);
+    hyLinkSendBuf[str_len + 1] = 0x03;
+
+    if (dir)
+    {
+        ret = runTransferCb(hyLinkSendBuf, str_len + 2, TRANSFER_SERVER_ZIGBEE_WRITE);
+    }
+    else
+    {
+        ret = runTransferCb(hyLinkSendBuf, str_len + 2, TRANSFER_SERVER_HYLINK_WRITE);
+    }
+    return ret;
+}
+
 int hylinkSendFunc(HylinkSend *hylinkSend)
 {
     if (hylinkSend == NULL)
         goto fail;
-    int ret = 0;
+
     cJSON *root = cJSON_CreateObject();
     if (hylinkSend->Command)
     {
@@ -53,19 +73,7 @@ int hylinkSendFunc(HylinkSend *hylinkSend)
     char *json = cJSON_PrintUnformatted(root);
     logInfo("hylink send json:%s\n", json);
 
-    char *reportBuf = (char *)getHylinkSendBuf();
-    int jsonLen = strlen(json);
-    reportBuf[0] = 0x02;
-    strncpy(&reportBuf[1], json, jsonLen);
-    reportBuf[jsonLen + 1] = 0x03;
-    if (hylinkSend->Command)
-    {
-        ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_SERVER_ZIGBEE_WRITE);
-    }
-    else
-    {
-        ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_SERVER_HYLINK_WRITE);
-    }
+    int ret = hylinkDispatch(json, strlen(json), hylinkSend->Command);
 
     cJSON_free(json);
     cJSON_Delete(root);

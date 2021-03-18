@@ -16,7 +16,8 @@
         "limits": "c",
         "streambuf": "c",
         "hylinklistfunc.h": "c",
-        "hylink.h": "c"
+        "hylink.h": "c",
+        "hylinksend.h": "c"
     },
     "python.formatting.provider": "yapf"
 }

@@ -6,9 +6,9 @@ extern "C"
 {
 #endif
 
-    unsigned char *getHylinkReportBuf(void);
-    void hylinkMain(void);
-
+    void hylinkOpen(void);
+    int hylinkClose(void);
+    
 #ifdef __cplusplus
 }
 #endif

@@ -16,7 +16,14 @@
         "limits": "c",
         "streambuf": "c",
         "typeinfo": "c",
-        "epollserver.h": "c"
+        "epollserver.h": "c",
+        "param_check.h": "c",
+        "json_key.h": "c",
+        "misc_api.h": "c",
+        "error_msg.h": "c",
+        "action_list.h": "c",
+        "scene_link_list.h": "c",
+        "scene.h": "c"
     },
     "python.formatting.provider": "yapf"
 }

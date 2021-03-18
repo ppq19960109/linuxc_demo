@@ -119,7 +119,7 @@ fail:
 void cloudLinkClose(void)
 {
     runTransferCb(NULL, SUBDEV_OFFLINE, TRANSFER_SUBDEV_LINE);
-    runSystemCb(HYLINK_CLOSE);
+    hylinkClose();
 
     databaseClose();
 

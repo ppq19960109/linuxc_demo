@@ -16,8 +16,8 @@
 static int mainClose(void)
 {
     hytoolClose();
-    runSystemCb(ZIGBEE_CLOSE);
-    runSystemCb(HYLINK_CLOSE);
+    zigbeeClose();
+    hylinkClose();
     cpythonDestroy();
     return 0;
 }
@@ -28,8 +28,8 @@ int main()
     // return pythonTest();
     registerSystemCb(heartbeat, SYSTEM_HEARTBEAT);
     registerSystemCb(mainClose, SYSTEM_CLOSE);
-    hylinkMain();
-    zigbeeMain();
+    hylinkOpen();
+    zigbeeOpen();
     logInfo("tuyazigbee app main start");
     hytoolOpen();
     while (1)

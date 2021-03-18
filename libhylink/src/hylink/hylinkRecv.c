@@ -123,6 +123,7 @@ int hylinkRecvAnaly(const char *json)
     else
     {
         logError("Command is value invaild:%s\n", Command->valuestring);
+        goto fail;
     }
 
     //Type字段

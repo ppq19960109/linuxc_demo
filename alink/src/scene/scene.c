@@ -45,7 +45,7 @@ int sceneHyDispatch(cJSON *DataArray)
     char *json = cJSON_PrintUnformatted(dispatch);
     logInfo("scene send json:%s\n", json);
 
-    int res = hylinkDispatch(json);
+    int res = hylinkDispatch(json, strlen(json));
     cJSON_free(json);
     cJSON_Delete(dispatch);
     return res;

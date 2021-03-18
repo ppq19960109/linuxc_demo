@@ -1,6 +1,6 @@
 #include "tcp.h"
 #include "epollServer.h"
-
+#include <signal.h>
 typedef struct
 {
     int epollfd;
@@ -79,7 +79,7 @@ static int epollAccetpCb(int lfd, int events, void *arg)
         clientEvents[i].fd = cfd;
         epollClientInit(epollfd, &clientEvents[i], epollClientCb);
 
-        printf("new connect[%s:%d]\n", inet_ntoa(cin.sin_addr), ntohs(cin.sin_port));
+        printf("new connect[%s:%d],fd:%d\n", inet_ntoa(cin.sin_addr), ntohs(cin.sin_port), cfd);
     } while (0);
 
     return 0;
@@ -89,6 +89,7 @@ static void epollServerInit(int efd, struct EpollTcpEvent *event, Epoll_cb epoll
 {
     if (tcpServerListen(&event->fd, event->addr, event->port, CLIENT_MAX_EVENTS) < 0)
         return;
+    printf("tcpServerListen fd:%d\n", event->fd);
     ++epollServer.listenNum;
     event->epoll_cb = epoll_cb;
     /* void eventadd(int efd, int events, struct EpollTcpEvent *ev) */
@@ -105,21 +106,33 @@ static void epollListListen(struct EpollTcpEvent *event)
 
 static void epollListClose(struct EpollTcpEvent *event)
 {
+    if (event == NULL)
+        return;
     if (event->status > 0 && event->fd != 0)
+    {
+        printf("test:%s,port:%d,fd:%d\n", event->addr, event->port, event->fd);
         Close(event->fd);
+        eventdel(epollServer.epollfd, event);
+
+        epoll_list_del(event);
+    }
 }
 
 int epollServerClose(void)
 {
+    for (int i = 0; i < CLIENT_MAX_EVENTS; ++i)
+    {
+        if (epollServer.events[i].status > 0 && epollServer.events[i].fd != 0)
+        {
+            Close(epollServer.events[i].fd);
+            eventdel(epollServer.epollfd, &epollServer.events[i]);
+        }
+    }
+    epoll_list_for_each(epollListClose, &epollServerList);
+
     if (epollServer.epollfd != 0)
     {
         Close(epollServer.epollfd);
-        epollServer.epollfd = 0;
-    }
-    epoll_list_for_each(epollListClose, &epollServerList);
-    for (int i = 0; i < CLIENT_MAX_EVENTS + SERVER_MAX_EVENTS; ++i)
-    {
-        epollListClose(&epollServer.events[i]);
     }
     return 0;
 }
@@ -134,15 +147,18 @@ int epollServerOpen(int timeout)
     }
 
     struct epoll_event events[CLIENT_MAX_EVENTS + SERVER_MAX_EVENTS]; //定义这个结构体数组，用来接收epoll_wait传出的满足监听事件的fd结构体
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGUSR1);
 
     epoll_list_for_each(epollListListen, &epollServerList);
     while (1)
     {
         //调用eppoll_wait等待接入的客户端事件,epoll_wait传出的是满足监听条件的那些fd的struct epoll_event类型
-        int nfd = epoll_wait(epollfd, events, CLIENT_MAX_EVENTS + SERVER_MAX_EVENTS, timeout);
+        int nfd = epoll_pwait(epollfd, events, CLIENT_MAX_EVENTS + SERVER_MAX_EVENTS, timeout, &mask);
         if (nfd < 0)
         {
-            printf("epoll_wait error, exit\n");
+            printf("epoll_wait error, exit:%d,errno:%d,strerror(errno):%s\n", nfd, errno, strerror(errno));
             continue;
         }
         epollHandle(events, nfd);

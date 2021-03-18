@@ -11,6 +11,7 @@
 
 #include "cJSON.h"
 #include "base64.h"
+#include "curl/curl.h"
 
 #include "logFunc.h"
 #include "cmd_run.h"

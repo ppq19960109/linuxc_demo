@@ -8,12 +8,12 @@
     "attr": [
         {
             "hyKey": "Switch_1",
-            "cloudKey": "PowerSwitch_1",
+            "cloudKey": "powerstate_1",
             "valueType": 0
         },
         {
             "hyKey": "Switch_2",
-            "cloudKey": "PowerSwitch_2",
+            "cloudKey": "powerstate_2",
             "valueType": 0
         },
         {
@@ -33,7 +33,7 @@
         },
         {
             "hyKey": "Switch_All",
-            "cloudKey": "SwitchAll",
+            "cloudKey": "switch_all",
             "valueType": 0
         }
     ],

@@ -10,9 +10,7 @@ extern "C"
     {
         SYSTEM_CLOSE = 0,
         SYSTEM_RESET,
-        HYLINK_CLOSE,
         LED_DRIVER_TIMER_FILP,
-        RK_DRIVER_CLOSE,
         DATABASE_CLOSE,
         DATABASE_RESET,
         CMD_DEVSINFO,
@@ -24,9 +22,7 @@ extern "C"
 
     typedef enum
     {
-        TRANSFER_CLIENT_WRITE = 0,
-        TRANSFER_CLIENT_READ,
-        TRANSFER_SERVER_HYLINK_WRITE,
+        TRANSFER_SERVER_HYLINK_WRITE=0,
         TRANSFER_SERVER_HYLINK_READ,
         TRANSFER_SERVER_ZIGBEE_WRITE,
         TRANSFER_SERVER_ZIGBEE_READ,

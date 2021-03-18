@@ -10,21 +10,23 @@
 #include "rkDriver.h"
 
 #include "hytool.h"
+#include "log_api.h"
 int mainClose(void)
 {
     hytoolClose();
- 
-    runSystemCb(HYLINK_CLOSE);
-    runSystemCb(RK_DRIVER_CLOSE);
+
+    hylinkClose();
+    rkDriverClose();
     return 0;
 }
 
 int main()
 {
+    // InitLog(LOG_DEBUG, NULL);
     registerSystemCb(mainClose, SYSTEM_CLOSE);
-
-    hylinkMain();
     rkDriverOpen();
+    hylinkOpen();
+
     logInfo("hylinkapp main start");
     hytoolOpen();
     mainClose();

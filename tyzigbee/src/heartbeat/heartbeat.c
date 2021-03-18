@@ -29,7 +29,7 @@ int heartbeat(void)
         logWarn("hyLink_kh_foreach_value heartbeat");
         if (hyDev != NULL && hyDev->activeTime != 0)
         {
-            // runZigbeeCb((void *)hyDev->DeviceId, (void *)hyDev->ModelId, STR_VERSION, NULL, ZIGBEE_DEV_DISPATCH);
+            runZigbeeCb((void *)hyDev->DeviceId, (void *)hyDev->ModelId, STR_VERSION, NULL, ZIGBEE_DEV_DISPATCH);
             zigbeeDev *zDev = (zigbeeDev *)zigbeeListGet(hyDev->ModelId);
             if (zDev == NULL)
             {
@@ -38,6 +38,7 @@ int heartbeat(void)
             }
             if (curTime > hyDev->activeTime + zDev->heartbeatTime)
             {
+                logWarn("heartbeat timeout zigbee dev id:%s,model id:%s\n", hyDev->DeviceId, hyDev->ModelId);
                 hyDev->activeTime = 0;
 
                 HylinkSend hylinkSend = {0};

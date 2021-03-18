@@ -1,0 +1,35 @@
+{
+    "modelId": "_TZ3000_9qkwnvil",
+    "productKey": "a1EfzYn6XTg",
+    "productSecret": "FV7koxjCkyOQyWCZ",
+    "deviceSecret": "",
+    "devName": "二位轻触多控开关",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Switch_1",
+            "cloudKey": "PowerSwitch_1",
+            "valueType": 0
+        },
+        {
+            "hyKey": "Switch_2",
+            "cloudKey": "PowerSwitch_2",
+            "valueType": 0
+        },
+        {
+            "hyKey": "LedEnable",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "PowerOffProtection",
+            "cloudKey": "",
+            "valueType": 0
+        },
+        {
+            "hyKey": "Switch_All",
+            "cloudKey": "SwitchAll",
+            "valueType": 0
+        }
+    ]
+}

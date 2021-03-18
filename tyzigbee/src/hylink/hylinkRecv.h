@@ -39,14 +39,6 @@ extern "C"
 
 #define STR_DEVSINFO "DevsInfo"
 
-    typedef struct
-    {
-        char *const *attr;
-        unsigned short attrLen;
-        char *const *attrCtrl;
-        unsigned short attrCtrlLen;
-    } AttrDesc;
-
     int hylinkRecvManage(void *data, unsigned int len);
 
 #ifdef __cplusplus

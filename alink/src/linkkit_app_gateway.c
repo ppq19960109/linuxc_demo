@@ -16,10 +16,10 @@
 #include "ota_service.h"
 #endif
 
-char g_product_key[IOTX_PRODUCT_KEY_LEN + 1] = "";
-char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "";
-char g_device_name[IOTX_DEVICE_NAME_LEN + 1] = "";
-char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "";
+// char g_product_key[IOTX_PRODUCT_KEY_LEN + 1] = "";
+// char g_product_secret[IOTX_PRODUCT_SECRET_LEN + 1] = "";
+// char g_device_name[IOTX_DEVICE_NAME_LEN + 1] = "";
+// char g_device_secret[IOTX_DEVICE_SECRET_LEN + 1] = "";
 #define USER_EXAMPLE_YIELD_TIMEOUT_MS (200)
 
 static user_example_ctx_t g_user_example_ctx;
@@ -219,9 +219,123 @@ int main_close(void)
     return 0;
 }
 
-void main_before_init(void)
+int operate_gateway_info(char *device_name, char *device_secret, int flags)
+{
+    int res = 0;
+    if (flags)
+    {
+        cJSON *root = cJSON_CreateObject();
+        cJSON_AddStringToObject(root, "devicce_name", device_name);
+        cJSON_AddStringToObject(root, "device_secret", device_secret);
+        char *json = cJSON_PrintUnformatted(root);
+        if (json != NULL)
+        {
+            res = operateFile(flags, ALINKGATEWAYFILE, json, strlen(json) + 1);
+            free(json);
+        }
+        cJSON_Delete(root);
+    }
+    else
+    {
+        char buf[256] = {0};
+        res = operateFile(flags, ALINKGATEWAYFILE, buf, sizeof(buf));
+        if (res < 0)
+        {
+            EXAMPLE_TRACE("operateFile:%s read fail\n", ALINKGATEWAYFILE);
+        }
+        else if (res == 0)
+        {
+        }
+        else
+        {
+            cJSON *root = cJSON_Parse(buf);
+            if (root == NULL)
+                return -1;
+            cJSON *device_name_json = cJSON_GetObjectItem(root, "devicce_name");
+            cJSON *device_secret_json = cJSON_GetObjectItem(root, "device_secret");
+            if (device_secret_json == NULL)
+            {
+                res = -1;
+            }
+            else
+            {
+                if (device_name_json)
+                    strcpy(device_name, device_name_json->valuestring);
+                strcpy(device_secret, device_secret_json->valuestring);
+            }
+            cJSON_Delete(root);
+        }
+    }
+    return res;
+}
+size_t get_write_cb(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+    printf("get_write_cb size:%d,nmemb:%d\n", size, nmemb);
+    printf("get_write_cb data:%s\n", (char *)ptr);
+    iotx_linkkit_dev_meta_info_t *master_meta_info = (iotx_linkkit_dev_meta_info_t *)stream;
+
+    cJSON *root = cJSON_Parse(ptr);
+    if (root == NULL)
+        return -1;
+    cJSON *deviceName = cJSON_GetObjectItem(root, "deviceName");
+    cJSON *deviceSecret = cJSON_GetObjectItem(root, "deviceSecret");
+
+    strcpy(master_meta_info->device_name, deviceName->valuestring);
+    strcpy(master_meta_info->device_secret, deviceSecret->valuestring);
+    operate_gateway_info(master_meta_info->device_name, master_meta_info->device_secret, 1);
+
+    cJSON_Delete(root);
+    return size * nmemb;
+}
+int curl_http_get_gateway_info(iotx_linkkit_dev_meta_info_t *master_meta_info)
+{
+    char http_request_url[180] = {0};
+    char gateway_mac[18] = {0};
+    if (getNetworkMac(ETH_NAME, gateway_mac, sizeof(gateway_mac), "") == NULL)
+    {
+        fprintf(stderr, "get mac error\n");
+        exit(1);
+    }
+    sprintf(http_request_url, "http://www.honyarcloud.com:8090/device/serial/code/query/?serial_code=W0011801&identity=%s&product_key=a1f0jNVDEPL&project_type=AL-Z", gateway_mac);
+    printf("get request url:%s\n", http_request_url);
+    CURLcode res;
+
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+
+    // get a curl handle
+    CURL *curl = curl_easy_init();
+    if (curl)
+    {
+        // set the URL with GET request
+        curl_easy_setopt(curl, CURLOPT_URL, http_request_url);
+
+        // write response msg into strResponse
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, get_write_cb);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, master_meta_info);
+
+        // perform the request, res will get the return code
+        res = curl_easy_perform(curl);
+        // check for errors
+        if (res != CURLE_OK)
+        {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        }
+        else
+        {
+            fprintf(stderr, "curl_easy_perform() success.\n");
+        }
+
+        // always cleanup
+        curl_easy_cleanup(curl);
+    }
+
+    curl_global_cleanup();
+    return 0;
+}
+static void main_before_init(iotx_linkkit_dev_meta_info_t *master_meta_info)
 {
     registerSystemCb(main_close, SYSTEM_CLOSE);
+
     cloudLinkOpen();
     CloudLinkDev *cloudLinkDev = (CloudLinkDev *)addProfileDev(PROFILE_PATH, STR_GATEWAY_DEVID, STR_GATEWAY_MODELID, cloudLinkParseJson);
     if (cloudLinkDev == NULL)
@@ -229,16 +343,45 @@ void main_before_init(void)
         EXAMPLE_TRACE("gw cloudLinkDev is NULL");
         return;
     }
-    strcpy(g_product_key, cloudLinkDev->alinkInfo.product_key);
-    strcpy(g_product_secret, cloudLinkDev->alinkInfo.product_secret);
-    strcpy(g_device_secret, cloudLinkDev->alinkInfo.device_secret);
-    if (strlen(g_device_name) == 0)
+
+    strcpy(master_meta_info->product_key, cloudLinkDev->alinkInfo.product_key);
+    strcpy(master_meta_info->product_secret, cloudLinkDev->alinkInfo.product_secret);
+    strcpy(master_meta_info->device_secret, cloudLinkDev->alinkInfo.device_secret);
+    if (strlen(master_meta_info->device_name) == 0)
     {
-        getNetworkMac(ETH_NAME, g_device_name, sizeof(g_device_name), "");
+        getNetworkMac(ETH_NAME, master_meta_info->device_name, sizeof(master_meta_info->device_name), "");
         // for (int i = 0; i < strlen(g_device_name); i++)
         //     g_device_name[i] = toupper(g_device_name[i]);
     }
-    EXAMPLE_TRACE("linkkit gateway g_device_name:%s,g_device_secret:%s,g_product_key:%s,g_product_secret:%s", g_device_name, g_device_secret, g_product_key, g_product_secret);
+
+    if (strlen(master_meta_info->device_secret) == 0)
+    {
+        if (operate_gateway_info(master_meta_info->device_name, master_meta_info->device_secret, 0) < 0)
+        {
+            EXAMPLE_TRACE("local read gateway info fail!!!!!,start cloud read \n");
+#if 0
+            curl_http_get_gateway_info(master_meta_info);
+#else
+            iotx_dev_meta_info_t meta;
+            memset(&meta, 0, sizeof(iotx_dev_meta_info_t));
+            memcpy(meta.product_key, master_meta_info->product_key, strlen(master_meta_info->product_key));
+            memcpy(meta.product_secret, master_meta_info->product_secret, strlen(master_meta_info->product_secret));
+            memcpy(meta.device_name, master_meta_info->device_name, strlen(master_meta_info->device_name));
+            EXAMPLE_TRACE("IOT_Dynamic_Register start\n");
+            int res = IOT_Dynamic_Register(IOTX_HTTP_REGION_SHANGHAI, &meta);
+            if (res < 0)
+            {
+                EXAMPLE_TRACE("IOT_Dynamic_Register:%d fail\n", res);
+                exit(1);
+            }
+            else
+            {
+                strcpy(master_meta_info->device_secret, meta.device_secret);
+                operate_gateway_info(master_meta_info->device_name, master_meta_info->device_secret, 1);
+            }
+#endif
+        }
+    }
 }
 
 void main_init(void)
@@ -264,10 +407,10 @@ int main(int argc, char **argv)
     int res = 0;
     uint64_t time_prev_sec = 0, time_now_sec = 0, time_begin_sec = 0;
     user_example_ctx_t *user_example_ctx = user_example_get_ctx();
-    iotx_linkkit_dev_meta_info_t master_meta_info;
-
+    iotx_linkkit_dev_meta_info_t master_meta_info = {0};
+reconnect:
     memset(user_example_ctx, 0, sizeof(user_example_ctx_t));
-    main_before_init();
+    main_before_init(&master_meta_info);
 
     // IOT_Ioctl(IOTX_IOCTL_SET_PRODUCT_KEY, g_product_key);
     // IOT_Ioctl(IOTX_IOCTL_SET_PRODUCT_SECRET, g_product_secret);
@@ -290,59 +433,12 @@ int main(int argc, char **argv)
     IOT_RegisterCallback(ITE_CLOUD_ERROR, user_cloud_error_handler);
     IOT_RegisterCallback(ITE_FOTA, user_fota_event_handler);
 
-    memset(&master_meta_info, 0, sizeof(iotx_linkkit_dev_meta_info_t));
-    memcpy(master_meta_info.product_key, g_product_key, strlen(g_product_key));
-    memcpy(master_meta_info.product_secret, g_product_secret, strlen(g_product_secret));
-    memcpy(master_meta_info.device_name, g_device_name, strlen(g_device_name));
-    memcpy(master_meta_info.device_secret, g_device_secret, strlen(g_device_secret));
-reconnect:
-    EXAMPLE_TRACE("register product_key:%s\n", master_meta_info.product_key);
-    EXAMPLE_TRACE("register product_secret:%s\n", master_meta_info.product_secret);
-    EXAMPLE_TRACE("register device_name:%s\n", master_meta_info.device_name);
-    EXAMPLE_TRACE("register device_secret:%s\n", master_meta_info.device_secret);
-    if (strlen(g_device_secret) == 0)
-    {
-        iotx_dev_meta_info_t meta;
-        memset(&meta, 0, sizeof(iotx_dev_meta_info_t));
-        memcpy(meta.product_key, master_meta_info.product_key, strlen(master_meta_info.product_key));
-        memcpy(meta.product_secret, master_meta_info.product_secret, strlen(master_meta_info.product_secret));
-        memcpy(meta.device_name, master_meta_info.device_name, strlen(master_meta_info.device_name));
-        EXAMPLE_TRACE("IOT_Dynamic_Register start\n");
-        res = IOT_Dynamic_Register(IOTX_HTTP_REGION_SHANGHAI, &meta);
-        if (res < 0)
-        {
-            EXAMPLE_TRACE("IOT_Dynamic_Register:%d fail\n", res);
-            char buf[64] = {0};
-            res = operateFile(0, ALINKGATEWAYFILE, buf, sizeof(buf));
-            if (res < 0)
-            {
-                EXAMPLE_TRACE("operateFile:%s fail\n", ALINKGATEWAYFILE);
-            }
-            else if (res == 0)
-            {
-            }
-            else
-            {
-                cJSON *root = cJSON_Parse(buf);
-                cJSON *val = cJSON_GetObjectItem(root, "device_secret");
-                if (val != NULL)
-                    strcpy(master_meta_info.device_secret, val->valuestring);
-                cJSON_Delete(root);
-            }
-        }
-        else
-        {
-            strcpy(master_meta_info.device_secret, meta.device_secret);
+    // memset(&master_meta_info, 0, sizeof(iotx_linkkit_dev_meta_info_t));
+    // memcpy(master_meta_info.product_key, g_product_key, strlen(g_product_key));
+    // memcpy(master_meta_info.product_secret, g_product_secret, strlen(g_product_secret));
+    // memcpy(master_meta_info.device_name, g_device_name, strlen(g_device_name));
+    // memcpy(master_meta_info.device_secret, g_device_secret, strlen(g_device_secret));
 
-            cJSON *root = cJSON_CreateObject();
-            cJSON_AddStringToObject(root, "device_secret", meta.device_secret);
-            char *json = cJSON_PrintUnformatted(root);
-            if (json != NULL)
-                operateFile(1, ALINKGATEWAYFILE, json, strlen(json) + 1);
-            free(json);
-            cJSON_Delete(root);
-        }
-    }
     EXAMPLE_TRACE("login product_key:%s\n", master_meta_info.product_key);
     EXAMPLE_TRACE("login product_secret:%s\n", master_meta_info.product_secret);
     EXAMPLE_TRACE("login device_name:%s\n", master_meta_info.device_name);

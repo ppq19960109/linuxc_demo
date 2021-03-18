@@ -7,6 +7,7 @@ static void *threadHander(void *arg)
     int ret;
     ThreadTcp *threadTcp = ((ThreadTcp *)arg);
     threadTcp->status = 1;
+    
     do
     {
         while (threadTcp->status && threadTcp->isServer == 0)
@@ -24,7 +25,7 @@ static void *threadHander(void *arg)
             ret = Recv(threadTcp->fd, threadTcp->recv_buf, sizeof(threadTcp->recv_buf), 0);
             if (ret <= 0)
             {
-                printf("thread client Recv error:%d,error:%d,%s\n", ret, errno, strerror(errno));
+                printf("thread client Recv ret:%d,error:%d,%s\n", ret, errno, strerror(errno));
                 if (threadTcp->disconnect_cb != NULL)
                     threadTcp->disconnect_cb();
                 break;
@@ -69,7 +70,7 @@ int threadClientClose(ThreadTcp *threadTcp)
         Close(threadTcp->fd);
         threadTcp->fd = 0;
     }
-    sleep(1);
+    // sleep(1);
 
     return 0;
 }

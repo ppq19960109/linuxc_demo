@@ -15,22 +15,8 @@
 #include "hylinkSend.h"
 
 #include "database.h"
+#include "scene_adapter.h"
 
-typedef struct
-{
-  unsigned char reportBuf[4096];
-  char mac[24];
-
-} hylinkHandle_t;
-
-hylinkHandle_t hylinkHandle;
-
-unsigned char *getHylinkSendBuf(void)
-{
-  return hylinkHandle.reportBuf;
-}
-
-//------------------------------
 static int hylinkSendQueryVersion(void *devId)
 {
   HylinkSend hylinkSend = {0};
@@ -93,8 +79,9 @@ int systemReset(void)
   hylinkSendFunc(&hylinkSend);
   //-------------------------------
   hylinkSend.Command = 1;
-
   hylinkSendFunc(&hylinkSend);
+
+  scene_adapter_reset();
   sleep(1);
   databseReset();
   runSystemCb(SYSTEM_CLOSE);
@@ -106,14 +93,14 @@ int systemReset(void)
 //--------------------------------------------------------
 int hylinkClose(void)
 {
+  scene_adapter_close();
   hylinkListEmpty();
   databaseClose();
   return 0;
 }
 
-void hylinkMain(void)
+void hylinkOpen(void)
 {
-  registerSystemCb(hylinkClose, HYLINK_CLOSE);
   registerSystemCb(systemReset, SYSTEM_RESET);
 
   registerTransferCb(hylinkRecvManage, TRANSFER_SERVER_HYLINK_READ);
@@ -123,4 +110,5 @@ void hylinkMain(void)
 
   databaseInit();
   selectDatabse(addDevToHyList);
+  scene_adapter_open();
 }

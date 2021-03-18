@@ -182,7 +182,6 @@ int rkDriverClose(void)
 
 void rkDriverOpen(void)
 {
-    registerSystemCb(rkDriverClose, RK_DRIVER_CLOSE);
     registerCmdCb(LedStatusForline, LED_DRIVER_LINE);
     registerSystemCb(ledTimerCallback, LED_DRIVER_TIMER_FILP);
     driverKeyOpen();

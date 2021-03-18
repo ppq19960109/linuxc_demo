@@ -11,21 +11,21 @@ static void delivered(void *context, MQTTClient_deliveryToken dt)
 
 static int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message)
 {
-    int i;
-    char *payloadptr;
+    // int i;
+    // char *payloadptr;
 
-    printf("Message arrived\n");
-    printf("     topic: %s\n", topicName);
-    printf("   message: ");
+    logInfo("Message arrived");
+    logInfo("     topic: %s", topicName);
+    // printf("   message: ");
 
-    payloadptr = message->payload;
-    for (i = 0; i < message->payloadlen; i++)
-    {
-        putchar(*payloadptr++);
-    }
-    putchar('\n');
-    printf("   message payload: %s\n", (char *)message->payload);
-    hylinkDispatch(message->payload);
+    // payloadptr = message->payload;
+    // for (i = 0; i < message->payloadlen; i++)
+    // {
+    //     putchar(*payloadptr++);
+    // }
+    // putchar('\n');
+    logInfo("   message payload: %.*s\n", message->payloadlen, (char *)message->payload);
+    // hylinkDispatch(message->payload, message->payloadlen);
 
     MQTTClient_freeMessage(&message);
     MQTTClient_free(topicName);
@@ -34,15 +34,16 @@ static int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_mes
 
 static void connlost(void *context, char *cause)
 {
-    printf("\nConnection lost\n");
-    printf("     cause: %s\n", cause);
+    logError("\nConnection lost\n");
+    logError("     cause: %s\n", cause);
+    mqtt_client_reconnect();
 }
 //------------------------------
 #define CTRL_TOPIC "honyar/Dispatch/%s/#"
 #define REPORT_TOPIC "honyar/Report/%s/%s/%s"
 static MQTTClient client;
 static char gateway_mac[18];
-static char subscribe_topic[80];
+static char subscribe_topic[64];
 static char publish_topic[100];
 
 int mqtt_client_publish(const char *topicName, char *payload)
@@ -56,7 +57,7 @@ int mqtt_client_publish(const char *topicName, char *payload)
     pubmsg.qos = QOS;
     pubmsg.retained = 0;
     ret = MQTTClient_publishMessage(client, topicName, &pubmsg, &token);
-    printf("Waiting for publication of payload %s topic %s\n", payload, topicName);
+    logInfo("publish topic:%s\npayload:%s\n", topicName, payload);
     return ret;
 }
 
@@ -125,13 +126,27 @@ int mqtt_client_close(void)
 {
     MQTTClient_unsubscribe(client, subscribe_topic);
 
-    MQTTClient_disconnect(client, 5000);
+    MQTTClient_disconnect(client, 2000);
     MQTTClient_destroy(&client);
     return 0;
 }
 
-int mqtt_client_open(const char *serverURI, const char *clientId, const char *username, const char *password)
+int mqtt_client_reconnect(void)
 {
+    logWarn("mqtt_client_reconnect.........");
+    mqtt_client_close();
+    sleep(2);
+    mqtt_client_open();
+    return 0;
+}
+
+int mqtt_client_open(void)
+{
+    const char *serverURI = MQTT_ADDRESS;
+    const char *clientId = MQTT_CLIENTID;
+    const char *username = MQTT_USERNAME;
+    const char *password = MQTT_PASSWORD;
+
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     int rc;
 
@@ -149,18 +164,20 @@ int mqtt_client_open(const char *serverURI, const char *clientId, const char *us
     conn_opts.username = username;
     conn_opts.password = password;
     MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
-
+reconnect:
     if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
     {
         printf("Failed to connect, return code %d\n", rc);
-        exit(EXIT_FAILURE);
+        sleep(4);
+        goto reconnect;
     }
-
-    // sprintf(subscribe_topic, CTRL_TOPIC, gateway_mac);
-    // if (mqtt_client_subscribe(subscribe_topic) != MQTTCLIENT_SUCCESS)
-    //     printf("mqtt_client_subscribe fail\n");
-    // else
-    //     printf("mqtt_client_subscribe success\n");
+    if (mqtt_client_subscribe("honyar/Report/#") != MQTTCLIENT_SUCCESS)
+        printf("mqtt_client_subscribe Report fail\n");
+    sprintf(subscribe_topic, CTRL_TOPIC, gateway_mac);
+    if (mqtt_client_subscribe(subscribe_topic) != MQTTCLIENT_SUCCESS)
+        printf("mqtt_client_subscribe fail\n");
+    else
+        printf("mqtt_client_subscribe success:%s\n", subscribe_topic);
 
     return rc;
 }

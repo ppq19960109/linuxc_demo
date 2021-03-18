@@ -2,16 +2,17 @@
 #define _THREADSERVER_H_
 
 #include "threadClient.h"
-
+#include "list.h"
 typedef struct
 {
     ThreadTcp threadTcp;
     ThreadTcp *clientList;
     int clientNumMax;
+    struct list_head node;
 } ThreadTcpServer;
 
-int threadServerOpen(ThreadTcpServer *threadTcpServer);
-int threadServerClose(ThreadTcpServer *threadTcpServer);
+int threadServerOpen(void);
+void threadServerClose(void);
 int threadServerSend(ThreadTcpServer *threadTcpServer, void *send, unsigned int len);
-void tcpEventServerSet(ThreadTcpServer *threadTcpServer, const char *addr, const short port, Recv_cb recv_cb, Disconnect_cb disconnect_cb, Connect_cb connect_cb, int clientNumMax);
+int tcpEventServerSet(ThreadTcpServer *threadTcpServer, const char *addr, const short port, Recv_cb recv_cb, Disconnect_cb disconnect_cb, Connect_cb connect_cb, int clientNumMax);
 #endif

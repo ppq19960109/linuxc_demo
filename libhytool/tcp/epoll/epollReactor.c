@@ -117,7 +117,8 @@ void epoll_list_del(struct EpollTcpEvent *epollTcpEvent)
 void epoll_list_for_each(void (*call_back)(struct EpollTcpEvent *), struct list_head *head)
 {
     struct EpollTcpEvent *epollTcpEvent;
-    list_for_each_entry(epollTcpEvent, head, node)
+    struct EpollTcpEvent *epollTcpEvent_temp;
+    list_for_each_entry_safe(epollTcpEvent, epollTcpEvent_temp, head, node)
     {
         call_back(epollTcpEvent);
     }

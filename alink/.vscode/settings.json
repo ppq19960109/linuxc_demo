@@ -13,6 +13,8 @@
         "cloudlinklistfunc.h": "c",
         "hylinksend.h": "c",
         "wrappers.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "base64.h": "c",
+        "reboot.h": "c"
     }
 }

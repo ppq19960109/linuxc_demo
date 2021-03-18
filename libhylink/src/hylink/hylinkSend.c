@@ -13,16 +13,14 @@
 #include "hylinkRecv.h"
 #include "hylinkSend.h"
 
-
 static char hyLinkSendBuf[1024];
-int hylinkDispatch(const char *str)
+int hylinkDispatch(const char *str, const int str_len)
 {
-    int jsonLen = strlen(str);
     hyLinkSendBuf[0] = 0x02;
-    strncpy(&hyLinkSendBuf[1], str, jsonLen);
-    hyLinkSendBuf[jsonLen + 1] = 0x03;
+    strncpy(&hyLinkSendBuf[1], str, str_len);
+    hyLinkSendBuf[str_len + 1] = 0x03;
 
-    return runTransferCb(hyLinkSendBuf, jsonLen + 2, TRANSFER_CLIENT_WRITE);
+    return runTransferCb(hyLinkSendBuf, str_len + 2, TRANSFER_CLIENT_WRITE);
 }
 int hylinkSend(void *ptr)
 {
@@ -56,7 +54,7 @@ int hylinkSend(void *ptr)
     char *json = cJSON_PrintUnformatted(root);
     logInfo("send json:%s\n", json);
 
-    int ret = hylinkDispatch(json);
+    int ret = hylinkDispatch(json, strlen(json));
 
     free(json);
     cJSON_Delete(root);

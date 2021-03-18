@@ -34,7 +34,7 @@ extern "C"
         // char GatewayId[16];
         struct HylinkSendData Data;
     } HylinkDevSendData;
-    int hylinkDispatch(const char *str);
+    int hylinkDispatch(const char *str, const int str_len);
     int hylinkSend(void *ptr);
     int hylinkDelDev(const char *sn);
 

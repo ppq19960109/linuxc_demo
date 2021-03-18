@@ -11,6 +11,20 @@ int tcpClientConnect(int *fd, const char *addr, const short port)
     server.sin_addr.s_addr = inet_addr(addr); //ip地址
 
     *fd = Socket(AF_INET, SOCK_STREAM);
+
+    int buf_size = 0;
+    socklen_t optlen = sizeof(buf_size);
+    if (getsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &optlen) < 0)
+    {
+        printf("getsockopt error=%d(%s)!!!\n", errno, strerror(errno));
+    }
+    printf("getsockopt send success=%d\n", buf_size);
+    if (getsockopt(*fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &optlen) < 0)
+    {
+        printf("getsockopt error=%d(%s)!!!\n", errno, strerror(errno));
+    }
+    printf("getsockopt recv success=%d\n", buf_size);
+
     // Bind(*fd, (struct sockaddr *)&server, sizeof(struct sockaddr));
 
     if (Connect(*fd, (struct sockaddr *)&server, sizeof(struct sockaddr)) != 0)
@@ -28,6 +42,19 @@ int tcpServerListen(int *fd, const char *addr, const short port, int listenNum)
     sin.sin_port = htons(port);
 
     int lfd = *fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    int buf_size = 0;
+    socklen_t optlen = sizeof(buf_size);
+    if (getsockopt(*fd, SOL_SOCKET, SO_SNDBUF, &buf_size, &optlen) < 0)
+    {
+        printf("getsockopt error=%d(%s)!!!\n", errno, strerror(errno));
+    }
+    printf("getsockopt send success=%d\n", buf_size);
+    if (getsockopt(*fd, SOL_SOCKET, SO_RCVBUF, &buf_size, &optlen) < 0)
+    {
+        printf("getsockopt error=%d(%s)!!!\n", errno, strerror(errno));
+    }
+    printf("getsockopt recv success=%d\n", buf_size);
 
     int opt = 1;
     if (setsockopt(lfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) == -1)

@@ -89,6 +89,7 @@ int push_stream_open(const char *in_filename, const char *out_url)
 
             duration = (frame_rate.num && frame_rate.den ? av_q2d((AVRational){frame_rate.den, frame_rate.num}) : 0);
             printf("input stream frame num:%d,den:%d,duration:%f\n", frame_rate.num, frame_rate.den, duration);
+            printf("input stream time num:%d,den:%d,duration:%ld\n", in_stream->time_base.num, in_stream->time_base.den, in_stream->duration);
             if (rtp_stream)
                 rtp_stream = 2;
         }
@@ -120,13 +121,11 @@ int push_stream_open(const char *in_filename, const char *out_url)
             goto end;
         }
         out_stream->codecpar->codec_tag = 0;
+
         if (rtp_stream == 2)
             break;
     }
-    av_dump_format(ofmt_ctx, 0, out_url, 1);
-    // av_opt_set(ofmt_ctx->priv_data, "hls_time", "5", AV_OPT_SEARCH_CHILDREN);
-    // av_opt_set(ofmt_ctx->priv_data, "hls_list_size" ,"10" , AV_OPT_SEARCH_CHILDREN);
-    // av_opt_set(ofmt_ctx->priv_data, "hls_wrap", "5", AV_OPT_SEARCH_CHILDREN);
+
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE))
     {
         // TODO: 研究AVFMT_NOFILE标志
@@ -152,6 +151,7 @@ int push_stream_open(const char *in_filename, const char *out_url)
         printf("%s\n", sdp);
         printf("------------------\n");
     }
+
     // 3. 数据处理
     // 3.1 写输出文件头
     ret = avformat_write_header(ofmt_ctx, NULL);
@@ -160,6 +160,10 @@ int push_stream_open(const char *in_filename, const char *out_url)
         printf("Error occurred when opening output file,err2str:%s\n", av_err2str(ret));
         goto end;
     }
+    av_dump_format(ofmt_ctx, 0, out_url, 1);
+
+    printf("fmt output stream time num:%d,den:%d\n", ofmt_ctx->streams[0]->time_base.num, ofmt_ctx->streams[0]->time_base.den);
+
     AVPacket pkt;
     AVStream *in_stream, *out_stream;
     int frame = 0;
@@ -201,6 +205,7 @@ int push_stream_open(const char *in_filename, const char *out_url)
 
         pkt.stream_index = stream_mapping[pkt.stream_index];
         out_stream = ofmt_ctx->streams[pkt.stream_index];
+        printf("output stream:%d, time num:%d,den:%d\n", pkt.stream_index, out_stream->time_base.num, out_stream->time_base.den);
         /* copy packet */
         // 3.3 更新packet中的pts和dts
         // 关于AVStream.time_base(容器中的time_base)的说明：

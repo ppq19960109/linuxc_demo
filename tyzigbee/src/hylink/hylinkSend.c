@@ -13,6 +13,16 @@
 #include "hylinkRecv.h"
 #include "hylinkSend.h"
 
+static char hyLinkSendBuf[1024];
+int hylinkDispatch(const char *str, const int str_len)
+{
+    hyLinkSendBuf[0] = 0x02;
+    strncpy(&hyLinkSendBuf[1], str, str_len);
+    hyLinkSendBuf[str_len + 1] = 0x03;
+
+    return runTransferCb(hyLinkSendBuf, str_len + 2, TRANSFER_CLIENT_WRITE);
+}
+
 int hylinkSendFunc(HylinkSend *hylinkSend)
 {
     if (hylinkSend == NULL || hylinkSend->Data == NULL || hylinkSend->DataSize == 0)
@@ -44,12 +54,7 @@ int hylinkSendFunc(HylinkSend *hylinkSend)
     char *json = cJSON_PrintUnformatted(root);
     logInfo("hylink report json:%s\n", json);
 
-    char *reportBuf = (char *)getHylinkReportBuf();
-    int jsonLen = strlen(json);
-    reportBuf[0] = 0x02;
-    strncpy(&reportBuf[1], json, jsonLen);
-    reportBuf[jsonLen + 1] = 0x03;
-    int ret = runTransferCb(reportBuf, jsonLen + 2, TRANSFER_CLIENT_WRITE);
+    int ret = hylinkDispatch(json,strlen(json));
 
     cJSON_free(json);
     cJSON_Delete(root);
