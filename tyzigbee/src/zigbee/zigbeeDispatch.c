@@ -153,7 +153,7 @@ static int zigbeeZclCtrl(ZigbeeAttr *attr, ty_z3_aps_frame_s *frame, char *model
 
 static int zigbeeDevZclDispatch(zigbeeDev *zDev, ty_z3_aps_frame_s *frame, void *key, void *value)
 {
-    int i;
+    int i = 0;
     if (key == NULL)
     {
         for (i = 0; i < zDev->attrLen; ++i)
@@ -165,8 +165,8 @@ static int zigbeeDevZclDispatch(zigbeeDev *zDev, ty_z3_aps_frame_s *frame, void 
         }
         return 0;
     }
-    int hyKeyLen;
-    for (i = 0; i < zDev->attrLen; ++i)
+
+    for (int hyKeyLen, i = 0; i < zDev->attrLen; ++i)
     {
         hyKeyLen = strlen(zDev->attr[i].hyKey);
         if (strncmp(key, zDev->attr[i].hyKey, hyKeyLen) == 0)
@@ -219,10 +219,11 @@ int zigbeeZclDispatch(void *devId, void *modelId, void *key, void *value)
     frame.frame_type = Z3_FRAME_TYPE_UNICAST;
     frame.message = msg;
 
-    int res, i;
+    int res;
     res = zigbeeDevZclDispatch(zDev, &frame, key, value);
     if (res < 0)
     {
+        int i;
         for (i = 0; i < zDev->sceneAttrLen; ++i)
         {
             if (strcmp(key, zDev->sceneAttr[i].key) == 0)

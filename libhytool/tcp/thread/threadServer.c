@@ -17,7 +17,7 @@ void thread_list_del(ThreadTcpServer *threadTcpServer)
 
 void thread_list_for_each(void (*call_back)(ThreadTcpServer *), struct list_head *head)
 {
-    ThreadTcpServer *threadTcpServer;
+    ThreadTcpServer *threadTcpServer = NULL;
     list_for_each_entry(threadTcpServer, head, node)
     {
         call_back(threadTcpServer);
@@ -27,7 +27,7 @@ void thread_list_for_each(void (*call_back)(ThreadTcpServer *), struct list_head
 
 ThreadTcpServer *thread_list_get_by_fd(const int fd, struct list_head *head)
 {
-    ThreadTcpServer *threadTcpServer;
+    ThreadTcpServer *threadTcpServer = NULL;
     list_for_each_entry(threadTcpServer, head, node)
     {
         if (threadTcpServer->threadTcp.fd == fd)
@@ -86,7 +86,7 @@ int threadServerOpen(void)
     fd_set rfds, copy_fds;
     FD_ZERO(&rfds);
 
-    ThreadTcpServer *threadTcpServer;
+    ThreadTcpServer *threadTcpServer = NULL;
     list_for_each_entry(threadTcpServer, &threadServerList, node)
     {
         FD_SET(threadTcpServer->threadTcp.fd, &rfds);
@@ -98,12 +98,12 @@ int threadServerOpen(void)
     }
     copy_fds = rfds;
 
-    int i, n;
+    int i;
 
     while (1)
     {
         rfds = copy_fds;
-        n = select(maxfd + 1, &rfds, NULL, NULL, NULL);
+        int n = select(maxfd + 1, &rfds, NULL, NULL, NULL);
         if (n < 0)
         {
             perror("select error");

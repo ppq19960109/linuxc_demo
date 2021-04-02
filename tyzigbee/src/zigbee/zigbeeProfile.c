@@ -163,11 +163,12 @@ int readProfileFile(const char *path)
         return -1;
     }
     void *buf = malloc(statfile.st_size);
-    memset(buf, 0, statfile.st_size);
     if (buf == NULL)
     {
         goto fail;
     }
+    memset(buf, 0, statfile.st_size);
+
     int res = read(fd, buf, statfile.st_size);
     if (res != statfile.st_size)
     {

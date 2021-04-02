@@ -111,10 +111,10 @@ int addtriggers(const char *localSceneId, cJSON *triggersItems)
     if (triggersItemsSize == 0)
         return 0;
     cJSON *triggersArray = cJSON_CreateArray();
-    cJSON *triggersItemsSub;
+
     for (int i = 0; i < triggersItemsSize; ++i)
     {
-        triggersItemsSub = cJSON_GetArrayItem(triggersItems, i);
+        cJSON *triggersItemsSub = cJSON_GetArrayItem(triggersItems, i);
         if (triggersItemsSub == NULL)
             continue;
 
@@ -147,7 +147,7 @@ int addtriggers(const char *localSceneId, cJSON *triggersItems)
             cJSON_AddStringToObject(arrayItem, "StartHour", token);
             cJSON_AddStringToObject(arrayItem, "EndHour", token);
 
-            token = strsep(&timeStr, delim);
+            strsep(&timeStr, delim);
             token = strsep(&timeStr, delim);
 
             if (strcmp("*", token) == 0)
@@ -188,10 +188,9 @@ int addconditions(const char *localSceneId, cJSON *conditionsItems)
         return 0;
     cJSON *conditionsArray = cJSON_CreateArray();
 
-    cJSON *conditionsItemsSub;
     for (int i = 0; i < conditionsItemsSize; ++i)
     {
-        conditionsItemsSub = cJSON_GetArrayItem(conditionsItems, i);
+        cJSON *conditionsItemsSub = cJSON_GetArrayItem(conditionsItems, i);
         if (conditionsItemsSub == NULL)
             continue;
         cJSON *arrayItem = cJSON_CreateObject();
@@ -286,10 +285,10 @@ int addActions(const char *localSceneId, cJSON *actions)
             dispatchNum = actionsSize;
         }
         cJSON *actionsArray = cJSON_CreateArray();
-        cJSON *actionsSub;
+
         for (; i < dispatchNum; ++i)
         {
-            actionsSub = cJSON_GetArrayItem(actions, i);
+            cJSON *actionsSub = cJSON_GetArrayItem(actions, i);
             if (actionsSub == NULL)
                 continue;
 

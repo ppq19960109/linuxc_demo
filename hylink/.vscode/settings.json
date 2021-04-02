@@ -23,7 +23,9 @@
         "error_msg.h": "c",
         "action_list.h": "c",
         "scene_link_list.h": "c",
-        "scene.h": "c"
+        "scene.h": "c",
+        "hytool.h": "c",
+        "hylink.h": "c"
     },
     "python.formatting.provider": "yapf"
 }

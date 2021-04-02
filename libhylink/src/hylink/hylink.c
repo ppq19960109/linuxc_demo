@@ -6,7 +6,6 @@
 #include "cJSON.h"
 #include "commonFunc.h"
 #include "frameCb.h"
-#include "rkDriver.h"
 
 #include "hylink.h"
 #include "hylinkRecv.h"
@@ -16,6 +15,9 @@
 #include "logFunc.h"
 
 #include "hytool.h"
+#ifndef ARCH
+#include "rkDriver.h"
+#endif // !ARCH
 
 int hylinkInit(void)
 {
@@ -32,12 +34,18 @@ int hylinkClose(void)
     hytoolClose();
 
     hylinkListEmpty();
+#ifndef ARCH
     rkDriverClose();
+#endif // !ARCH
     return 0;
 }
 
 void hylinkOpen(void)
 {
+#ifndef ARCH
+    rkDriverOpen();
+#endif // !ARCH
+
     registerTransferCb(hylinkRecv, TRANSFER_CLIENT_READ);
     registerTransferCb(hylinkSendDevAttr, TRANSFER_DEVATTR);
     registerSystemCb(hylinkHeart, CMD_HEART);
@@ -45,6 +53,5 @@ void hylinkOpen(void)
     registerSystemCb(hylinkSendDevInfo, CMD_DEVSINFO);
 
     hylinkInit();
-    rkDriverOpen();
     hytoolOpen();
 }

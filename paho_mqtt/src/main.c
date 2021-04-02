@@ -15,6 +15,8 @@ int main(void)
   mqtt_client_open();
 
   hylinkOpen();
+
+  mqtt_client_publish("honyar/Report/12345678","test publush!!!!!!!!!!!!!");
   while (1)
   {
     sleep(1);

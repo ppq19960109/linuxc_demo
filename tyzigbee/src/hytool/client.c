@@ -13,7 +13,7 @@ static ThreadTcp threadTcp;
 
 static int recv(char *data, unsigned int len)
 {
-    printf("---recv:%d,%s ...\n", len, data);
+    printf("---recv:%u,%s ...\n", len, data);
     runTransferCb(data, len, TRANSFER_CLIENT_READ);
     return 0;
 }

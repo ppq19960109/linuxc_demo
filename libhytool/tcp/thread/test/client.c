@@ -9,7 +9,7 @@
 ThreadTcp threadTcp;
 int recv(char *data, unsigned int len)
 {
-    printf("---recv:%d,%s ...\n", len, data);
+    printf("---recv:%u,%s ...\n", len, data);
     threadClientSend(&threadTcp, data, len);
     return 0;
 }

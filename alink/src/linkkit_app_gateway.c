@@ -188,12 +188,12 @@ static int user_state_dev_bind(int ev, const char *msg)
 /** fota event handler **/
 static int user_fota_event_handler(int type, const char *version)
 {
-    char buffer[1024] = {0};
-    int buffer_length = 1024;
     user_example_ctx_t *user_example_ctx = user_example_get_ctx();
     /* 0 - new firmware exist, query the new firmware */
     if (type == 0)
     {
+        char buffer[1024] = {0};
+        int buffer_length = 1024;
         EXAMPLE_TRACE("New Firmware Version: %s", version);
 
         IOT_Linkkit_Query(user_example_ctx->master_devid, ITM_MSG_QUERY_FOTA_DATA, (unsigned char *)buffer, buffer_length);
@@ -270,7 +270,7 @@ int operate_gateway_info(char *device_name, char *device_secret, int flags)
 }
 size_t get_write_cb(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-    printf("get_write_cb size:%d,nmemb:%d\n", size, nmemb);
+    printf("get_write_cb size:%u,nmemb:%u\n", size, nmemb);
     printf("get_write_cb data:%s\n", (char *)ptr);
     iotx_linkkit_dev_meta_info_t *master_meta_info = (iotx_linkkit_dev_meta_info_t *)stream;
 

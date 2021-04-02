@@ -190,7 +190,6 @@ void cloudLinkDevFree(CloudLinkDev *dev)
 
     free(dev->eventAttr);
     free(dev);
-    dev = NULL;
 }
 
 KHASH_MAP_INIT_STR(cloudLink, CloudLinkDev *)

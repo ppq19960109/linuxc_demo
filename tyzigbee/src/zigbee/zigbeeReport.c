@@ -84,10 +84,9 @@ int zigbeeZclReport(void *zclFrame)
     }
 
     unsigned short attributeId;
-    unsigned char status;
     unsigned char dataType;
     unsigned char *value;
-    int shift = 0, i = 0;
+    int shift = 0;
     int dataTypeLen;
     if (frame->cmd_type == Z3_CMD_TYPE_PRIVATE)
     {
@@ -170,7 +169,7 @@ int zigbeeZclReport(void *zclFrame)
                 logInfo("READ_ATTRIBUTES_RESPONSE");
                 attributeId = frame->message[index + 0] + (frame->message[index + 1] << 8);
                 index += 2;
-                status = frame->message[index];
+                unsigned char status = frame->message[index];
                 index += 1;
                 if (status != 0)
                 {
@@ -206,7 +205,7 @@ int zigbeeZclReport(void *zclFrame)
         case WRITE_ATTRIBUTES_RESPONSE:
         {
             logInfo("WRITE_ATTRIBUTES_RESPONSE:");
-            for (i = 0; i < frame->msg_length; i++)
+            for (int i = 0; i < frame->msg_length; i++)
                 printf("%02x ", frame->message[i]);
             printf("\n");
         }

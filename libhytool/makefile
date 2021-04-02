@@ -1,9 +1,9 @@
-ifeq ($(VER), 0)
-CROSS_COMPILE =arm-rockchip-linux-gnueabihf-
-
-else
+ifeq ($(ARCH), u86)
 CROSS_COMPILE =/home/ppq/lede-toolchain-ramips-mt7688_gcc-5.4.0_musl-1.1.16.Linux-x86_64/toolchain-mipsel_24kc_gcc-5.4.0_musl-1.1.16/bin/mipsel-openwrt-linux-
-
+INSTALL = "install_u86"
+else
+CROSS_COMPILE =arm-rockchip-linux-gnueabihf-
+INSTALL = "install"
 endif
 
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
@@ -12,7 +12,7 @@ AR = ar -rcs
 CP = cp -a
 MV = mv
 MKDIR = mkdir -p
-INSTALL = "install"
+
 INSTALL_INCLUDE = "$(INSTALL)/include"
 INSTALL_LIB = "$(INSTALL)/lib"
 

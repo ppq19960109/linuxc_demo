@@ -6,13 +6,11 @@
 
 static int user_property_set_event_handler(const int devid, const char *request, const int request_len)
 {
-    int res = -1;
-
     EXAMPLE_TRACE("Property Set Received, Devid: %d, Request: %s", devid, request);
 
     // EXAMPLE_TRACE("Post Property Message ID: %d", res);
 
-    res = cloudLinkCtrl((void *)devid, request);
+    int res = cloudLinkCtrl((void *)devid, request);
     return res;
 }
 
@@ -42,12 +40,11 @@ static int user_property_get_event_handler(const int devid, const char *request,
 
     cJSON *send = cJSON_CreateObject();
 
-    cJSON *array_sub;
     int array_size = cJSON_GetArraySize(root);
 
     for (i = 0; i < array_size; i++)
     {
-        array_sub = cJSON_GetArrayItem(root, i);
+        cJSON *array_sub = cJSON_GetArrayItem(root, i);
         if (array_sub == NULL)
             continue;
 

@@ -171,8 +171,10 @@ reconnect:
         sleep(4);
         goto reconnect;
     }
+    
     if (mqtt_client_subscribe("honyar/Report/#") != MQTTCLIENT_SUCCESS)
         printf("mqtt_client_subscribe Report fail\n");
+
     sprintf(subscribe_topic, CTRL_TOPIC, gateway_mac);
     if (mqtt_client_subscribe(subscribe_topic) != MQTTCLIENT_SUCCESS)
         printf("mqtt_client_subscribe fail\n");

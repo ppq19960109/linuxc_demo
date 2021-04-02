@@ -71,14 +71,12 @@ void hylinkAnalyDevInfo(cJSON *root, cJSON *Data)
     }
     if (cJSON_HasObjectItem(Data, STR_PARAMS))
     {
-        int res;
-        cJSON *array_sub;
         cJSON *params = cJSON_GetObjectItem(Data, STR_PARAMS);
         int array_size = cJSON_GetArraySize(params);
         for (int i = 0; i < array_size; i++)
         {
-            array_sub = cJSON_GetArrayItem(params, i);
-            res = hylinkSubDevAttrUpdate(hyLinkDevBuf, array_sub);
+            cJSON * array_sub = cJSON_GetArrayItem(params, i);
+            int res = hylinkSubDevAttrUpdate(hyLinkDevBuf, array_sub);
             if (res < 0)
             {
                 if (res == -1)

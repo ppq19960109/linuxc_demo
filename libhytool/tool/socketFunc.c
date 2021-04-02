@@ -178,8 +178,7 @@ again:
 
 ssize_t Readn(int fd, void *vptr, size_t n)
 {
-    size_t nleft;  //usigned int 剩余未读取的字节数
-    ssize_t nread; //int 实际读到的字节数
+    size_t nleft; //usigned int 剩余未读取的字节数
     char *ptr;
 
     ptr = (char *)vptr;
@@ -187,7 +186,8 @@ ssize_t Readn(int fd, void *vptr, size_t n)
 
     while (nleft > 0)
     {
-        if ((nread = read(fd, ptr, nleft)) < 0)
+        ssize_t nread = read(fd, ptr, nleft); //int 实际读到的字节数
+        if (nread < 0)
         {
             if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) //被中断，一个都没有读
                 nread = 0;
@@ -209,14 +209,14 @@ ssize_t Readn(int fd, void *vptr, size_t n)
 ssize_t Writen(int fd, const void *vptr, size_t n)
 {
     size_t nleft;
-    ssize_t nwritten;
     const char *ptr;
 
     ptr = (char *)vptr;
     nleft = n;
     while (nleft > 0)
     {
-        if ((nwritten = write(fd, ptr, nleft)) <= 0)
+        ssize_t nwritten = write(fd, ptr, nleft);
+        if (nwritten <= 0)
         {
             if (nwritten < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK))
                 nwritten = 0;

@@ -1,24 +1,24 @@
 {
     "modelId": "_TYZB01_42x30fz4",
-    "productKey": "a1T6JIBWh5o",
-    "productSecret": "jxAGB21mg6lWwBtS",
+    "productKey": "a1upECow3ho",
+    "productSecret": "UmSkpnNraSlst70V",
     "deviceSecret": "",
     "devName": "三键智能开关U2",
     "deviceType": "0",
     "attr": [
         {
             "hyKey": "Switch_1",
-            "cloudKey": "powerstate_1",
+            "cloudKey": "PowerSwitch_1",
             "valueType": 0
         },
         {
             "hyKey": "Switch_2",
-            "cloudKey": "powerstate_2",
+            "cloudKey": "PowerSwitch_2",
             "valueType": 0
         },
         {
             "hyKey": "Switch_3",
-            "cloudKey": "powerstate_3",
+            "cloudKey": "PowerSwitch_3",
             "valueType": 0
         },
         {
@@ -30,6 +30,11 @@
             "hyKey": "PowerOffProtection",
             "cloudKey": "power_off_memory",
             "valueType": 0
+        },
+        {
+            "hyKey": "Version",
+            "cloudKey": "version",
+            "valueType": 2
         }
     ]
 }

@@ -23,7 +23,7 @@ int heartbeat(void)
     logDebug("heartbeat.........");
     time_t curTime = time(NULL);
 
-    HylinkDev *hyDev;
+    HylinkDev *hyDev = NULL;
     hyLink_kh_foreach_value(hyDev)
     {
         logWarn("hyLink_kh_foreach_value heartbeat");

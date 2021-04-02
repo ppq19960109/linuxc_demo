@@ -1,0 +1,14 @@
+prefix=/home/ppq/ffmpeg-4.2.4/_install
+exec_prefix=${prefix}
+libdir=/home/ppq/ffmpeg-4.2.4/_install/lib
+includedir=/home/ppq/ffmpeg-4.2.4/_install/include
+
+Name: libpostproc
+Description: FFmpeg postprocessing library
+Version: 55.5.100
+Requires: 
+Requires.private: libavutil >= 56.31.100
+Conflicts:
+Libs: -L${libdir}  -lpostproc 
+Libs.private: -lm
+Cflags: -I${includedir}

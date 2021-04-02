@@ -77,10 +77,10 @@ static int delScene(cJSON *ruleIds)
         int ruleIdsSize = cJSON_GetArraySize(ruleIds);
         if (ruleIdsSize == 0)
             return 0;
-        cJSON *ruleIdsSub;
+
         for (int i = 0; i < ruleIdsSize; ++i)
         {
-            ruleIdsSub = cJSON_GetArrayItem(ruleIds, i);
+            cJSON *ruleIdsSub = cJSON_GetArrayItem(ruleIds, i);
             if (ruleIdsSub == NULL)
                 continue;
             res = delete_single_scene(ruleIdsSub->valuestring);
@@ -101,10 +101,9 @@ static int triggerScene(cJSON *ruleIds)
 
     cJSON *delArray = cJSON_CreateArray();
 
-    cJSON *ruleIdsSub;
     for (int i = 0; i < ruleIdsSize; ++i)
     {
-        ruleIdsSub = cJSON_GetArrayItem(ruleIds, i);
+        cJSON *ruleIdsSub = cJSON_GetArrayItem(ruleIds, i);
         if (ruleIdsSub == NULL)
             continue;
         cJSON *arrayItem = cJSON_CreateObject();
@@ -123,13 +122,12 @@ static int addScene(const char *sceneId, cJSON *rules, const int isUpdate)
     cJSON *enable = cJSON_GetObjectItem(rules, "enable");
 
     //---------------------------------
-    cJSON *additionsSub, *params;
     cJSON *additions = cJSON_GetObjectItem(rules, "additions");
     int additionsSize = cJSON_GetArraySize(additions);
     if (additionsSize)
     {
-        additionsSub = cJSON_GetArrayItem(additions, 0);
-        params = cJSON_GetObjectItem(additionsSub, "params");
+        cJSON *additionsSub = cJSON_GetArrayItem(additions, 0);
+        cJSON *params = cJSON_GetObjectItem(additionsSub, "params");
         if (params != NULL)
         {
             delayTime = cJSON_GetObjectItem(params, "delayTime")->valueint;
@@ -296,12 +294,12 @@ int localScene(const int devid, const char *serviceid, const int serviceid_len, 
         logError("Type is NULL\n");
         goto fail;
     }
-    cJSON *sceneRequest;
+
     char buf[24] = {0};
     for (i = 1; i <= 9; ++i)
     {
         sprintf(buf, "Request_%d", i);
-        sceneRequest = cJSON_GetObjectItem(root, buf);
+        cJSON *sceneRequest = cJSON_GetObjectItem(root, buf);
         if (sceneRequest == NULL)
         {
             logError("sceneRequest is NULL\n");

@@ -5,8 +5,8 @@
 int systemRun(const char *cmdline)
 {
     printf("systemRun cmdline = %s\n", cmdline);
-    int ret = -1;
-    ret = system(cmdline);
+
+    int ret = system(cmdline);
     if (ret < 0)
     {
         printf("console_run cmdline failed: %s\n", cmdline);

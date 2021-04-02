@@ -9,7 +9,7 @@
 struct EpollTcpEvent myevents;
 int recv(char *data, unsigned int len)
 {
-    printf("---recv:%d,%s ...\n", len, data);
+    printf("---recv:%u,%s ...\n", len, data);
     epollClientSend(&myevents, data, len);
     return 0;
 }

@@ -98,10 +98,10 @@ void *hyLinkParseJson(const char *devId, const char *str)
     strcpy(dev->modelId, modelId->valuestring);
     dev->online = SUBDEV_ONLINE;
 
-    cJSON *arraySub, *hyKey, *valueType, *repeat;
+    cJSON *hyKey, *valueType, *repeat;
     for (int i = 0; i < arraySize; i++)
     {
-        arraySub = cJSON_GetArrayItem(attr, i);
+        cJSON *arraySub = cJSON_GetArrayItem(attr, i);
         if (arraySub == NULL)
             continue;
 
@@ -149,11 +149,12 @@ void *addProfileDev(const char *path, const char *devId, const char *modelId, vo
         return NULL;
     }
     void *buf = malloc(statfile.st_size);
-    memset(buf, 0, statfile.st_size);
     if (buf == NULL)
     {
         goto fail;
     }
+    memset(buf, 0, statfile.st_size);
+
     int res = read(fd, buf, statfile.st_size);
     if (res != statfile.st_size)
     {
@@ -187,7 +188,6 @@ void hyLinkDevFree(HyLinkDev *dev)
     }
     free(dev->attr);
     free(dev);
-    dev = NULL;
 }
 
 KHASH_MAP_INIT_STR(hyLink, HyLinkDev *)

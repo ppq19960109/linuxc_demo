@@ -1,0 +1,32 @@
+{
+    "modelId": "_TYZB01_i8yav3hg",
+    "devName": "二键智能开关U2",
+    "deviceType": "0",
+    "attr": [
+        {
+            "hyKey": "Version",
+            "valueType": 2,
+            "repeat": 0
+        },
+        {
+            "hyKey": "Switch_1",
+            "valueType": 0,
+            "repeat": 0
+        },
+        {
+            "hyKey": "Switch_2",
+            "valueType": 0,
+            "repeat": 0
+        },
+        {
+            "hyKey": "LedEnable",
+            "valueType": 0,
+            "repeat": 0
+        },
+        {
+            "hyKey": "PowerOffProtection",
+            "valueType": 0,
+            "repeat": 0
+        }
+    ]
+}

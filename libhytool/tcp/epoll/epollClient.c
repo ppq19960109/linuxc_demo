@@ -23,7 +23,7 @@ int epollClientSend(struct EpollTcpEvent *myevents, void *send, unsigned int len
     // pthread_mutex_lock(&myevents->mutex);
     myevents->send_len = Send(myevents->fd, send, len, 0);
     // pthread_mutex_unlock(&myevents->mutex);
-#elif
+#else
     pthread_mutex_lock(&myevents->mutex);
 
     myevents->events |= EPOLLOUT;

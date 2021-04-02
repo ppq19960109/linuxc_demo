@@ -5,6 +5,7 @@
 #include "logFunc.h"
 #include "commonFunc.h"
 #include "base64.h"
+#ifndef ARCH
 #include "python3.6m/Python.h"
 
 void cpythonInit(void)
@@ -33,11 +34,9 @@ int hyLinkConver(const char *modelId, const char *key, const char *dir, char *in
         strcpy(hkey, key);
     }
     //导入python源文件
-    PyObject *pname = NULL;
-    pname = PyUnicode_FromString(modelId);
+    PyObject *pname = PyUnicode_FromString(modelId);
 
-    PyObject *pmodule = NULL;
-    pmodule = PyImport_Import(pname);
+    PyObject *pmodule = PyImport_Import(pname);
     if (pmodule == NULL)
     {
         printf("can not find %s.py\n", modelId);
@@ -54,15 +53,12 @@ int hyLinkConver(const char *modelId, const char *key, const char *dir, char *in
         goto fail_pfunc;
     }
 
-    PyObject *pArgs = NULL;
-    PyObject *pRetVal = NULL;
-
-    pArgs = PyTuple_New(2);
+    PyObject *pArgs = PyTuple_New(2);
 
     PyTuple_SetItem(pArgs, 0, Py_BuildValue("s", in));
     PyTuple_SetItem(pArgs, 1, Py_BuildValue("i", inLen));
     //调用函数
-    pRetVal = PyObject_CallObject(pfunc, pArgs);
+    PyObject *pRetVal = PyObject_CallObject(pfunc, pArgs);
     if (pRetVal == NULL)
     {
         printf("PyObject_CallObject error\n");
@@ -93,7 +89,7 @@ fail_pmodule:
     Py_Finalize();
     return -1;
 }
-
+#if 0
 int pythonTest()
 {
     printf("main start\n");
@@ -120,3 +116,9 @@ int pythonTest()
     free(encode_out);
     return 0;
 }
+#endif // 0
+#else
+void cpythonInit(void) {}
+void cpythonDestroy(void) {}
+int hyLinkConver(const char *modelId, const char *key, const char *dir, char *in, int inLen, char *out, int *outLen) { return 0; }
+#endif // !ARCH
