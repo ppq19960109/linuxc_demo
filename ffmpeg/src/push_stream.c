@@ -1,16 +1,24 @@
-#include <time.h>
+#include <libavcodec/avcodec.h>
+
+#include <libavformat/avformat.h>
+
+#include <libswresample/swresample.h>
+
+#include <libavutil/imgutils.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/timestamp.h>
+#include <libavutil/opt.h>
+#include <libavutil/time.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-// #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdbool.h>
 
-#include "push_stream.h"
-
-int push_stream_open(const char *in_filename, const char *out_url)
+int file_push_stream(const char *in_filename, const char *out_url)
 {
     printf("in_filename:%s,out_url:%s\n", in_filename, out_url);
     int ret, i;
@@ -38,7 +46,6 @@ int push_stream_open(const char *in_filename, const char *out_url)
     char *ofmt_name = NULL;
     if (strstr(out_url, "rtmp://") != NULL)
     {
-        // ofmt_name = "hls";
         ofmt_name = "flv";
     }
     else if (strstr(out_url, "udp://") != NULL)
@@ -121,6 +128,14 @@ int push_stream_open(const char *in_filename, const char *out_url)
             printf("Failed to copy codec parameters\n");
             goto end;
         }
+        printf("%ld\n", out_stream->codecpar->bit_rate);
+        printf("%d\n", out_stream->codecpar->codec_id);
+        printf("%d\n", out_stream->codecpar->width);
+        printf("%d\n", out_stream->codecpar->height);
+        printf("%d\n", out_stream->codecpar->format);
+        printf("%d\n", out_stream->codecpar->level);
+        printf("%d\n", out_stream->codecpar->codec_type);
+        printf("%d\n", out_stream->codecpar->profile);
         out_stream->codecpar->codec_tag = 0;
 
         if (rtp_stream == 2)
@@ -163,8 +178,6 @@ int push_stream_open(const char *in_filename, const char *out_url)
     }
     av_dump_format(ofmt_ctx, 0, out_url, 1);
 
-    printf("fmt output stream time num:%d,den:%d\n", ofmt_ctx->streams[0]->time_base.num, ofmt_ctx->streams[0]->time_base.den);
-
     AVPacket pkt;
     AVStream *in_stream, *out_stream;
     int frame = 0;
@@ -206,7 +219,6 @@ int push_stream_open(const char *in_filename, const char *out_url)
 
         pkt.stream_index = stream_mapping[pkt.stream_index];
         out_stream = ofmt_ctx->streams[pkt.stream_index];
-        printf("output stream:%d, time num:%d,den:%d\n", pkt.stream_index, out_stream->time_base.num, out_stream->time_base.den);
         /* copy packet */
         // 3.3 更新packet中的pts和dts
         // 关于AVStream.time_base(容器中的time_base)的说明：
@@ -215,12 +227,11 @@ int push_stream_open(const char *in_filename, const char *out_url)
         // AVPacket.pts和AVPacket.dts的单位是AVStream.time_base，不同的封装格式AVStream.time_base不同
         // 所以输出文件中，每个packet需要根据输出封装格式重新计算pts和dts
 
-        printf("pkt1 pts:%ld,dts:%ld,duration:%ld\n", pkt.pts, pkt.dts, pkt.duration);
+        printf("input pkt pts:%ld,dts:%ld,duration:%ld\n", pkt.pts, pkt.dts, pkt.duration);
         av_packet_rescale_ts(&pkt, in_stream->time_base, out_stream->time_base);
         pkt.pos = -1;
-        printf("pkt2 pts:%ld,dts:%ld,duration:%ld\n", pkt.pts, pkt.dts, pkt.duration);
-        printf("input stream time num:%d,den:%d\n", in_stream->time_base.num, in_stream->time_base.den);
-        printf("output stream time num:%d,den:%d\n", out_stream->time_base.num, out_stream->time_base.den);
+        printf("output pkt pts:%ld,dts:%ld,duration:%ld\n", pkt.pts, pkt.dts, pkt.duration);
+        // printf("output stream time num:%d,den:%d\n", out_stream->time_base.num, out_stream->time_base.den);
         // 3.4 将packet写入输出
         ret = av_interleaved_write_frame(ofmt_ctx, &pkt);
         if (ret < 0)
@@ -251,5 +262,19 @@ end:
         return -1;
     }
 
+    return 0;
+}
+
+int main1(int argc, char **argv)
+{
+    printf("ffmpeg push stream start...\n");
+    if (argc <= 2)
+    {
+        fprintf(stderr, "Usage: %s <input file> <output url>\n", argv[0]);
+        exit(0);
+    }
+
+    file_push_stream(argv[1], argv[2]);
+    printf("ffmpeg push stream end...\n");
     return 0;
 }
