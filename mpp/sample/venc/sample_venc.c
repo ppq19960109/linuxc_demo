@@ -1034,21 +1034,21 @@ HI_S32 SAMPLE_VENC_H265_H264(void)
     /******************************************
      stream save process
     ******************************************/
-    s32Ret = SAMPLE_COMM_VENC_StartGetStream(VencChn,s32ChnNum);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("Start Venc failed!\n");
-        goto EXIT_VENC_H264_UnBind;
-    }
+    // s32Ret = SAMPLE_COMM_VENC_StartGetStream(VencChn,s32ChnNum);
+    // if (HI_SUCCESS != s32Ret)
+    // {
+    //     SAMPLE_PRT("Start Venc failed!\n");
+    //     goto EXIT_VENC_H264_UnBind;
+    // }
 
     printf("please press twice ENTER to exit this sample\n");
-    getchar();
-    getchar();
+    // getchar();
+    // getchar();
 
     /******************************************
      exit process
     ******************************************/
-    SAMPLE_COMM_VENC_StopGetStream();
+    // SAMPLE_COMM_VENC_StopGetStream();
 
 EXIT_VENC_H264_UnBind:
     SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[1],VencChn[1]);
