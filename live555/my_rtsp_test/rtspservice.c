@@ -35,17 +35,17 @@ pthread_mutex_t mut;
 #define RTSP_RTP_AVP "RTP/AVP"
 
 
-struct profileid_sps_pps psp; //´æbase64±àÂëµÄprofileid sps pps
+struct profileid_sps_pps psp; //å­˜base64ç¼–ç çš„profileid sps pps
 
 StServPrefs stPrefs;
 extern int num_conn;
-int g_s32Maxfd = 0;//×î´óÂÖÑ¯idºÅ
+int g_s32Maxfd = 0;//æœ€å¤§è½®è¯¢idå·
 int g_s32DoPlay = 0;
 
 uint32_t s_u32StartPort=RTP_DEFAULT_PORT;
-uint32_t s_uPortPool[MAX_CONNECTION];//RTP¶Ë¿Ú
+uint32_t s_uPortPool[MAX_CONNECTION];//RTPç«¯å£
 extern int stop_schedule;
-int g_s32Quit = 0;//ÍË³öÈ«¾Ö±äÁ¿
+int g_s32Quit = 0;//é€€å‡ºå…¨å±€å˜é‡
 
 void RTP_port_pool_init(int port);
 int UpdateSpsOrPps(unsigned char *data,int frame_type,int len);
@@ -57,7 +57,7 @@ int UpdateSpsOrPps(unsigned char *data,int frame_type,int len);
 void PrefsInit()
 {
 	int l;
-	//ÉèÖÃ·şÎñÆ÷ĞÅÏ¢È«¾Ö±äÁ¿
+	//è®¾ç½®æœåŠ¡å™¨ä¿¡æ¯å…¨å±€å˜é‡
 	stPrefs.port = SERVER_RTSP_PORT_DEFAULT;
 
 	gethostname(stPrefs.hostname,sizeof(stPrefs.hostname));
@@ -81,7 +81,7 @@ void PrefsInit()
 **
 **
 **************************************************************************************************/
-//Îª»º³å·ÖÅä¿Õ¼ä
+//ä¸ºç¼“å†²åˆ†é…ç©ºé—´
 void RTSP_initserver(RTSP_buffer *rtsp, int fd)
 {
     rtsp->fd = fd;
@@ -93,7 +93,7 @@ void RTSP_initserver(RTSP_buffer *rtsp, int fd)
 **
 **
 **************************************************************************************************/
-//ÎªRTP×¼±¸Á½¸ö¶Ë¿Ú
+//ä¸ºRTPå‡†å¤‡ä¸¤ä¸ªç«¯å£
 int RTP_get_port_pair(port_pair *pair)
 {
     int i;
@@ -123,10 +123,10 @@ void AddClient(RTSP_buffer **ppRtspList, int fd)
     fprintf(stderr, "%s, %d\n", __FUNCTION__, __LINE__);
 #endif
 
-    //ÔÚÁ´±íÍ·²¿²åÈëµÚÒ»¸öÔªËØ
+    //åœ¨é“¾è¡¨å¤´éƒ¨æ’å…¥ç¬¬ä¸€ä¸ªå…ƒç´ 
     if (*ppRtspList==NULL)
     {
-        /*·ÖÅä¿Õ¼ä*/
+        /*åˆ†é…ç©ºé—´*/
         if ( !(*ppRtspList=(RTSP_buffer*)calloc(1,sizeof(RTSP_buffer)) ) )
         {
             fprintf(stderr,"alloc memory error %s,%i\n", __FILE__, __LINE__);
@@ -136,12 +136,12 @@ void AddClient(RTSP_buffer **ppRtspList, int fd)
     }
     else
     {
-    	//ÏòÁ´±íÖĞ²åÈëĞÂµÄÔªËØ
+    	//å‘é“¾è¡¨ä¸­æ’å…¥æ–°çš„å…ƒç´ 
         for (pRtsp=*ppRtspList; pRtsp!=NULL; pRtsp=pRtsp->next)
         {
         	pRtspNew=pRtsp;
         }
-        /*ÔÚÁ´±íÎ²²¿²åÈë*/
+        /*åœ¨é“¾è¡¨å°¾éƒ¨æ’å…¥*/
         if (pRtspNew!=NULL)
         {
         	if ( !(pRtspNew->next=(RTSP_buffer *)calloc(1,sizeof(RTSP_buffer)) ) )
@@ -154,13 +154,13 @@ void AddClient(RTSP_buffer **ppRtspList, int fd)
         }
     }
 
-    //ÉèÖÃ×î´óÂÖÑ¯idºÅ
+    //è®¾ç½®æœ€å¤§è½®è¯¢idå·
     if(g_s32Maxfd < fd)
     {
     	g_s32Maxfd = fd;
     }
 
-    /*³õÊ¼»¯ĞÂÌí¼ÓµÄ¿Í»§¶Ë*/
+    /*åˆå§‹åŒ–æ–°æ·»åŠ çš„å®¢æˆ·ç«¯*/
     RTSP_initserver(pRtsp,fd);
     fprintf(stderr,"Incoming RTSP connection accepted on socket: %d\n",pRtsp->fd);
 
@@ -170,7 +170,7 @@ void AddClient(RTSP_buffer **ppRtspList, int fd)
 **
 **
 **************************************************************************************************/
-/*¸ù¾İ»º³åÇøµÄÄÚÈİ£¬Ìî³äºó±ßÁ½¸ö³¤¶ÈÊı¾İ,¼ì²é»º³åÇøÖĞÏûÏ¢µÄÍêÕûĞÔ
+/*æ ¹æ®ç¼“å†²åŒºçš„å†…å®¹ï¼Œå¡«å……åè¾¹ä¸¤ä¸ªé•¿åº¦æ•°æ®,æ£€æŸ¥ç¼“å†²åŒºä¸­æ¶ˆæ¯çš„å®Œæ•´æ€§
  * return -1 on ERROR
  * return RTSP_not_full (0) if a full RTSP message is NOT present in the in_buffer yet.
  * return RTSP_method_rcvd (1) if a full RTSP message is present in the in_buffer and is
@@ -190,12 +190,12 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
     int control;
     char *p;
 
-    /*ÊÇ·ñ´æÔÚ½»²æ´æÈ¡µÄ¶ş½øÖÆrtp/rtcpÊı¾İ°ü£¬²Î¿¼RFC2326-10.12*/
+    /*æ˜¯å¦å­˜åœ¨äº¤å‰å­˜å–çš„äºŒè¿›åˆ¶rtp/rtcpæ•°æ®åŒ…ï¼Œå‚è€ƒRFC2326-10.12*/
     if (rtsp->in_buffer[0] == '$')
     {
-    	uint16_t *intlvd_len = (uint16_t *)&rtsp->in_buffer[2];   /*Ìø¹ıÍ¨µÀ±êÖ¾·û*/
+    	uint16_t *intlvd_len = (uint16_t *)&rtsp->in_buffer[2];   /*è·³è¿‡é€šé“æ ‡å¿—ç¬¦*/
 
-        /*×ª»¯ÎªÖ÷»ú×Ö½ÚĞò£¬ÒòÎª³¤¶ÈÊÇÍøÂç×Ö½ÚĞò*/
+        /*è½¬åŒ–ä¸ºä¸»æœºå­—èŠ‚åºï¼Œå› ä¸ºé•¿åº¦æ˜¯ç½‘ç»œå­—èŠ‚åº*/
         if ( (bl = ntohs(*intlvd_len)) <= rtsp->in_size)
         {
         	fprintf(stderr,"Interleaved RTP or RTCP packet arrived (len: %hu).\n", bl);
@@ -207,7 +207,7 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
         }
         else
         {
-            /*»º³åÇø²»ÄÜÍêÈ«´æ·ÅÊı¾İ*/
+            /*ç¼“å†²åŒºä¸èƒ½å®Œå…¨å­˜æ”¾æ•°æ®*/
             fprintf(stderr,"Non-complete Interleaved RTP or RTCP packet arrived.\n");
             return RTSP_not_full;
         }
@@ -219,7 +219,7 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
     while (ml <= rtsp->in_size)
     {
         /* look for eol. */
-        /*¼ÆËã²»°üº¬»Ø³µ¡¢»»ĞĞÔÚÄÚµÄËùÓĞ×Ö·ûÊı*/
+        /*è®¡ç®—ä¸åŒ…å«å›è½¦ã€æ¢è¡Œåœ¨å†…çš„æ‰€æœ‰å­—ç¬¦æ•°*/
         control = strcspn(&(rtsp->in_buffer[ml]), "\r\n");
         if(control > 0)
             ml += control;
@@ -231,17 +231,17 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
             return RTSP_not_full;
 
 
-        /* ´¦ÀíÖÕ½á·û£¬ÅĞ¶ÁÊÇ·ñÊÇÏûÏ¢Í·µÄ½áÊø*/
+        /* å¤„ç†ç»ˆç»“ç¬¦ï¼Œåˆ¤è¯»æ˜¯å¦æ˜¯æ¶ˆæ¯å¤´çš„ç»“æŸ*/
         tc = ws = 0;
         while (!eomh && ((ml + tc + ws) < rtsp->in_size))
         {
             c = rtsp->in_buffer[ml + tc + ws];
-            /*Í³¼Æ»Ø³µ»»ĞĞ*/
+            /*ç»Ÿè®¡å›è½¦æ¢è¡Œ*/
             if (c == '\r' || c == '\n')
                 tc++;
             else if ((tc < 3) && ((c == ' ') || (c == '\t')))
             {
-                ws++;                 /*»Ø³µ¡¢»»ĞĞÖ®¼äµÄ¿Õ¸ñ»òÕßTAB£¬Ò²ÊÇ¿ÉÒÔ½ÓÊÜµÄ */
+                ws++;                 /*å›è½¦ã€æ¢è¡Œä¹‹é—´çš„ç©ºæ ¼æˆ–è€…TABï¼Œä¹Ÿæ˜¯å¯ä»¥æ¥å—çš„ */
             }
             else
             {
@@ -250,11 +250,11 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
         }
 
         /*
-         *Ò»¶Ô»Ø³µ¡¢»»ĞĞ·û½ö½ö±»Í³¼ÆÎªÒ»¸öĞĞÖÕ½á·û
-         * Ë«ĞĞ¿ÉÒÔ±»½ÓÊÜ£¬²¢½«ÆäÈÏÎªÊÇÏûÏ¢Í·µÄ½áÊø±êÊ¶
-         * ÕâÓëRFC2068ÖĞµÄÃèÊöÒ»ÖÂ£¬²Î¿¼rfc2068 19.3
-         *·ñÔò£¬¶ÔËùÓĞµÄHTTP/1.1¼æÈİĞ­ÒéÏûÏ¢ÔªËØÀ´Ëµ£¬
-         *»Ø³µ¡¢»»ĞĞ±»ÈÏÎªÊÇºÏ·¨µÄĞĞÖÕ½á·û
+         *ä¸€å¯¹å›è½¦ã€æ¢è¡Œç¬¦ä»…ä»…è¢«ç»Ÿè®¡ä¸ºä¸€ä¸ªè¡Œç»ˆç»“ç¬¦
+         * åŒè¡Œå¯ä»¥è¢«æ¥å—ï¼Œå¹¶å°†å…¶è®¤ä¸ºæ˜¯æ¶ˆæ¯å¤´çš„ç»“æŸæ ‡è¯†
+         * è¿™ä¸RFC2068ä¸­çš„æè¿°ä¸€è‡´ï¼Œå‚è€ƒrfc2068 19.3
+         *å¦åˆ™ï¼Œå¯¹æ‰€æœ‰çš„HTTP/1.1å…¼å®¹åè®®æ¶ˆæ¯å…ƒç´ æ¥è¯´ï¼Œ
+         *å›è½¦ã€æ¢è¡Œè¢«è®¤ä¸ºæ˜¯åˆæ³•çš„è¡Œç»ˆç»“ç¬¦
          */
 
         /* must be the end of the message header */
@@ -264,24 +264,24 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
 
         if (eomh)
         {
-            ml += bl;   /* ¼ÓÈëÏûÏ¢Ìå³¤¶È */
+            ml += bl;   /* åŠ å…¥æ¶ˆæ¯ä½“é•¿åº¦ */
             if (ml <= rtsp->in_size)
             	break;  /* all done finding the end of the message. */
         }
 
         if (ml >= rtsp->in_size)
-            return RTSP_not_full;   /* »¹Ã»ÓĞÍêÈ«½ÓÊÕÏûÏ¢ */
+            return RTSP_not_full;   /* è¿˜æ²¡æœ‰å®Œå…¨æ¥æ”¶æ¶ˆæ¯ */
 
-        /*¼ì²éÃ¿Ò»ĞĞµÄµÚÒ»¸ö¼ÇºÅ£¬È·¶¨ÊÇ·ñÓĞÏûÏ¢Ìå´æÔÚ */
+        /*æ£€æŸ¥æ¯ä¸€è¡Œçš„ç¬¬ä¸€ä¸ªè®°å·ï¼Œç¡®å®šæ˜¯å¦æœ‰æ¶ˆæ¯ä½“å­˜åœ¨ */
         if (!mb)
         {
             /* content length token not yet encountered. */
             if (!strncmp(&(rtsp->in_buffer[ml]), HDR_CONTENTLENGTH, strlen(HDR_CONTENTLENGTH)))
             {
-                mb = 1;                        /* ´æÔÚÏûÏ¢Ìå. */
+                mb = 1;                        /* å­˜åœ¨æ¶ˆæ¯ä½“. */
                 ml += strlen(HDR_CONTENTLENGTH);
 
-                /*Ìø¹ı:ºÍ¿Õ¸ñ£¬ÕÒµ½³¤¶È×Ö¶Î*/
+                /*è·³è¿‡:å’Œç©ºæ ¼ï¼Œæ‰¾åˆ°é•¿åº¦å­—æ®µ*/
                 while (ml < rtsp->in_size)
                 {
                     c = rtsp->in_buffer[ml];
@@ -290,7 +290,7 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
                     else
                         break;
                 }
-                //Content-Length:ºóÃæÊÇÏûÏ¢Ìå³¤¶ÈÖµ
+                //Content-Length:åé¢æ˜¯æ¶ˆæ¯ä½“é•¿åº¦å€¼
                 if (sscanf(&(rtsp->in_buffer[ml]), "%d", &bl) != 1)
                 {
                     fprintf(stderr,"RTSP_full_msg_rcvd(): Invalid ContentLength encountered in message.\n");
@@ -310,7 +310,7 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
      * following the body part of the message.  It is probably not strictly
      * legal when the null byte is not included in the Content-Length count.
      * However, it is tolerated here.
-     * ¼õÈ¥¿ÉÄÜ´æÔÚµÄ\0£¬ËüÃ»ÓĞ±»¼ÆËãÔÚContent-LengthÖĞ
+     * å‡å»å¯èƒ½å­˜åœ¨çš„\0ï¼Œå®ƒæ²¡æœ‰è¢«è®¡ç®—åœ¨Content-Lengthä¸­
      */
         for (tc = rtsp->in_size - ml, p = &(rtsp->in_buffer[ml]); tc && (*p == '\0'); p++, bl++, tc--);
             *body_len = bl;
@@ -324,8 +324,8 @@ int RTSP_full_msg_rcvd(RTSP_buffer *rtsp, int *hdr_len, int *body_len)
 **
 **************************************************************************************************/
 /*
- * return	0 ÊÇ¿Í»§¶Ë·¢ËÍµÄÇëÇó
- *			1 ÊÇ·şÎñÆ÷·µ»ØµÄÏìÓ¦
+ * return	0 æ˜¯å®¢æˆ·ç«¯å‘é€çš„è¯·æ±‚
+ *			1 æ˜¯æœåŠ¡å™¨è¿”å›çš„å“åº”
  */
 int RTSP_valid_response_msg(unsigned short *status, RTSP_buffer * rtsp)
 {
@@ -337,10 +337,10 @@ int RTSP_valid_response_msg(unsigned short *status, RTSP_buffer * rtsp)
     /* assuming "stat" may not be zero (probably faulty) */
     stat = 0;
 
-    /*´ÓÏûÏ¢ÖĞÌî³äÊı¾İ*/
+    /*ä»æ¶ˆæ¯ä¸­å¡«å……æ•°æ®*/
     pcnt = sscanf(rtsp->in_buffer, " %31s %u %s %s %u\n%*255s ", ver, &stat, trash, trash, &seq);
 
-    /* Í¨¹ıÆğÊ¼×Ö·û£¬¼ì²éĞÅÏ¢ÊÇ¿Í»§¶Ë·¢ËÍµÄÇëÇó»¹ÊÇ·şÎñÆ÷×ö³öµÄÏìÓ¦*/
+    /* é€šè¿‡èµ·å§‹å­—ç¬¦ï¼Œæ£€æŸ¥ä¿¡æ¯æ˜¯å®¢æˆ·ç«¯å‘é€çš„è¯·æ±‚è¿˜æ˜¯æœåŠ¡å™¨åšå‡ºçš„å“åº”*/
     /* C->S CMD rtsp://IP:port/suffix RTSP/1.0\r\n			|head
      * 		CSeq: 1 \r\n									|
      * 		Content_Length:**								|body
@@ -349,19 +349,19 @@ int RTSP_valid_response_msg(unsigned short *status, RTSP_buffer * rtsp)
      * 		Date:....
       */
     if (strncmp(ver, "RTSP/", 5))
-        return 0;   /*²»ÊÇÏìÓ¦ÏûÏ¢£¬ÊÇ¿Í»§¶ËÇëÇóÏûÏ¢£¬·µ»Ø*/
+        return 0;   /*ä¸æ˜¯å“åº”æ¶ˆæ¯ï¼Œæ˜¯å®¢æˆ·ç«¯è¯·æ±‚æ¶ˆæ¯ï¼Œè¿”å›*/
 
-    /*È·ĞÅÖÁÉÙ´æÔÚ°æ±¾¡¢×´Ì¬Âë¡¢ĞòÁĞºÅ*/
+    /*ç¡®ä¿¡è‡³å°‘å­˜åœ¨ç‰ˆæœ¬ã€çŠ¶æ€ç ã€åºåˆ—å·*/
     if (pcnt < 3 || stat == 0)
-        return 0;            /* ±íÊ¾²»ÊÇÒ»¸öÏìÓ¦ÏûÏ¢   */
+        return 0;            /* è¡¨ç¤ºä¸æ˜¯ä¸€ä¸ªå“åº”æ¶ˆæ¯   */
 
-    /*Èç¹û°æ±¾²»¼æÈİ£¬ÔÚ´Ë´¦Ôö¼ÓÂëÀ´¾Ü¾ø¸ÃÏûÏ¢*/
+    /*å¦‚æœç‰ˆæœ¬ä¸å…¼å®¹ï¼Œåœ¨æ­¤å¤„å¢åŠ ç æ¥æ‹’ç»è¯¥æ¶ˆæ¯*/
 
-    /*¼ì²é»Ø¸´ÏûÏ¢ÖĞµÄĞòÁĞºÅÊÇ·ñºÏ·¨*/
+    /*æ£€æŸ¥å›å¤æ¶ˆæ¯ä¸­çš„åºåˆ—å·æ˜¯å¦åˆæ³•*/
     if (rtsp->rtsp_cseq != seq + 1)
     {
         fprintf(stderr,"Invalid sequence number returned in response.\n");
-        return ERR_GENERIC;    /*ĞòÁĞºÅ´íÎó£¬·µ»Ø*/
+        return ERR_GENERIC;    /*åºåˆ—å·é”™è¯¯ï¼Œè¿”å›*/
     }
 
     *status = stat;
@@ -372,7 +372,7 @@ int RTSP_valid_response_msg(unsigned short *status, RTSP_buffer * rtsp)
 **
 **
 **************************************************************************************************/
-//·µ»ØÇëÇó·½·¨ÀàĞÍ£¬³ö´í·µ»Ø-1
+//è¿”å›è¯·æ±‚æ–¹æ³•ç±»å‹ï¼Œå‡ºé”™è¿”å›-1
 int RTSP_validate_method(RTSP_buffer * pRtsp)
 {
     char method[32], hdr[16];
@@ -381,14 +381,14 @@ int RTSP_validate_method(RTSP_buffer * pRtsp)
     unsigned int seq;
     int pcnt;   /* parameter count */
     int mid = ERR_GENERIC;
-	char *p; //=======Ôö¼Ó
-	char trash[255];   //===Ôö¼Ó
+	char *p; //=======å¢åŠ 
+	char trash[255];   //===å¢åŠ 
 
     *method = *object = '\0';
     seq = 0;
 
 	printf("");
-    /*°´ÕÕÇëÇóÏûÏ¢µÄ¸ñÊ½½âÎöÏûÏ¢µÄµÚÒ»ĞĞ*/
+    /*æŒ‰ç…§è¯·æ±‚æ¶ˆæ¯çš„æ ¼å¼è§£ææ¶ˆæ¯çš„ç¬¬ä¸€è¡Œ*/
 //    if ( (pcnt = sscanf(pRtsp->in_buffer, " %31s %255s %31s\n%15s", method, object, ver, hdr, &seq)) != 5){
 	if ( (pcnt = sscanf(pRtsp->in_buffer, " %31s %255s %31s\n%15s", method, object, ver, hdr)) != 4){
 		printf("========\n%s\n==========\n",pRtsp->in_buffer);
@@ -400,14 +400,14 @@ int RTSP_validate_method(RTSP_buffer * pRtsp)
 	}
 	
 
-    /*Èç¹ûÃ»ÓĞÍ·±ê¼Ç£¬Ôò´íÎó*/
+    /*å¦‚æœæ²¡æœ‰å¤´æ ‡è®°ï¼Œåˆ™é”™è¯¯*/
 /*	
     if ( !strstr(hdr, HDR_CSEQ) ){
 		printf("no HDR_CSEQ err_generic");
 	   	return ERR_GENERIC;	
 	}
 */
-//===========¼Ó
+//===========åŠ 
 	if ((p = strstr(pRtsp->in_buffer, "CSeq")) == NULL) {
 		return ERR_GENERIC;
 	}else {
@@ -417,7 +417,7 @@ int RTSP_validate_method(RTSP_buffer * pRtsp)
 	}
 //==========
 
-    /*¸ù¾İ²»Í¬µÄ·½·¨£¬·µ»ØÏìÓ¦µÄ·½·¨ID*/
+    /*æ ¹æ®ä¸åŒçš„æ–¹æ³•ï¼Œè¿”å›å“åº”çš„æ–¹æ³•ID*/
     if (strcmp(method, RTSP_METHOD_DESCRIBE) == 0) {
         mid = RTSP_ID_DESCRIBE;
     }
@@ -452,7 +452,7 @@ int RTSP_validate_method(RTSP_buffer * pRtsp)
         mid = RTSP_ID_TEARDOWN;
     }
 
-    /*ÉèÖÃµ±Ç°·½·¨µÄÇëÇóĞòÁĞºÅ*/
+    /*è®¾ç½®å½“å‰æ–¹æ³•çš„è¯·æ±‚åºåˆ—å·*/
     pRtsp->rtsp_cseq = seq;
     return mid;
 }
@@ -461,28 +461,28 @@ int RTSP_validate_method(RTSP_buffer * pRtsp)
 **
 **
 **************************************************************************************************/
-//½âÎöURLÖĞµÄport¶Ë¿ÚºÍÎÄ¼şÃû³Æ
+//è§£æURLä¸­çš„portç«¯å£å’Œæ–‡ä»¶åç§°
 int ParseUrl(const char *pUrl, char *pServer, unsigned short *port, char *pFileName, size_t FileNameLen)
 {
 	/* expects format [rtsp://server[:port/]]filename RTSP/1.0*/
 
 	int s32NoValUrl;
 
-    /*¿½±´URL */
+    /*æ‹·è´URL */
     char *pFull = (char *)malloc(strlen(pUrl) + 1);
     strcpy(pFull, pUrl);
 
-    /*¼ì²éÇ°×ºÊÇ·ñÕıÈ·*/
+    /*æ£€æŸ¥å‰ç¼€æ˜¯å¦æ­£ç¡®*/
     if (strncmp(pFull, "rtsp://", 7) == 0)
     {
         char *pSuffix;
 
-        //ÕÒµ½/ ËüÖ®ºóÊÇÎÄ¼şÃû
+        //æ‰¾åˆ°/ å®ƒä¹‹åæ˜¯æ–‡ä»¶å
         if((pSuffix = strchr(&pFull[7], '/')) != NULL)
         {
         	char *pPort;
         	char pSubPort[128];
-        	//ÅĞ¶ÏÊÇ·ñÓĞ¶Ë¿Ú
+        	//åˆ¤æ–­æ˜¯å¦æœ‰ç«¯å£
         	pPort=strchr(&pFull[7], ':');
         	if(pPort != NULL)
         	{	
@@ -498,12 +498,12 @@ int ParseUrl(const char *pUrl, char *pServer, unsigned short *port, char *pFileN
         		*port = SERVER_RTSP_PORT_DEFAULT;
         	}
         	pSuffix++;
-        	//Ìø¹ı¿Õ¸ñ»òÕßÖÆ±í·û
+        	//è·³è¿‡ç©ºæ ¼æˆ–è€…åˆ¶è¡¨ç¬¦
         	while(*pSuffix == ' '||*pSuffix == '\t')
         	{
         		pSuffix++;
         	}
-        	//¿½±´ÎÄ¼şÃû
+        	//æ‹·è´æ–‡ä»¶å
         	strcpy(pFileName, pSuffix);
         	s32NoValUrl = 0;
         }
@@ -518,7 +518,7 @@ int ParseUrl(const char *pUrl, char *pServer, unsigned short *port, char *pFileN
     	*pFileName = '\0';
     	s32NoValUrl = 1;
     }
-    //ÊÍ·Å¿Õ¼ä
+    //é‡Šæ”¾ç©ºé—´
     free(pFull);
     return s32NoValUrl;
 }
@@ -527,13 +527,13 @@ int ParseUrl(const char *pUrl, char *pServer, unsigned short *port, char *pFileN
 **
 **
 **************************************************************************************************/
-//°Ñµ±Ç°Ê±¼ä×÷ÎªsessionºÅ
+//æŠŠå½“å‰æ—¶é—´ä½œä¸ºsessionå·
 char *GetSdpId(char *buffer)
 {
 	time_t t;
     buffer[0]='\0';
     t = time(NULL);
-    sprintf(buffer,"%.0f",(float)t+2208988800U);    /*»ñµÃNPTÊ±¼ä*/
+    sprintf(buffer,"%.0f",(float)t+2208988800U);    /*è·å¾—NPTæ—¶é—´*/
     return buffer;
 }
 /**************************************************************************************************
@@ -545,19 +545,19 @@ void GetSdpDescr(RTSP_buffer * pRtsp, char *pDescr, char *s8Str)
 {
 /*/=====================================
 	char const* const SdpPrefixFmt =
-			"v=0\r\n"	//°æ±¾ĞÅÏ¢
-			"o=- %s %s IN IP4 %s\r\n" //<ÓÃ»§Ãû><»á»°id><°æ±¾>//<ÍøÂçÀàĞÍ><µØÖ·ÀàĞÍ><µØÖ·>
-			"c=IN IP4 %s\r\n"		//c=<ÍøÂçĞÅÏ¢><µØÖ·ĞÅÏ¢><Á¬½ÓµØÖ·>¶Ôip4Îª0.0.0.0  here£¡
-			"s=RTSP Session\r\n"		//»á»°Ãûsession id
-			"i=N/A\r\n"		//»á»°ĞÅÏ¢
-			"t=0 0\r\n"		//<¿ªÊ¼Ê±¼ä><½áÊøÊ±¼ä>
+			"v=0\r\n"	//ç‰ˆæœ¬ä¿¡æ¯
+			"o=- %s %s IN IP4 %s\r\n" //<ç”¨æˆ·å><ä¼šè¯id><ç‰ˆæœ¬>//<ç½‘ç»œç±»å‹><åœ°å€ç±»å‹><åœ°å€>
+			"c=IN IP4 %s\r\n"		//c=<ç½‘ç»œä¿¡æ¯><åœ°å€ä¿¡æ¯><è¿æ¥åœ°å€>å¯¹ip4ä¸º0.0.0.0  hereï¼
+			"s=RTSP Session\r\n"		//ä¼šè¯åsession id
+			"i=N/A\r\n"		//ä¼šè¯ä¿¡æ¯
+			"t=0 0\r\n"		//<å¼€å§‹æ—¶é—´><ç»“æŸæ—¶é—´>
 			"a=recvonly\r\n"
-			"m=video %s RTP/AVP 96\r\n\r\n";	//<Ã½Ìå¸ñÊ½><¶Ë¿Ú><´«ËÍ><¸ñÊ½ÁĞ±í,¼´Ã½Ìå¾»ºÉÀàĞÍ> m=video 5004 RTP/AVP 96
+			"m=video %s RTP/AVP 96\r\n\r\n";	//<åª’ä½“æ ¼å¼><ç«¯å£><ä¼ é€><æ ¼å¼åˆ—è¡¨,å³åª’ä½“å‡€è·ç±»å‹> m=video 5004 RTP/AVP 96
 			
 	struct ifreq stIfr;
 	char pSdpId[128];
 
-	//»ñÈ¡±¾»úµØÖ·
+	//è·å–æœ¬æœºåœ°å€
 	strcpy(stIfr.ifr_name, "eth0");
 	if(ioctl(pRtsp->fd, SIOCGIFADDR, &stIfr) < 0)
 	{
@@ -575,8 +575,8 @@ void GetSdpDescr(RTSP_buffer * pRtsp, char *pDescr, char *s8Str)
 
 	sprintf(pDescr,  SdpPrefixFmt,  pSdpId,  pSdpId,  s8Str,  inet_ntoa(((struct sockaddr_in *)(&pRtsp->stClientAddr))->sin_addr), "5006", "H264");
 			"b=RR:0\r\n"
-			 //°´spydroid¸Ä
-			"a=rtpmap:96 %s/90000\r\n"		//a=rtpmap:<¾»ºÉÀàĞÍ><±àÂëÃû>/<Ê±ÖÓËÙÂÊ> 	a=rtpmap:96 H264/90000
+			 //æŒ‰spydroidæ”¹
+			"a=rtpmap:96 %s/90000\r\n"		//a=rtpmap:<å‡€è·ç±»å‹><ç¼–ç å>/<æ—¶é’Ÿé€Ÿç‡> 	a=rtpmap:96 H264/90000
 			"a=fmtp:96 packetization-mode=1;profile-level-id=1EE042;sprop-parameter-sets=QuAe2gLASRA=,zjCkgA==\r\n"
 			"a=control:trackID=0\r\n";
 	
@@ -670,7 +670,7 @@ printf("\n\n%s,%d===>psp.base64profileid=%s,psp.base64sps=%s,psp.base64pps=%s\n\
 **
 **
 **************************************************************************************************/
-/*Ìí¼ÓÊ±¼ä´Á*/
+/*æ·»åŠ æ—¶é—´æˆ³*/
 void add_time_stamp(char *b, int crlf)
 {
     struct tm *t;
@@ -682,10 +682,10 @@ void add_time_stamp(char *b, int crlf)
     */
     now = time(NULL);
     t = gmtime(&now);
-    //Êä³öÊ±¼ä¸ñÊ½£ºDate: Fri, 15 Jul 2011 09:23:26 GMT
+    //è¾“å‡ºæ—¶é—´æ ¼å¼ï¼šDate: Fri, 15 Jul 2011 09:23:26 GMT
     strftime(b + strlen(b), 38, "Date: %a, %d %b %Y %H:%M:%S GMT"RTSP_EL, t);
 
-    //ÊÇ·ñÊÇÏûÏ¢½áÊø£¬Ìí¼Ó»Ø³µ»»ĞĞ·û
+    //æ˜¯å¦æ˜¯æ¶ˆæ¯ç»“æŸï¼Œæ·»åŠ å›è½¦æ¢è¡Œç¬¦
     if (crlf)
         strcat(b, "\r\n");	/* add a message header terminator (CRLF) */
 }
@@ -696,10 +696,10 @@ void add_time_stamp(char *b, int crlf)
 **************************************************************************************************/
 int SendDescribeReply(RTSP_buffer * rtsp, char *object, char *descr, char *s8Str)
 {
-    char *pMsgBuf;            /* ÓÃÓÚ»ñÈ¡ÏìÓ¦»º³åÖ¸Õë*/
+    char *pMsgBuf;            /* ç”¨äºè·å–å“åº”ç¼“å†²æŒ‡é’ˆ*/
     int s32MbLen;
 
-    /* ·ÖÅä¿Õ¼ä£¬´¦ÀíÄÚ²¿´íÎó*/
+    /* åˆ†é…ç©ºé—´ï¼Œå¤„ç†å†…éƒ¨é”™è¯¯*/
     s32MbLen = 2048;
     pMsgBuf = (char *)malloc(s32MbLen);
     if (!pMsgBuf)
@@ -713,22 +713,22 @@ int SendDescribeReply(RTSP_buffer * rtsp, char *object, char *descr, char *s8Str
         return ERR_ALLOC;
     }
 
-    /*¹¹ÔìdescribeÏûÏ¢´®*/
+    /*æ„é€ describeæ¶ˆæ¯ä¸²*/
     sprintf(pMsgBuf, "%s %d %s"RTSP_EL"CSeq: %d"RTSP_EL"Server: %s/%s"RTSP_EL, RTSP_VER, 200, get_stat(200), rtsp->rtsp_cseq, PACKAGE, VERSION);
-    add_time_stamp(pMsgBuf, 0);                 /*Ìí¼ÓÊ±¼ä´Á*/
+    add_time_stamp(pMsgBuf, 0);                 /*æ·»åŠ æ—¶é—´æˆ³*/
 
-	strcat(pMsgBuf, "Content-Type: application/sdp"RTSP_EL);   /*ÊµÌåÍ·£¬±íÊ¾ÊµÌåÀàĞÍ*/
+	strcat(pMsgBuf, "Content-Type: application/sdp"RTSP_EL);   /*å®ä½“å¤´ï¼Œè¡¨ç¤ºå®ä½“ç±»å‹*/
 
-    /*ÓÃÓÚ½âÎöÊµÌåÄÚÏà¶ÔurlµÄ ¾ø¶Ôurl*/
+    /*ç”¨äºè§£æå®ä½“å†…ç›¸å¯¹urlçš„ ç»å¯¹url*/
     sprintf(pMsgBuf + strlen(pMsgBuf), "Content-Base: rtsp://%s/%s/"RTSP_EL, s8Str, object);
-    sprintf(pMsgBuf + strlen(pMsgBuf), "Content-Length: %d"RTSP_EL, strlen(descr)); /*ÏûÏ¢ÌåµÄ³¤¶È*/
+    sprintf(pMsgBuf + strlen(pMsgBuf), "Content-Length: %d"RTSP_EL, strlen(descr)); /*æ¶ˆæ¯ä½“çš„é•¿åº¦*/
     strcat(pMsgBuf, RTSP_EL);
 
-    /*ÏûÏ¢Í·½áÊø*/
+    /*æ¶ˆæ¯å¤´ç»“æŸ*/
 
-    /*¼ÓÉÏÏûÏ¢Ìå*/
-    strcat(pMsgBuf, descr);    /*describeÏûÏ¢*/
-    /*Ïò»º³åÇøÖĞÌî³äÊı¾İ*/
+    /*åŠ ä¸Šæ¶ˆæ¯ä½“*/
+    strcat(pMsgBuf, descr);    /*describeæ¶ˆæ¯*/
+    /*å‘ç¼“å†²åŒºä¸­å¡«å……æ•°æ®*/
     bwrite(pMsgBuf, (unsigned short) strlen(pMsgBuf), rtsp);
 
     free(pMsgBuf);
@@ -740,7 +740,7 @@ int SendDescribeReply(RTSP_buffer * rtsp, char *object, char *descr, char *s8Str
 **
 **
 **************************************************************************************************/
-//describe´¦Àí
+//describeå¤„ç†
 int RTSP_describe(RTSP_buffer * pRtsp)
 {
 	char object[255], trash[255];
@@ -751,7 +751,7 @@ int RTSP_describe(RTSP_buffer * pRtsp)
 	char server[128];
 	char s8Str[128];
 
-	/*¸ù¾İÊÕµ½µÄÇëÇóÇëÇóÏûÏ¢£¬Ìø¹ı·½·¨Ãû£¬·ÖÀë³öURL*/
+	/*æ ¹æ®æ”¶åˆ°çš„è¯·æ±‚è¯·æ±‚æ¶ˆæ¯ï¼Œè·³è¿‡æ–¹æ³•åï¼Œåˆ†ç¦»å‡ºURL*/
 	if (!sscanf(pRtsp->in_buffer, " %*s %254s ", s8Url))
 	{
 		fprintf(stderr, "Error %s,%i\n", __FILE__, __LINE__);
@@ -760,17 +760,17 @@ int RTSP_describe(RTSP_buffer * pRtsp)
 		return ERR_NOERROR;
 	}
 
-	/*ÑéÖ¤URL */
+	/*éªŒè¯URL */
 	switch (ParseUrl(s8Url, server, &port, object, sizeof(object)))
 	{
-		case 1: /*ÇëÇó´íÎó*/
+		case 1: /*è¯·æ±‚é”™è¯¯*/
 			fprintf(stderr, "Error %s,%i\n", __FILE__, __LINE__);
 			send_reply(400, 0, pRtsp);
 			printf("url request error");
 			return ERR_NOERROR;
 			break;
 
-		case -1: /*ÄÚ²¿´íÎó*/
+		case -1: /*å†…éƒ¨é”™è¯¯*/
 			fprintf(stderr,"url error while parsing !\n");
 			send_reply(500, 0, pRtsp);
 			printf("inner error");
@@ -781,7 +781,7 @@ int RTSP_describe(RTSP_buffer * pRtsp)
 			break;
 	}
 
-	/*È¡µÃĞòÁĞºÅ,²¢ÇÒ±ØĞëÓĞÕâ¸öÑ¡Ïî*/
+	/*å–å¾—åºåˆ—å·,å¹¶ä¸”å¿…é¡»æœ‰è¿™ä¸ªé€‰é¡¹*/
 	if ((p = strstr(pRtsp->in_buffer, HDR_CSEQ)) == NULL)
 	{
 		fprintf(stderr, "Error %s,%i\n", __FILE__, __LINE__);
@@ -794,15 +794,15 @@ int RTSP_describe(RTSP_buffer * pRtsp)
 		if (sscanf(p, "%254s %d", trash, &(pRtsp->rtsp_cseq)) != 2)
 		{
 			fprintf(stderr, "Error %s,%i\n", __FILE__, __LINE__);
-			send_reply(400, 0, pRtsp);   /*ÇëÇó´íÎó*/
+			send_reply(400, 0, pRtsp);   /*è¯·æ±‚é”™è¯¯*/
 			printf("get serial num 2 error");
 			return ERR_NOERROR;
 		}
 	}
 
-	//»ñÈ¡SDPÄÚÈİ
+	//è·å–SDPå†…å®¹
 	GetSdpDescr(pRtsp, s8Descr, s8Str);
-	//·¢ËÍDescribeÏìÓ¦
+	//å‘é€Describeå“åº”
 	//printf("----------------1\r\n");
 	SendDescribeReply(pRtsp, object, s8Descr, s8Str);
 	//printf("2\r\n");
@@ -813,7 +813,7 @@ int RTSP_describe(RTSP_buffer * pRtsp)
 **
 **
 **************************************************************************************************/
-//·¢ËÍoptions´¦ÀíºóµÄÏìÓ¦
+//å‘é€optionså¤„ç†åçš„å“åº”
 int send_options_reply(RTSP_buffer * pRtsp, long cseq)
 {
     char r[1024];
@@ -834,7 +834,7 @@ int send_options_reply(RTSP_buffer * pRtsp, long cseq)
 **
 **
 **************************************************************************************************/
-//options´¦Àí
+//optionså¤„ç†
 int RTSP_options(RTSP_buffer * pRtsp)
 {
     char *p;
@@ -846,7 +846,7 @@ int RTSP_options(RTSP_buffer * pRtsp)
 //	trace_point();
 #endif
 
-    /*ĞòÁĞºÅ*/
+    /*åºåˆ—å·*/
     if ((p = strstr(pRtsp->in_buffer, HDR_CSEQ)) == NULL)
     {
     	fprintf(stderr, "Error %s,%i\n", __FILE__, __LINE__);
@@ -872,7 +872,7 @@ int RTSP_options(RTSP_buffer * pRtsp)
     fprintf(stderr,"%s %s %s \n",method,url,ver);
 #endif
 
-    //·¢ËÍoption´¦ÀíºóµÄÏûÏ¢
+    //å‘é€optionå¤„ç†åçš„æ¶ˆæ¯
     send_options_reply(pRtsp, cseq);
 
     return ERR_NOERROR;
@@ -942,7 +942,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 		return ERR_NOERROR;
 	}
 
-	//¼ì²é´«Êä²ã×Ó´®ÊÇ·ñÕıÈ·
+	//æ£€æŸ¥ä¼ è¾“å±‚å­ä¸²æ˜¯å¦æ­£ç¡®
 	if (sscanf(s8Str, "%*10s %255s", s8TranStr) != 1)
 	{
 		fprintf(stderr,"SETUP request malformed: Transport string is empty\n");
@@ -953,14 +953,14 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 
 	fprintf(stderr,"*** transport: %s ***\n", s8TranStr);
 
-	//Èç¹ûĞèÒªÔö¼ÓÒ»¸ö»á»°
+	//å¦‚æœéœ€è¦å¢åŠ ä¸€ä¸ªä¼šè¯
 	if ( !pRtsp->session_list )
 	{
 		pRtsp->session_list = (RTSP_session *) calloc(1, sizeof(RTSP_session));
 	}
 	rtsp_s = pRtsp->session_list;
 
-	//½¨Á¢Ò»¸öĞÂ»á»°£¬²åÈëµ½Á´±íÖĞ
+	//å»ºç«‹ä¸€ä¸ªæ–°ä¼šè¯ï¼Œæ’å…¥åˆ°é“¾è¡¨ä¸­
 	if (pRtsp->session_list->rtp_session == NULL)
 	{
 		pRtsp->session_list->rtp_session = (RTP_session *) calloc(1, sizeof(RTP_session));
@@ -984,7 +984,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 	}
 */
 
-	//ÆğÊ¼×´Ì¬ÎªÔİÍ£
+	//èµ·å§‹çŠ¶æ€ä¸ºæš‚åœ
 	rtp_s->pause = 1;
 
 	rtp_s->hndRtp = NULL;
@@ -997,10 +997,10 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 		pStr += strlen(RTSP_RTP_AVP);
 		if ( !*pStr || (*pStr == ';') || (*pStr == ' '))
 		{
-			//µ¥²¥
+			//å•æ’­
 			if (strstr(s8TranStr, "unicast"))
 			{
-				//Èç¹ûÖ¸¶¨ÁË¿Í»§¶Ë¶Ë¿ÚºÅ£¬Ìî³ä¶ÔÓ¦µÄÁ½¸ö¶Ë¿ÚºÅ
+				//å¦‚æœæŒ‡å®šäº†å®¢æˆ·ç«¯ç«¯å£å·ï¼Œå¡«å……å¯¹åº”çš„ä¸¤ä¸ªç«¯å£å·
 				if( (pStr = strstr(s8TranStr, "client_port")) )
 				{
 					pStr = strstr(s8TranStr, "=");
@@ -1009,7 +1009,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 					sscanf(pStr + 1, "%d", &(Transport.u.udp.cli_ports.RTCP));
 				}
 
-				//·şÎñÆ÷¶Ë¿Ú
+				//æœåŠ¡å™¨ç«¯å£
 				if (RTP_get_port_pair(&Transport.u.udp.ser_ports) != ERR_NOERROR)
 				{
 					fprintf(stderr, "Error %s,%d\n", __FILE__, __LINE__);
@@ -1017,7 +1017,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 					return ERR_GENERIC;
 				}
 
-				//½¨Á¢RTPÌ×½Ó×Ö
+				//å»ºç«‹RTPå¥—æ¥å­—
 				rtp_s->hndRtp = (struct _tagStRtpHandle*)RtpCreate((unsigned int)(((struct sockaddr_in *)(&pRtsp->stClientAddr))->sin_addr.s_addr), Transport.u.udp.cli_ports.RTP, _h264nalu);
 				printf("<><><><>Creat RTP<><><><>\n");
 
@@ -1026,7 +1026,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 			else
 			{
 				printf("multicast not codeing\n");
-				//multicast ¶à²¥´¦Àí....
+				//multicast å¤šæ’­å¤„ç†....
 			}
 			Transport.type = RTP_rtp_avp;
 		}
@@ -1064,7 +1064,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 
 	memcpy(&rtp_s->transport, &Transport, sizeof(Transport));
 
-	//Èç¹ûÓĞ»á»°Í·£¬¾ÍÓĞÁËÒ»¸ö¿ØÖÆ¼¯ºÏ
+	//å¦‚æœæœ‰ä¼šè¯å¤´ï¼Œå°±æœ‰äº†ä¸€ä¸ªæ§åˆ¶é›†åˆ
 	if ((pStr = strstr(pRtsp->in_buffer, HDR_SESSION)) != NULL)
 	{
 		if (sscanf(pStr, "%*s %d", &s32SessionID) != 1)
@@ -1076,7 +1076,7 @@ int RTSP_setup(RTSP_buffer * pRtsp)
 	}
 	else
 	{
-		//²úÉúÒ»¸ö·Ç0µÄËæ»úµÄ»á»°ĞòºÅ
+		//äº§ç”Ÿä¸€ä¸ªé0çš„éšæœºçš„ä¼šè¯åºå·
 		struct timeval stNowTmp;
 		gettimeofday(&stNowTmp, 0);
 		srand((stNowTmp.tv_sec * 1000) + (stNowTmp.tv_usec / 1000));
@@ -1128,7 +1128,7 @@ int RTSP_play(RTSP_buffer * pRtsp)
 	RTSP_session *pRtspSesn;
 	RTP_session *pRtpSesn;
 
-	//»ñÈ¡CSeq
+	//è·å–CSeq
 	if ((pStr = strstr(pRtsp->in_buffer, HDR_CSEQ)) == NULL)
 	{
 		send_reply(400, 0, pRtsp);   /* Bad Request */
@@ -1145,7 +1145,7 @@ int RTSP_play(RTSP_buffer * pRtsp)
 		}
 	}
 
-	//»ñÈ¡session
+	//è·å–session
 	if ((pStr = strstr(pRtsp->in_buffer, HDR_SESSION)) != NULL)
 	{
 		if (sscanf(pStr, "%254s %ld", pTrash, &s32SessionId) != 2)
@@ -1162,7 +1162,7 @@ int RTSP_play(RTSP_buffer * pRtsp)
 		return ERR_NOERROR;
 	}
 
-	//Ê±¼ä²ÎÊı,¼ÙÉè¶¼ÊÇ 0-0,²»×öÉèÖÃ
+	//æ—¶é—´å‚æ•°,å‡è®¾éƒ½æ˜¯ 0-0,ä¸åšè®¾ç½®
 /*	if ((pStr = strstr(pRtsp->in_buffer, HDR_RANGE)) != NULL)
 	{
 		if((pStrTime = strstr(pRtsp->in_buffer, "npt")) != NULL)
@@ -1180,19 +1180,19 @@ int RTSP_play(RTSP_buffer * pRtsp)
 		}
 	}
 */
-	//²¥·ÅlistÖ¸ÏòµÄrtp session
+	//æ’­æ”¾listæŒ‡å‘çš„rtp session
 	pRtspSesn = pRtsp->session_list;
 	if (pRtspSesn != NULL)
 	{
 		if (pRtspSesn->session_id == s32SessionId)
 		{
-			//²éÕÒRTP session,²¥·ÅlistÖĞËùÓĞµÄsession£¬±¾Àı³ÌÖ»ÓĞÒ»¸ö³ÉÔ±.
+			//æŸ¥æ‰¾RTP session,æ’­æ”¾listä¸­æ‰€æœ‰çš„sessionï¼Œæœ¬ä¾‹ç¨‹åªæœ‰ä¸€ä¸ªæˆå‘˜.
 			for (pRtpSesn = pRtspSesn->rtp_session; pRtpSesn != NULL; pRtpSesn = pRtpSesn->next)
 			{
-				//²¥·ÅËùÓĞÑİÊ¾
+				//æ’­æ”¾æ‰€æœ‰æ¼”ç¤º
 				if (!pRtpSesn->started)
 				{
-					//¿ªÊ¼ĞÂµÄ²¥·Å
+					//å¼€å§‹æ–°çš„æ’­æ”¾
 					printf("\t+++++++++++++++++++++\n");
 					printf("\tstart to play %d now!\n", pRtpSesn->sched_id);
 					printf("\t+++++++++++++++++++++\n");
@@ -1204,7 +1204,7 @@ int RTSP_play(RTSP_buffer * pRtsp)
 				}
 				else
 				{
-					//»Ö¸´ÔİÍ££¬²¥·Å
+					//æ¢å¤æš‚åœï¼Œæ’­æ”¾
 					if (!pRtpSesn->pause)
 					{
 						//fnc_log(FNC_LOG_INFO,"PLAY: already playing\n");
@@ -1243,18 +1243,18 @@ int send_teardown_reply(RTSP_buffer * pRtsp, long SessionId, long cseq)
     char s8Str[1024];
     char s8Temp[30];
 
-    // ¹¹½¨»Ø¸´ÏûÏ¢
+    // æ„å»ºå›å¤æ¶ˆæ¯
     sprintf(s8Str, "%s %d %s"RTSP_EL"CSeq: %ld"RTSP_EL"Server: %s/%s"RTSP_EL, RTSP_VER,\
     		200, get_stat(200), cseq, PACKAGE, VERSION);
-    //Ìí¼ÓÊ±¼ä´Á
+    //æ·»åŠ æ—¶é—´æˆ³
     add_time_stamp(s8Str, 0);
-    //»á»°ID
+    //ä¼šè¯ID
     sprintf(s8Temp, "Session: %ld"RTSP_EL, SessionId);
     strcat(s8Str, s8Temp);
 
     strcat(s8Str, RTSP_EL);
 
-    //Ğ´Èë»º³åÇø
+    //å†™å…¥ç¼“å†²åŒº
     bwrite(s8Str, (unsigned short) strlen(s8Str), pRtsp);
 
     return ERR_NOERROR;
@@ -1273,7 +1273,7 @@ int RTSP_teardown(RTSP_buffer * pRtsp)
 	RTSP_session *pRtspSesn;
 	RTP_session *pRtpSesn;
 
-	//»ñÈ¡CSeq
+	//è·å–CSeq
 	if ((pStr = strstr(pRtsp->in_buffer, HDR_CSEQ)) == NULL)
 	{
 		send_reply(400, 0, pRtsp);   // Bad Request
@@ -1290,7 +1290,7 @@ int RTSP_teardown(RTSP_buffer * pRtsp)
 		}
 	}
 
-	//»ñÈ¡session
+	//è·å–session
 	if ((pStr = strstr(pRtsp->in_buffer, HDR_SESSION)) != NULL)
 	{
 		if (sscanf(pStr, "%254s %ld", pTrash, &s32SessionId) != 2)
@@ -1317,10 +1317,10 @@ int RTSP_teardown(RTSP_buffer * pRtsp)
 		return ERR_NOERROR;
 	}
 
-	//Ïò¿Í»§¶Ë·¢ËÍÏìÓ¦ÏûÏ¢
+	//å‘å®¢æˆ·ç«¯å‘é€å“åº”æ¶ˆæ¯
 	send_teardown_reply(pRtsp, s32SessionId, pRtsp->rtsp_cseq);
 
-	//ÊÍ·ÅËùÓĞµÄURI RTP»á»°
+	//é‡Šæ”¾æ‰€æœ‰çš„URI RTPä¼šè¯
 	RTP_session *pRtpSesnTemp;
 	pRtpSesn = pRtspSesn->rtp_session;
 	while (pRtpSesn != NULL)
@@ -1331,11 +1331,11 @@ int RTSP_teardown(RTSP_buffer * pRtsp)
 
 		pRtpSesn = pRtpSesn->next;
 
-		//É¾³ıRTPÊÓÆµ·¢ËÍ
+		//åˆ é™¤RTPè§†é¢‘å‘é€
 		RtpDelete((unsigned int)pRtpSesnTemp->hndRtp);
-		//É¾³ıscheduleÖĞ¶ÔÓ¦id
+		//åˆ é™¤scheduleä¸­å¯¹åº”id
 		schedule_remove(pRtpSesnTemp->sched_id);
-		//È«¾Ö±äÁ¿²¥·Å×ÜÊı¼õÒ»£¬Èç¹ûÎª0Ôò²»²¥·Å
+		//å…¨å±€å˜é‡æ’­æ”¾æ€»æ•°å‡ä¸€ï¼Œå¦‚æœä¸º0åˆ™ä¸æ’­æ”¾
 		g_s32DoPlay--;
 
 	}
@@ -1343,10 +1343,10 @@ int RTSP_teardown(RTSP_buffer * pRtsp)
 	{
 		printf("no user online now resetfifo\n");
 		ringreset;
-		/* ÖØĞÂ½«ËùÓĞ¿ÉÓÃµÄRTP¶Ë¿ÚºÅ·ÅÈëµ½port_pool[MAX_SESSION] ÖĞ */
+		/* é‡æ–°å°†æ‰€æœ‰å¯ç”¨çš„RTPç«¯å£å·æ”¾å…¥åˆ°port_pool[MAX_SESSION] ä¸­ */
 		RTP_port_pool_init(RTP_DEFAULT_PORT);
 	}
-	//ÊÍ·ÅÁ´±í¿Õ¼ä
+	//é‡Šæ”¾é“¾è¡¨ç©ºé—´
 	if (pRtspSesn->rtp_session == NULL)
 	{
 		free(pRtsp->session_list);
@@ -1360,7 +1360,7 @@ int RTSP_teardown(RTSP_buffer * pRtsp)
 **
 **
 **************************************************************************************************/
-/*rtsp×´Ì¬»ú£¬·şÎñÆ÷¶Ë*/
+/*rtspçŠ¶æ€æœºï¼ŒæœåŠ¡å™¨ç«¯*/
 void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
 {
 
@@ -1368,9 +1368,9 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
 	trace_point();
 #endif
 
-    /*³ıÁË²¥·Å¹ı³ÌÖĞ·¢ËÍµÄ×îºóÒ»¸öÊı¾İÁ÷£¬
-     *ËùÓĞµÄ×´Ì¬Ç¨ÒÆ¶¼ÔÚÕâÀï±»´¦Àí
-     * ×´Ì¬Ç¨ÒÆÎ»ÓÚstream_eventÖĞ
+    /*é™¤äº†æ’­æ”¾è¿‡ç¨‹ä¸­å‘é€çš„æœ€åä¸€ä¸ªæ•°æ®æµï¼Œ
+     *æ‰€æœ‰çš„çŠ¶æ€è¿ç§»éƒ½åœ¨è¿™é‡Œè¢«å¤„ç†
+     * çŠ¶æ€è¿ç§»ä½äºstream_eventä¸­
      */
     char *s;
     RTSP_session *pRtspSess;
@@ -1378,18 +1378,18 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
     char trash[255];
     char szDebug[255];
 
-    /*ÕÒµ½»á»°Î»ÖÃ*/
+    /*æ‰¾åˆ°ä¼šè¯ä½ç½®*/
     if ((s = strstr(pRtspBuf->in_buffer, HDR_SESSION)) != NULL)
     {
         if (sscanf(s, "%254s %ld", trash, &session_id) != 2)
         {
             fprintf(stderr,"Invalid Session number %s,%i\n", __FILE__, __LINE__);
-            send_reply(454, 0, pRtspBuf);              /* Ã»ÓĞ´Ë»á»°*/
+            send_reply(454, 0, pRtspBuf);              /* æ²¡æœ‰æ­¤ä¼šè¯*/
             return;
         }
     }
 
-    /*´ò¿ª»á»°ÁĞ±í*/
+    /*æ‰“å¼€ä¼šè¯åˆ—è¡¨*/
     pRtspSess = pRtspBuf->session_list;
     if (pRtspSess == NULL)
     {
@@ -1402,22 +1402,22 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
     printf("%s\n", szDebug);
 #endif
 
-    /*¸ù¾İ×´Ì¬Ç¨ÒÆ¹æÔò£¬´Óµ±Ç°×´Ì¬¿ªÊ¼Ç¨ÒÆ*/
+    /*æ ¹æ®çŠ¶æ€è¿ç§»è§„åˆ™ï¼Œä»å½“å‰çŠ¶æ€å¼€å§‹è¿ç§»*/
     switch (pRtspSess->cur_state)
     {
-        case INIT_STATE:                    /*³õÊ¼Ì¬*/
+        case INIT_STATE:                    /*åˆå§‹æ€*/
         {
 #ifdef RTSP_DEBUG
         	fprintf(stderr,"current method code is:  %d  \n",method);
 #endif
             switch (method)
             {
-                case RTSP_ID_DESCRIBE:  //×´Ì¬²»±ä
+                case RTSP_ID_DESCRIBE:  //çŠ¶æ€ä¸å˜
                     RTSP_describe(pRtspBuf);
 					//printf("3\r\n");
                     break;
 
-                case RTSP_ID_SETUP:                //×´Ì¬±äÎª¾ÍĞ÷Ì¬
+                case RTSP_ID_SETUP:                //çŠ¶æ€å˜ä¸ºå°±ç»ªæ€
 					//printf("4\r\n");
                   if (RTSP_setup(pRtspBuf) == ERR_NOERROR)
                     {
@@ -1427,14 +1427,14 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
                     }
                     break;
 
-                case RTSP_ID_TEARDOWN:       //×´Ì¬²»±ä
+                case RTSP_ID_TEARDOWN:       //çŠ¶æ€ä¸å˜
                     RTSP_teardown(pRtspBuf);
                     break;
 
                 case RTSP_ID_OPTIONS:
                     if (RTSP_options(pRtspBuf) == ERR_NOERROR)
                     {
-                    	pRtspSess->cur_state = INIT_STATE;         //×´Ì¬²»±ä
+                    	pRtspSess->cur_state = INIT_STATE;         //çŠ¶æ€ä¸å˜
                     }
                     break;
 
@@ -1459,7 +1459,7 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
 
             switch (method)
             {
-                case RTSP_ID_PLAY:                                      //×´Ì¬Ç¨ÒÆÎª²¥·ÅÌ¬
+                case RTSP_ID_PLAY:                                      //çŠ¶æ€è¿ç§»ä¸ºæ’­æ”¾æ€
                    if (RTSP_play(pRtspBuf) == ERR_NOERROR)
                     {
                         fprintf(stderr,"\tStart Playing!\n");
@@ -1468,20 +1468,20 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
                     break;
 
                 case RTSP_ID_SETUP:
-                    if (RTSP_setup(pRtspBuf) == ERR_NOERROR)    //×´Ì¬²»±ä
+                    if (RTSP_setup(pRtspBuf) == ERR_NOERROR)    //çŠ¶æ€ä¸å˜
                     {
                         pRtspSess->cur_state = READY_STATE;
                     }
                     break;
 
                 case RTSP_ID_TEARDOWN:
-                    RTSP_teardown(pRtspBuf);                 //×´Ì¬±äÎª³õÊ¼Ì¬ ?
+                    RTSP_teardown(pRtspBuf);                 //çŠ¶æ€å˜ä¸ºåˆå§‹æ€ ?
                     break;
 
                 case RTSP_ID_OPTIONS:
                     if (RTSP_options(pRtspBuf) == ERR_NOERROR)
                     {
-                        pRtspSess->cur_state = INIT_STATE;          //×´Ì¬²»±ä
+                        pRtspSess->cur_state = INIT_STATE;          //çŠ¶æ€ä¸å˜
                     }
                     break;
 
@@ -1511,8 +1511,8 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
                     fprintf(stderr,"UNSUPPORTED: Play while playing.\n");
                     send_reply(551, 0, pRtspBuf);        // Option not supported
                     break;
-/*				//²»Ö§³ÖÔİÍ£ÃüÁî
-                case RTSP_ID_PAUSE:              	//×´Ì¬±äÎª¾ÍĞ÷Ì¬
+/*				//ä¸æ”¯æŒæš‚åœå‘½ä»¤
+                case RTSP_ID_PAUSE:              	//çŠ¶æ€å˜ä¸ºå°±ç»ªæ€
                     if (RTSP_pause(pRtspBuf) == ERR_NOERROR)
                     {
                     	pRtspSess->cur_state = READY_STATE;
@@ -1520,7 +1520,7 @@ void RTSP_state_machine(RTSP_buffer * pRtspBuf, int method)
                     break;
 */
                 case RTSP_ID_TEARDOWN:
-                    RTSP_teardown(pRtspBuf);        //×´Ì¬Ç¨ÒÆÎª³õÊ¼Ì¬
+                    RTSP_teardown(pRtspBuf);        //çŠ¶æ€è¿ç§»ä¸ºåˆå§‹æ€
                     break;
 
                 case RTSP_ID_OPTIONS:
@@ -1559,7 +1559,7 @@ void RTSP_remove_msg(int len, RTSP_buffer * rtsp)
     rtsp->in_size -= len;
     if (rtsp->in_size && len)
     {
-        //É¾³ıÖ¸¶¨³¤¶ÈµÄÏûÏ¢
+        //åˆ é™¤æŒ‡å®šé•¿åº¦çš„æ¶ˆæ¯
         memmove(rtsp->in_buffer, &(rtsp->in_buffer[len]), RTSP_BUFFERSIZE - len);
         memset(&(rtsp->in_buffer[RTSP_BUFFERSIZE - len]), 0, len);
     }
@@ -1577,7 +1577,7 @@ void RTSP_discard_msg(RTSP_buffer * rtsp)
 //	trace_point();
 #endif
 
-    //ÕÒ³ö»º³åÇøÖĞÊ×¸öÏûÏ¢µÄ³¤¶È£¬È»ºóÉ¾³ı
+    //æ‰¾å‡ºç¼“å†²åŒºä¸­é¦–ä¸ªæ¶ˆæ¯çš„é•¿åº¦ï¼Œç„¶ååˆ é™¤
     if (RTSP_full_msg_rcvd(rtsp, &hlen, &blen) > 0)
         RTSP_remove_msg(hlen + blen, rtsp);
 }
@@ -1599,18 +1599,18 @@ int RTSP_handler(RTSP_buffer *pRtspBuf)
 		s32Meth = RTSP_validate_method(pRtspBuf);
 		if (s32Meth < 0)
 		{
-			//´íÎóµÄÇëÇó£¬ÇëÇóµÄ·½·¨²»´æÔÚ
+			//é”™è¯¯çš„è¯·æ±‚ï¼Œè¯·æ±‚çš„æ–¹æ³•ä¸å­˜åœ¨
 			fprintf(stderr,"Bad Request %s,%d\n", __FILE__, __LINE__);
 			printf("bad request, requestion not exit %d",s32Meth);
 			send_reply(400, NULL, pRtspBuf);
 		}
 		else
 		{
-			//½øÈëµ½×´Ì¬»ú£¬´¦Àí½ÓÊÕµÄÇëÇó
+			//è¿›å…¥åˆ°çŠ¶æ€æœºï¼Œå¤„ç†æ¥æ”¶çš„è¯·æ±‚
 			RTSP_state_machine(pRtspBuf, s32Meth);
 			printf("exit Rtsp_state_machine\r\n");
 		}
-		//¶ªÆú´¦ÀíÖ®ºóµÄÏûÏ¢
+		//ä¸¢å¼ƒå¤„ç†ä¹‹åçš„æ¶ˆæ¯
 		RTSP_discard_msg(pRtspBuf);
 		printf("4\r\n");
 	}
@@ -1623,7 +1623,7 @@ int RTSP_handler(RTSP_buffer *pRtspBuf)
 **************************************************************************************************/
 int RtspServer(RTSP_buffer *rtsp)
 {
-	fd_set rset,wset;       /*¶ÁĞ´I/OÃèÊö¼¯*/
+	fd_set rset,wset;       /*è¯»å†™I/Oæè¿°é›†*/
 	struct timeval t;
 	int size;
 	static char buffer[RTSP_BUFFERSIZE+1]; /* +1 to control the final '\0'*/
@@ -1642,15 +1642,15 @@ int RtspServer(RTSP_buffer *rtsp)
 		return ERR_NOERROR;
 	}
 
-	/*±äÁ¿³õÊ¼»¯*/
+	/*å˜é‡åˆå§‹åŒ–*/
 	FD_ZERO(&rset);
 	FD_ZERO(&wset);
-	t.tv_sec=0;				/*select Ê±¼ä¼ä¸ô*/
+	t.tv_sec=0;				/*select æ—¶é—´é—´éš”*/
 	t.tv_usec=100000;
 
 	FD_SET(rtsp->fd,&rset);
 
-	/*µ÷ÓÃselectµÈ´ı¶ÔÓ¦ÃèÊö·û±ä»¯*/
+	/*è°ƒç”¨selectç­‰å¾…å¯¹åº”æè¿°ç¬¦å˜åŒ–*/
 	if (select(g_s32Maxfd+1,&rset,0,0,&t)<0)
 	{
 		fprintf(stderr,"select error %s %d\n", __FILE__, __LINE__);
@@ -1658,13 +1658,13 @@ int RtspServer(RTSP_buffer *rtsp)
 		return ERR_GENERIC; //errore interno al server
 	}
 
-	/*ÓĞ¿É¹©¶Á½øµÄrtsp°ü*/
+	/*æœ‰å¯ä¾›è¯»è¿›çš„rtspåŒ…*/
 	if (FD_ISSET(rtsp->fd,&rset))
 	{
 		memset(buffer,0,sizeof(buffer));
-		size=sizeof(buffer)-1;  /*×îºóÒ»Î»ÓÃÓÚÌî³ä×Ö·û´®½áÊø±êÊ¶*/
+		size=sizeof(buffer)-1;  /*æœ€åä¸€ä½ç”¨äºå¡«å……å­—ç¬¦ä¸²ç»“æŸæ ‡è¯†*/
 
-		/*¶ÁÈëÊı¾İµ½»º³åÇøÖĞ*/
+		/*è¯»å…¥æ•°æ®åˆ°ç¼“å†²åŒºä¸­*/
 #ifdef RTSP_DEBUG
 //    fprintf(stderr, "tcp_read, %d\n", __LINE__);
 #endif
@@ -1677,31 +1677,31 @@ int RtspServer(RTSP_buffer *rtsp)
 		if (n<0)
 		{
 			fprintf(stderr,"read() error %s %d\n", __FILE__, __LINE__);
-			send_reply(500, NULL, rtsp);                //·şÎñÆ÷ÄÚ²¿´íÎóÏûÏ¢
+			send_reply(500, NULL, rtsp);                //æœåŠ¡å™¨å†…éƒ¨é”™è¯¯æ¶ˆæ¯
 			return ERR_GENERIC;
 		}
 
-		//¼ì²é¶ÁÈëµÄÊı¾İÊÇ·ñ²úÉúÒç³ö
+		//æ£€æŸ¥è¯»å…¥çš„æ•°æ®æ˜¯å¦äº§ç”Ÿæº¢å‡º
 		if (rtsp->in_size+n>RTSP_BUFFERSIZE)
 		{
 			fprintf(stderr,"RTSP buffer overflow (input RTSP message is most likely invalid).\n");
 			send_reply(500, NULL, rtsp);
-			return ERR_GENERIC;//Êı¾İÒç³ö´íÎó
+			return ERR_GENERIC;//æ•°æ®æº¢å‡ºé”™è¯¯
 		}
 
 #ifdef RTSP_DEBUG
 		fprintf(stderr,"INPUT_BUFFER was:%s\n", buffer);
 #endif
 
-		/*Ìî³äÊı¾İ*/
+		/*å¡«å……æ•°æ®*/
 		memcpy(&(rtsp->in_buffer[rtsp->in_size]),buffer,n);
 		rtsp->in_size+=n;
-		//Çå¿Õbuffer
+		//æ¸…ç©ºbuffer
 		memset(buffer, 0, n);
-		//Ìí¼Ó¿Í»§¶ËµØÖ·ĞÅÏ¢
+		//æ·»åŠ å®¢æˆ·ç«¯åœ°å€ä¿¡æ¯
 		memcpy(	&rtsp->stClientAddr, &ClientAddr, sizeof(ClientAddr));
 
-		/*´¦Àí»º³åÇøµÄÊı¾İ£¬½øĞĞrtsp´¦Àí*/
+		/*å¤„ç†ç¼“å†²åŒºçš„æ•°æ®ï¼Œè¿›è¡Œrtspå¤„ç†*/
 		if ((res=RTSP_handler(rtsp))==ERR_GENERIC)
 		{
 			fprintf(stderr,"Invalid input message.\n");
@@ -1709,10 +1709,10 @@ int RtspServer(RTSP_buffer *rtsp)
 		}
 	}
 
-	/*ÓĞ·¢ËÍÊı¾İ*/
+	/*æœ‰å‘é€æ•°æ®*/
 	if (rtsp->out_size>0)
 	{
-		//½«Êı¾İ·¢ËÍ³öÈ¥
+		//å°†æ•°æ®å‘é€å‡ºå»
 		n= tcp_write(rtsp->fd,rtsp->out_buffer,rtsp->out_size);
 		printf("5\r\n");
 		if (n<0)
@@ -1725,15 +1725,15 @@ int RtspServer(RTSP_buffer *rtsp)
 #ifdef 	RTSP_DEBUG
 		//fprintf(stderr,"OUTPUT_BUFFER length %d\n%s\n", rtsp->out_size, rtsp->out_buffer);
 #endif
-		//Çå¿Õ·¢ËÍ»º³åÇø
+		//æ¸…ç©ºå‘é€ç¼“å†²åŒº
 		memset(rtsp->out_buffer, 0, rtsp->out_size);
 		rtsp->out_size = 0;
 	}
 
 
-	//Èç¹ûĞèÒªRTCPÔÚ´Ë³ö¼ÓÈë¶ÔRTCPÊı¾İµÄ½ÓÊÕ£¬²¢´æ·ÅÔÚ»º´æÖĞ¡£
-	//¼Ì¶øÔÚschedule_doÏß³ÌÖĞ¶ÔÆä´¦Àí¡£
-	//rtcp¿ØÖÆ´¦Àí,¼ì²é¶ÁÈëRTCPÊı¾İ±¨
+	//å¦‚æœéœ€è¦RTCPåœ¨æ­¤å‡ºåŠ å…¥å¯¹RTCPæ•°æ®çš„æ¥æ”¶ï¼Œå¹¶å­˜æ”¾åœ¨ç¼“å­˜ä¸­ã€‚
+	//ç»§è€Œåœ¨schedule_doçº¿ç¨‹ä¸­å¯¹å…¶å¤„ç†ã€‚
+	//rtcpæ§åˆ¶å¤„ç†,æ£€æŸ¥è¯»å…¥RTCPæ•°æ®æŠ¥
 
 
 	return ERR_NOERROR;
@@ -1759,17 +1759,17 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
         {
             if (res==ERR_CONNECTION_CLOSE || res==ERR_GENERIC)
             {
-                /*Á¬½ÓÒÑ¾­¹Ø±Õ*/
+                /*è¿æ¥å·²ç»å…³é—­*/
                 if (res==ERR_CONNECTION_CLOSE)
                     fprintf(stderr,"fd:%d,RTSP connection closed by client.\n",pRtsp->fd);
                 else
                 	fprintf(stderr,"fd:%d,RTSP connection closed by server.\n",pRtsp->fd);
 
-                /*¿Í»§¶ËÔÚ·¢ËÍTEARDOWN Ö®Ç°¾Í½Ø¶ÏÁËÁ¬½Ó£¬µ«ÊÇ»á»°È´Ã»ÓĞ±»ÊÍ·Å*/
+                /*å®¢æˆ·ç«¯åœ¨å‘é€TEARDOWN ä¹‹å‰å°±æˆªæ–­äº†è¿æ¥ï¼Œä½†æ˜¯ä¼šè¯å´æ²¡æœ‰è¢«é‡Šæ”¾*/
                 if (pRtsp->session_list!=NULL)
                 {
                     r=pRtsp->session_list->rtp_session;
-                    /*ÊÍ·ÅËùÓĞ»á»°*/
+                    /*é‡Šæ”¾æ‰€æœ‰ä¼šè¯*/
                     while (r!=NULL)
                     {
                         t = r->next;
@@ -1778,7 +1778,7 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
                         r=t;
                     }
 
-                    /*ÊÍ·ÅÁ´±íÍ·Ö¸Õë*/
+                    /*é‡Šæ”¾é“¾è¡¨å¤´æŒ‡é’ˆ*/
                     free(pRtsp->session_list);
                     pRtsp->session_list=NULL;
 
@@ -1787,7 +1787,7 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
 					{
 						printf("user abort! no user online now resetfifo\n");
 						ringreset;
-						/* ÖØĞÂ½«ËùÓĞ¿ÉÓÃµÄRTP¶Ë¿ÚºÅ·ÅÈëµ½port_pool[MAX_SESSION] ÖĞ */
+						/* é‡æ–°å°†æ‰€æœ‰å¯ç”¨çš„RTPç«¯å£å·æ”¾å…¥åˆ°port_pool[MAX_SESSION] ä¸­ */
 						RTP_port_pool_init(RTP_DEFAULT_PORT);
 					}
                     fprintf(stderr,"WARNING! fd:%d RTSP connection truncated before ending operations.\n",pRtsp->fd);
@@ -1798,10 +1798,10 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
                 --*conn_count;
                 num_conn--;
 
-                /*ÊÍ·Årtsp»º³åÇø*/
+                /*é‡Šæ”¾rtspç¼“å†²åŒº*/
                 if (pRtsp==*rtsp_list)
                 {
-                	//Á´±íµÚÒ»¸öÔªËØ¾Í³ö´í£¬ÔòpRtspNÎª¿Õ
+                	//é“¾è¡¨ç¬¬ä¸€ä¸ªå…ƒç´ å°±å‡ºé”™ï¼Œåˆ™pRtspNä¸ºç©º
 					printf("first error,pRtsp is null\n");
                     *rtsp_list=pRtsp->next;
                     free(pRtsp);
@@ -1809,8 +1809,8 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
                 }
                 else
                 {
-                	//²»ÊÇÁ´±íÖĞµÄµÚÒ»¸ö£¬Ôò°Ñµ±Ç°³ö´íÈÎÎñÉ¾³ı£¬²¢°ÑnextÈÎÎñ´æ·ÅÔÚpRtspN(ÉÏÒ»¸öÃ»ÓĞ³ö´íµÄÈÎÎñ)
-                	//Ö¸ÏòµÄnext£¬ºÍµ±Ç°ĞèÒª´¦ÀíµÄpRtspÖĞ.
+                	//ä¸æ˜¯é“¾è¡¨ä¸­çš„ç¬¬ä¸€ä¸ªï¼Œåˆ™æŠŠå½“å‰å‡ºé”™ä»»åŠ¡åˆ é™¤ï¼Œå¹¶æŠŠnextä»»åŠ¡å­˜æ”¾åœ¨pRtspN(ä¸Šä¸€ä¸ªæ²¡æœ‰å‡ºé”™çš„ä»»åŠ¡)
+                	//æŒ‡å‘çš„nextï¼Œå’Œå½“å‰éœ€è¦å¤„ç†çš„pRtspä¸­.
 					printf("dell current fd:%d\n",pRtsp->fd);
                 	pRtspN->next=pRtsp->next;
                     free(pRtsp);
@@ -1818,7 +1818,7 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
 					printf("current next fd:%d\n",pRtsp->fd);
                 }
 
-                /*ÊÊµ±Çé¿öÏÂ£¬ÊÍ·Åµ÷¶ÈÆ÷±¾Éí*/
+                /*é€‚å½“æƒ…å†µä¸‹ï¼Œé‡Šæ”¾è°ƒåº¦å™¨æœ¬èº«*/
                 if (pRtsp==NULL && *conn_count<0)
                 {
                 	fprintf(stderr,"to stop cchedule_do thread\n");
@@ -1834,8 +1834,8 @@ void ScheduleConnections(RTSP_buffer **rtsp_list, int *conn_count)
         else
         {
 			//printf("6\r\n");
-        	//Ã»ÓĞ³ö´í
-        	//ÉÏÒ»¸ö´¦ÀíÃ»ÓĞ³ö´íµÄlist´æ·ÅÔÚpRtspNÖĞ,ĞèÒª´¦ÀíµÄÈÎÎñ·ÅÔÚpRtstÖĞ
+        	//æ²¡æœ‰å‡ºé”™
+        	//ä¸Šä¸€ä¸ªå¤„ç†æ²¡æœ‰å‡ºé”™çš„listå­˜æ”¾åœ¨pRtspNä¸­,éœ€è¦å¤„ç†çš„ä»»åŠ¡æ”¾åœ¨pRtstä¸­
         	pRtspN = pRtsp;
             pRtsp = pRtsp->next;
         }
@@ -1863,23 +1863,23 @@ void RTP_port_pool_init(int port)
 void EventLoop(int s32MainFd)
 {
 //	static unsigned int s32ChdCnt=0;
-	static int s32ConCnt = 0;//ÒÑ¾­Á¬½ÓµÄ¿Í»§¶ËÊı
+	static int s32ConCnt = 0;//å·²ç»è¿æ¥çš„å®¢æˆ·ç«¯æ•°
 	int s32Fd = -1;
 	static RTSP_buffer *pRtspList=NULL;
 	RTSP_buffer *p=NULL;
 	unsigned int u32FdFound;
 
 //	printf("%s\n", __FUNCTION__);
-	/*½ÓÊÕÁ¬½Ó£¬´´½¨Ò»¸öĞÂµÄsocket*/
+	/*æ¥æ”¶è¿æ¥ï¼Œåˆ›å»ºä¸€ä¸ªæ–°çš„socket*/
 	if (s32ConCnt!=-1)
 	{
 		s32Fd= tcp_accept(s32MainFd);
 	}
 
-	/*´¦ÀíĞÂ´´½¨µÄÁ¬½Ó*/
+	/*å¤„ç†æ–°åˆ›å»ºçš„è¿æ¥*/
 	if (s32Fd >= 0)
 	{
-		/*²éÕÒÁĞ±íÖĞÊÇ·ñ´æÔÚ´ËÁ¬½ÓµÄsocket*/
+		/*æŸ¥æ‰¾åˆ—è¡¨ä¸­æ˜¯å¦å­˜åœ¨æ­¤è¿æ¥çš„socket*/
 		for (u32FdFound=0,p=pRtspList; p!=NULL; p=p->next)
 		{
 			if (p->fd == s32Fd)
@@ -1890,7 +1890,7 @@ void EventLoop(int s32MainFd)
 		}
 		if (!u32FdFound)
 		{
-			/*´´½¨Ò»¸öÁ¬½Ó£¬Ôö¼ÓÒ»¸ö¿Í»§¶Ë*/
+			/*åˆ›å»ºä¸€ä¸ªè¿æ¥ï¼Œå¢åŠ ä¸€ä¸ªå®¢æˆ·ç«¯*/
 			if (s32ConCnt<MAX_CONNECTION)
 			{
 				++s32ConCnt;
@@ -1906,7 +1906,7 @@ void EventLoop(int s32MainFd)
 		}
 	}
 
-	/*¶ÔÒÑÓĞµÄÁ¬½Ó½øĞĞµ÷¶È*/
+	/*å¯¹å·²æœ‰çš„è¿æ¥è¿›è¡Œè°ƒåº¦*/
 	//printf("7\r\n");
 	ScheduleConnections(&pRtspList,&s32ConCnt);
 }

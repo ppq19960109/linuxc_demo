@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "cunit.h": "c",
+        "cuerror.h": "c",
+        "testdb.h": "c",
+        "automated.h": "c",
+        "console.h": "c",
+        "testrun.h": "c",
+        "assert.h": "c",
+        "basic.h": "c",
+        "stdio.h": "c",
+        "func.h": "c"
+    }
+}
