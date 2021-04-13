@@ -23,6 +23,11 @@ static void announceStream(RTSPServer *rtspServer, ServerMediaSession *sms,
       << inputFileName << "\"\n";
   announceURL(rtspServer, sms);
 }
+
+static int getTestFrame(int chId,int srcId,unsigned char* buf,int size)
+{
+  return 0;
+}
 // #define ACCESS_CONTROL
 int main(int argc, char **argv)
 {
@@ -77,6 +82,17 @@ int main(int argc, char **argv)
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
+  // A H.264 live video elementary stream:
+  {
+    char const *streamName = "h264Live";
+    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
+                                                            descriptionString);
+    sms->addSubsession(H264VideoLiveServerMediaSubsession::createNew(*env, getTestFrame,0,0,reuseFirstSource));
+    rtspServer->addServerMediaSession(sms);
+
+    announceStream(rtspServer, sms, streamName, "hisih264Live");
   }
 
   // A H.265 video elementary stream:

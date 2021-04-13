@@ -1754,11 +1754,11 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
     VencChn=chId;
     // VENC_STREAM_S* stStream=&vencFrameStream;
     VENC_STREAM_S stStream;
-
+    HI_U32 copy_addr=0,copy_size;
     if (VencChn >= VENC_MAX_CHN_NUM)
     {
         SAMPLE_PRT("input count invaild\n");
-        return NULL;
+        return 0;
     }
     /* Set Venc Fd. */
     VencFd[VencChn] = HI_MPI_VENC_GetFd(VencChn);
@@ -1766,17 +1766,17 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
     {
         SAMPLE_PRT("HI_MPI_VENC_GetFd failed with %#x!\n",
                        VencFd[VencChn]);
-        return NULL;
+        return 0;
     }
     if (maxfd <= VencFd[VencChn])
     {
-            maxfd = VencFd[VencChn];
+        maxfd = VencFd[VencChn];
     }
     //--------
     FD_ZERO(&read_fds);
     FD_SET(VencFd[VencChn], &read_fds);
 
-    TimeoutVal.tv_sec  = 2;
+    TimeoutVal.tv_sec  = 1;
     TimeoutVal.tv_usec = 0;
     do{
     s32Ret = select(maxfd + 1, &read_fds, NULL, NULL, &TimeoutVal);
@@ -1792,7 +1792,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
     }
     else
     {
-                if (FD_ISSET(VencFd[i], &read_fds))
+                if (FD_ISSET(VencFd[VencChn], &read_fds))
                 {
                     /*******************************************************
                      step 2.1 : query how many packs in one-frame stream.
@@ -1848,7 +1848,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                     *******************************************************/
 //-------
                     // s32Ret = SAMPLE_COMM_VENC_SaveStream(NULL, &stStream);
-                    HI_U32 copy_addr=0,copy_size;
+                    
                     for (i = 0; i < stStream.u32PackCount; ++i)
                     {
                         copy_size=stStream.pstPack[i].u32Len - stStream.pstPack[i].u32Offset;
@@ -1858,13 +1858,13 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                         copy_addr+=copy_size;
                     }
 //-------
-                    if (HI_SUCCESS != s32Ret)
-                    {
-                        free(stStream.pstPack);
-                        stStream.pstPack = NULL;
-                        SAMPLE_PRT("save stream failed!\n");
-                        break;
-                    }
+                    // if (HI_SUCCESS != s32Ret)
+                    // {
+                    //     free(stStream.pstPack);
+                    //     stStream.pstPack = NULL;
+                    //     SAMPLE_PRT("save stream failed!\n");
+                    //     break;
+                    // }
                     /*******************************************************
                      step 2.6 : release stream
                      *******************************************************/
@@ -1886,7 +1886,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                 }
     } 
     }while(0);
-    return 0;
+    return copy_addr;
 }
 /******************************************************************************
 * funciton : get stream from each channels and save them

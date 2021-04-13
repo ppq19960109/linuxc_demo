@@ -32,7 +32,7 @@ ByteStreamLiveSource::createNew(UsageEnvironment& env, GetFrameCB funcCb,int chI
 
   ByteStreamLiveSource* newSource
     = new ByteStreamLiveSource(env, chId, srcId,preferredFrameSize, playTimePerFrame);
-  newSource->getFrameFunc = funcCb;
+  newSource->getFrameFun = funcCb;
 
   return newSource;
 }
@@ -81,14 +81,14 @@ void ByteStreamLiveSource::doReadFromFile() {
   }
 
 	cout <<"famxSize: "<< fMaxSize << endl;
-	cout <<"fPreferredFrameSize: " << fPreferredFrameSize << endl;
-	cout <<"fNumBytesToStream: " <<fNumBytesToStream << endl;
+	// cout <<"fPreferredFrameSize: " << fPreferredFrameSize << endl;
+	// cout <<"fNumBytesToStream: " <<fNumBytesToStream << endl;
 
 	fFrameSize =0;
-	if(getFrameFunc != NULL){
-		cout <<"doGetNextFrame call back getFrameFunc" << endl;
+	if(getFrameFun != NULL){
+		// cout <<"doGetNextFrame call back getFrameFun" << endl;
 		//callback function get encoder frame-----
-		fFrameSize = getFrameFunc(chId,srcId,fTo,fMaxSize); 
+		fFrameSize = getFrameFun(chId,srcId,fTo,fMaxSize); 
 	}
   cout <<"fFrameSize: "<< fFrameSize << endl;
 

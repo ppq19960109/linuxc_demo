@@ -890,16 +890,16 @@ HI_S32 SAMPLE_VENC_ModifyResolution(SAMPLE_SNS_TYPE_E   enSnsType,PIC_SIZE_E *pe
 /******************************************************************************
 * function: H.265e + H264e@720P, H.265 Channel resolution adaptable with sensor
 ******************************************************************************/
-HI_S32 SAMPLE_VENC_H265_H264(void)
+HI_S32 SAMPLE_VENC_H265_H264(int flag)
 {
     HI_S32 i;
     HI_S32 s32Ret;
     SIZE_S          stSize[2];
-    PIC_SIZE_E      enSize[2]     = {BIG_STREAM_SIZE, SMALL_STREAM_SIZE};
+    PIC_SIZE_E      enSize[2]     = {PIC_1080P, SMALL_STREAM_SIZE};//PIC_1080P
     HI_S32          s32ChnNum     = 2;
     VENC_CHN        VencChn[2]    = {0,1};
     HI_U32          u32Profile[2] = {0,0};
-    PAYLOAD_TYPE_E  enPayLoad[2]  = {PT_H265, PT_H264};
+    PAYLOAD_TYPE_E  enPayLoad[2]  = {PT_H264, PT_H265};//PT_H264
     VENC_GOP_MODE_E enGopMode;
     VENC_GOP_ATTR_S stGopAttr;
     SAMPLE_RC_E     enRcMode;
@@ -915,7 +915,8 @@ HI_S32 SAMPLE_VENC_H265_H264(void)
     HI_BOOL         abChnEnable[VPSS_MAX_PHY_CHN_NUM] = {1,1,0};
     SAMPLE_VPSS_CHN_ATTR_S stParam;
     SAMPLE_VB_ATTR_S commVbAttr;
-
+if(flag)
+{
     for(i=0; i<s32ChnNum; i++)
     {
         s32Ret = SAMPLE_COMM_SYS_GetPicSize(enSize[i], &stSize[i]);
@@ -1041,15 +1042,16 @@ HI_S32 SAMPLE_VENC_H265_H264(void)
     //     goto EXIT_VENC_H264_UnBind;
     // }
 
-    printf("please press twice ENTER to exit this sample\n");
+    // printf("please press twice ENTER to exit this sample\n");
     // getchar();
     // getchar();
 
-    /******************************************
-     exit process
-    ******************************************/
+    // /******************************************
+    //  exit process
+    // ******************************************/
     // SAMPLE_COMM_VENC_StopGetStream();
-
+    return s32Ret;
+}
 EXIT_VENC_H264_UnBind:
     SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[1],VencChn[1]);
 EXIT_VENC_H264_STOP:
@@ -1066,7 +1068,7 @@ EXIT_VI_STOP:
     SAMPLE_COMM_VI_StopVi(&stViConfig);
     SAMPLE_COMM_SYS_Exit();
 
-    return s32Ret;
+    return 0;
 }
 
 /******************************************************************************
@@ -2231,64 +2233,64 @@ EXIT_VI_STOP:
 * function    : main()
 * Description : video venc sample
 ******************************************************************************/
-#ifdef __HuaweiLite__
-    int app_main(int argc, char *argv[])
-#else
-    int main(int argc, char *argv[])
-#endif
-{
-    HI_S32 s32Ret;
-    HI_U32 u32Index;
+// #ifdef __HuaweiLite__
+//     int app_main(int argc, char *argv[])
+// #else
+//     int main(int argc, char *argv[])
+// #endif
+// {
+//     HI_S32 s32Ret;
+//     HI_U32 u32Index;
 
-    if (argc < 2)
-    {
-        SAMPLE_VENC_Usage(argv[0]);
-        return HI_FAILURE;
-    }
-    u32Index = atoi(argv[1]);
+//     if (argc < 2)
+//     {
+//         SAMPLE_VENC_Usage(argv[0]);
+//         return HI_FAILURE;
+//     }
+//     u32Index = atoi(argv[1]);
 
-#ifndef __HuaweiLite__
-    signal(SIGINT, SAMPLE_VENC_HandleSig);
-    signal(SIGTERM, SAMPLE_VENC_HandleSig);
-#endif
+// #ifndef __HuaweiLite__
+//     signal(SIGINT, SAMPLE_VENC_HandleSig);
+//     signal(SIGTERM, SAMPLE_VENC_HandleSig);
+// #endif
 
-    switch (u32Index)
-    {
-        case 0:
-            s32Ret = SAMPLE_VENC_Ring();
-            break;
-        case 1:
-            s32Ret = SAMPLE_VENC_H265_H264();
-            break;
-        case 2:
-            s32Ret = SAMPLE_VENC_Qpmap();
-            break;
-        case 3:
-            s32Ret = SAMPLE_VENC_IntraRefresh();
-            break;
-        case 4:
-            s32Ret = SAMPLE_VENC_ROIBG();
-            break;
-        case 5:
-            s32Ret = SAMPLE_VENC_MJPEG_JPEG();
-            break;
-        default:
-            printf("the index is invaild!\n");
-            SAMPLE_VENC_Usage(argv[0]);
-            return HI_FAILURE;
-    }
+//     switch (u32Index)
+//     {
+//         case 0:
+//             s32Ret = SAMPLE_VENC_Ring();
+//             break;
+//         case 1:
+//             s32Ret = SAMPLE_VENC_H265_H264();
+//             break;
+//         case 2:
+//             s32Ret = SAMPLE_VENC_Qpmap();
+//             break;
+//         case 3:
+//             s32Ret = SAMPLE_VENC_IntraRefresh();
+//             break;
+//         case 4:
+//             s32Ret = SAMPLE_VENC_ROIBG();
+//             break;
+//         case 5:
+//             s32Ret = SAMPLE_VENC_MJPEG_JPEG();
+//             break;
+//         default:
+//             printf("the index is invaild!\n");
+//             SAMPLE_VENC_Usage(argv[0]);
+//             return HI_FAILURE;
+//     }
 
-    if (HI_SUCCESS == s32Ret)
-    { printf("program exit normally!\n"); }
-    else
-    { printf("program exit abnormally!\n"); }
+//     if (HI_SUCCESS == s32Ret)
+//     { printf("program exit normally!\n"); }
+//     else
+//     { printf("program exit abnormally!\n"); }
 
-#ifdef __HuaweiLite__
-    return s32Ret;
-#else
-    exit(s32Ret);
-#endif
-}
+// #ifdef __HuaweiLite__
+//     return s32Ret;
+// #else
+//     exit(s32Ret);
+// #endif
+// }
 
 #ifdef __cplusplus
 #if __cplusplus

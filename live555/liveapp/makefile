@@ -25,7 +25,7 @@ LIVE555_LIBS= -lBasicUsageEnvironment -lgroupsock -lliveMedia -lUsageEnvironment
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic $(LIVE555_LIBS) \
-		-Wl,-Bdynamic -ldl -lm -lpthread -lrt  -lssl -lcrypto \
+		-Wl,-Bdynamic -ldl -lm -lpthread -lrt \
 		-Wl,--end-group
 
 # SRC := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.c))

@@ -137,7 +137,8 @@ RTPInterface::RTPInterface(Medium* owner, Groupsock* gs)
   // even if the socket was previously reported (e.g., by "select()") as having data available.
   // (This can supposedly happen if the UDP checksum fails, for example.)
   makeSocketNonBlocking(fGS->socketNum());
-  increaseSendBufferTo(envir(), fGS->socketNum(), 50*1024);
+  // increaseSendBufferTo(envir(), fGS->socketNum(), 50*1024);
+  increaseSendBufferTo(envir(), fGS->socketNum(), 512*1024);
 }
 
 RTPInterface::~RTPInterface() {

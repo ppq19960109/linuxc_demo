@@ -24,8 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "ByteStreamFileSource.hh"
 #include "H264VideoStreamFramer.hh"
 
-#include <iostream>
-using namespace std;
 
 H264VideoLiveServerMediaSubsession*
 H264VideoLiveServerMediaSubsession::createNew(UsageEnvironment& env,
@@ -36,7 +34,7 @@ H264VideoLiveServerMediaSubsession::createNew(UsageEnvironment& env,
 
 H264VideoLiveServerMediaSubsession::H264VideoLiveServerMediaSubsession(UsageEnvironment& env,
 								       GetFrameCB cb, int mchId,int msrcId, Boolean reuseFirstSource)
-  : OnDemandServerMediaSubsession(env, reuseFirstSource),tempCb(cb),chId(mchId),srcId(msrcId),
+  : OnDemandServerMediaSubsession(env, reuseFirstSource),frameCb(cb),chId(mchId),srcId(msrcId),
     fAuxSDPLine(NULL), fDoneFlag(0), fDummyRTPSink(NULL) {
 }
 
@@ -108,8 +106,7 @@ FramedSource* H264VideoLiveServerMediaSubsession::createNewStreamSource(unsigned
 
   // Create the video source:
 
-  cout<<"createNewStreamSource--------------====>"<<endl;
-  ByteStreamLiveSource* liveVideoSource = ByteStreamLiveSource::createNew(envir(),tempCb,chId,srcId);
+  ByteStreamLiveSource* liveVideoSource = ByteStreamLiveSource::createNew(envir(),frameCb,chId,srcId);
 
   // Create a framer for the Video Elementary Stream:
   return H264VideoStreamFramer::createNew(envir(), liveVideoSource);

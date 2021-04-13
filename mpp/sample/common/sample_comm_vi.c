@@ -203,7 +203,7 @@ combo_dev_attr_t MIPI_4lane_CHN0_SENSOR_IMX335_12BIT_5M_NOWDR_ATTR =
     .devno = 0,
     .input_mode = INPUT_MODE_MIPI,
     .data_rate = MIPI_DATA_RATE_X1,
-    .img_rect = {0, 0, 2592, 1944},
+    .img_rect = {0, 0, 1920, 1080},
 
     {
         .mipi_attr =
@@ -407,10 +407,10 @@ VI_DEV_ATTR_S DEV_ATTR_IMX335_5M_BASE =
     },
     VI_DATA_TYPE_RGB,
     HI_FALSE,
-    {2592 , 1944},
+    {1920 , 1080},
     {
         {
-            {2592 , 1944},
+            {1920 , 1080},
         },
         {
             VI_REPHASE_MODE_NONE,
@@ -419,7 +419,7 @@ VI_DEV_ATTR_S DEV_ATTR_IMX335_5M_BASE =
     },
     {
         WDR_MODE_NONE,
-        1944
+        1080
     },
     DATA_RATE_X1
 };
@@ -522,7 +522,7 @@ VI_PIPE_ATTR_S PIPE_ATTR_1920x1080_RAW12_420_3DNR_CHN0 =
 static VI_PIPE_ATTR_S PIPE_ATTR_2592x1944_RAW12_420_3DNR_RFR =
 {
     VI_PIPE_BYPASS_NONE, HI_FALSE, HI_FALSE,
-    2592, 1944,
+    1920, 1080,
     PIXEL_FORMAT_RGB_BAYER_12BPP,
     COMPRESS_MODE_NONE,
     DATA_BITWIDTH_12,
@@ -683,7 +683,7 @@ VI_CHN_ATTR_S CHN_ATTR_1920x1080_400_SDR8_LINEAR =
 
 static VI_CHN_ATTR_S CHN_ATTR_2592x1944_420_SDR8_LINEAR =
 {
-    {2592, 1944},
+    {1920, 1080},
     PIXEL_FORMAT_YVU_SEMIPLANAR_420,
     DYNAMIC_RANGE_SDR8,
     VIDEO_FORMAT_LINEAR,

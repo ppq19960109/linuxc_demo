@@ -53,7 +53,8 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 	    rtpPayloadFormatName, numChannels),
     fOutBuf(NULL), fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False),
     fOnSendErrorFunc(NULL), fOnSendErrorData(NULL) {
-  setPacketSizes((RTP_PAYLOAD_PREFERRED_SIZE), (RTP_PAYLOAD_MAX_SIZE));
+  // setPacketSizes((RTP_PAYLOAD_PREFERRED_SIZE), (RTP_PAYLOAD_MAX_SIZE));
+  setPacketSizes((RTP_PAYLOAD_PREFERRED_SIZE), (8192));
 }
 
 MultiFramedRTPSink::~MultiFramedRTPSink() {
@@ -403,6 +404,7 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
     // We have more frames left to send.  Figure out when the next frame
     // is due to start playing, then make sure that we wait this long before
     // sending the next packet.
+    #if 0
     struct timeval timeNow;
     gettimeofday(&timeNow, NULL);
     int secsDiff = fNextSendTime.tv_sec - timeNow.tv_sec;
@@ -413,6 +415,9 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
 
     // Delay this amount of time:
     nextTask() = envir().taskScheduler().scheduleDelayedTask(uSecondsToGo, (TaskFunc*)sendNext, this);
+    #else
+    sendNext(this);
+    #endif
   }
 }
 
