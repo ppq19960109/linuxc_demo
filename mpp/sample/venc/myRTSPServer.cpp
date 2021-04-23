@@ -3,7 +3,6 @@
 #include "announceURL.hh"
 
 #include "myRTSPServer.hh"
-UsageEnvironment *env;
 
 // To make the second and subsequent client for each stream reuse the same
 // input stream as the first client (rather than playing the file from the
@@ -25,14 +24,15 @@ static void announceStream(RTSPServer *rtspServer, ServerMediaSession *sms,
   announceURL(rtspServer, sms);
 }
 
-static int getTestFrame(int chId,int srcId,unsigned char* buf,int size)
-{
-  return 0;
-}
+// static int getTestFrame(int chId, int srcId, unsigned char *buf, int size)
+// {
+//   return 0;
+// }
 // #define ACCESS_CONTROL
 int main(int argc, char **argv)
 {
-  if(SAMPLE_VENC_H265_H264(1))
+  UsageEnvironment *env;
+  if (SAMPLE_VENC_H265_H264(1))
     return -1;
   // Begin by setting up our usage environment:
   TaskScheduler *scheduler = BasicTaskScheduler::createNew(5000);
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
     char const *streamName = "h264Live";
     ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
                                                             descriptionString);
-    sms->addSubsession(H264VideoLiveServerMediaSubsession::createNew(*env, getVencFrame,0,0,reuseFirstSource));
+    sms->addSubsession(H264VideoLiveServerMediaSubsession::createNew(*env, getVencFrame, 0, 0, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, "hisih264Live");
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     char const *streamName = "h265Live";
     ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
                                                             descriptionString);
-    sms->addSubsession(H265VideoLiveServerMediaSubsession::createNew(*env, getVencFrame,1,0,reuseFirstSource));
+    sms->addSubsession(H265VideoLiveServerMediaSubsession::createNew(*env, getVencFrame, 1, 0, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, "hisih265Live");
@@ -115,78 +115,6 @@ int main(int argc, char **argv)
     ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
                                                             descriptionString);
     sms->addSubsession(H265VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
-    rtspServer->addServerMediaSession(sms);
-
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
-
-  // A MPEG-1 or 2 audio+video program stream:
-  {
-    char const *streamName = "mpeg1or2AudioVideoTest";
-    char const *inputFileName = "test.mpg";
-    // NOTE: This *must* be a Program Stream; not an Elementary Stream
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    MPEG1or2FileServerDemux *demux = MPEG1or2FileServerDemux::createNew(*env, inputFileName, reuseFirstSource);
-    sms->addSubsession(demux->newVideoServerMediaSubsession(iFramesOnly));
-    sms->addSubsession(demux->newAudioServerMediaSubsession());
-    rtspServer->addServerMediaSession(sms);
-
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
-
-  // A MPEG-1 or 2 video elementary stream:
-  {
-    char const *streamName = "mpeg1or2ESVideoTest";
-    char const *inputFileName = "testv.mpg";
-    // NOTE: This *must* be a Video Elementary Stream; not a Program Stream
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    sms->addSubsession(MPEG1or2VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource, iFramesOnly));
-    rtspServer->addServerMediaSession(sms);
-
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
-
-  // A MP3 audio stream (actually, any MPEG-1 or 2 audio file will work):
-  // To stream using 'ADUs' rather than raw MP3 frames, uncomment the following:
-  //#define STREAM_USING_ADUS 1
-  // To also reorder ADUs before streaming, uncomment the following:
-  //#define INTERLEAVE_ADUS 1
-  // (For more information about ADUs and interleaving,
-  //  see <http://www.live555.com/rtp-mp3/>)
-  {
-    char const *streamName = "mp3AudioTest";
-    char const *inputFileName = "test.mp3";
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    Boolean useADUs = False;
-    Interleaving *interleaving = NULL;
-#ifdef STREAM_USING_ADUS
-    useADUs = True;
-#ifdef INTERLEAVE_ADUS
-    unsigned char interleaveCycle[] = {0, 2, 1, 3}; // or choose your own...
-    unsigned const interleaveCycleSize = (sizeof interleaveCycle) / (sizeof(unsigned char));
-    interleaving = new Interleaving(interleaveCycleSize, interleaveCycle);
-#endif
-#endif
-    sms->addSubsession(MP3AudioFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource,
-                                                                     useADUs, interleaving));
-    rtspServer->addServerMediaSession(sms);
-
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
-
-  // A WAV audio stream:
-  {
-    char const *streamName = "wavAudioTest";
-    char const *inputFileName = "test.wav";
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    // To convert 16-bit PCM data to 8-bit u-law, prior to streaming,
-    // change the following to True:
-    Boolean convertToULaw = False;
-    sms->addSubsession(WAVAudioFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource, convertToULaw));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, inputFileName);

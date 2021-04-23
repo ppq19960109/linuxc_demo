@@ -6,25 +6,24 @@ libBasicUsageEnvironment_LIB_SUFFIX = $(LIB_SUFFIX)
 libUsageEnvironment_LIB_SUFFIX = $(LIB_SUFFIX)
 libgroupsock_LIB_SUFFIX = $(LIB_SUFFIX)
 ##### Change the following for your environment:
-CROSS_COMPILE?=		arm-himix100-linux-
-COMPILE_OPTS =		$(INCLUDES)  -I. -O2 -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -DNO_OPENSSL=1 -DLOCALE_NOT_USED
+COMPILE_OPTS =		$(INCLUDES) -I. -O2 -DSOCKLEN_T=socklen_t -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -DNO_OPENSSL=1
 C =			c
-C_COMPILER =		$(CROSS_COMPILE)gcc
-C_FLAGS =		$(COMPILE_OPTS)
+C_COMPILER =		cc
+C_FLAGS =		$(COMPILE_OPTS) $(CPPFLAGS) $(CFLAGS)
 CPP =			cpp
-CPLUSPLUS_COMPILER =	$(CROSS_COMPILE)g++
-CPLUSPLUS_FLAGS =	$(COMPILE_OPTS) -Wall -DBSD=1
+CPLUSPLUS_COMPILER =	c++
+CPLUSPLUS_FLAGS =	$(COMPILE_OPTS) -Wall -DBSD=1 $(CPPFLAGS) $(CXXFLAGS)
 OBJ =			o
-LINK =			$(CROSS_COMPILE)g++ -o
-LINK_OPTS =		
+LINK =			c++ -o
+LINK_OPTS =		-L. $(LDFLAGS)
 CONSOLE_LINK_OPTS =	$(LINK_OPTS)
-LIBRARY_LINK =		$(CROSS_COMPILE)ar cr 
-LIBRARY_LINK_OPTS =	$(LINK_OPTS)
+LIBRARY_LINK =		ar cr 
+LIBRARY_LINK_OPTS =	
 LIB_SUFFIX =			a
-LIBS_FOR_CONSOLE_APPLICATION = #-lssl -lcrypto
+LIBS_FOR_CONSOLE_APPLICATION =
 LIBS_FOR_GUI_APPLICATION =
 EXE =
-PREFIX= ../hisi##### End of variables to change
+PREFIX= ../_install##### End of variables to change
 
 MULTICAST_STREAMER_APPS = testMP3Streamer$(EXE) testMPEG1or2VideoStreamer$(EXE) testMPEG1or2AudioVideoStreamer$(EXE) testMPEG2TransportStreamer$(EXE) testMPEG4VideoStreamer$(EXE) testH264VideoStreamer$(EXE) testH265VideoStreamer$(EXE) testDVVideoStreamer$(EXE) testWAVAudioStreamer$(EXE) testAMRAudioStreamer$(EXE) testMKVStreamer$(EXE) testOggStreamer$(EXE) vobStreamer$(EXE)
 MULTICAST_RECEIVER_APPS = testMP3Receiver$(EXE) testMPEG1or2VideoReceiver$(EXE) testMPEG2TransportReceiver$(EXE) sapWatch$(EXE)

@@ -991,10 +991,11 @@ if(flag)
    /******************************************
     start stream venc
     ******************************************/
+    enRcMode=SAMPLE_RC_AVBR;
+    enGopMode = VENC_GOPMODE_SMARTP;
+    // enRcMode = SAMPLE_VENC_GetRcMode();
 
-    enRcMode = SAMPLE_VENC_GetRcMode();
-
-    enGopMode = SAMPLE_VENC_GetGopMode();
+    // enGopMode = SAMPLE_VENC_GetGopMode();
     s32Ret = SAMPLE_COMM_VENC_GetGopAttr(enGopMode,&stGopAttr);
     if (HI_SUCCESS != s32Ret)
     {

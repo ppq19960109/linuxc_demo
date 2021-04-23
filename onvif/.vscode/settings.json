@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "stdio.h": "c",
+        "onvif_server.h": "c",
+        "string.h": "c",
+        "signal.h": "c",
+        "pthread.h": "c",
+        "stdlib.h": "c"
+    }
+}
