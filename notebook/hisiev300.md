@@ -28,7 +28,7 @@ route add default gw 192.168.1.1
 telnetd&
 ./load3516ev300 -i -sensor0 imx335 -osmem 32M
 ./load3516ev300 -i -sensor0 imx335 -osmem 64M
-
+./load3516ev300 remove_ko
 
 vi /etc/resolv.conf
 nameserver 114.114.114.114
@@ -50,3 +50,5 @@ echo $PKG_CONFIG_PATH
 pkg-config --cflags --libs
 
 static char av_error[AV_ERROR_MAX_STRING_SIZE] = {0};
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/nfsroot/libopenssl

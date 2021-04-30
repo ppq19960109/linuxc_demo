@@ -1,6 +1,7 @@
 openssl:
 
 ./config no-asm shared --prefix=$PWD/install --cross-compile-prefix=arm-none-linux-gnueabi-
+./config no-asm no-async shared --prefix=$PWD/_install --cross-compile-prefix=arm-himix100-linux-
 ./config no-asm -shared --prefix=$(pwd)/_install
 makefile中搜索-m64选项并删除，共两处
 make CROSS_COMPILE=arm-rockchip-linux-gnueabihf-
@@ -50,13 +51,38 @@ nginx:
 ./configure --add-module=../nginx-http-flv-module  --with-http_ssl_module --prefix=`pwd`/_install 
 
 gsoap:
---prefix=`pwd`/_install  
+ 
 ./configure --prefix=`pwd`/_install --with-openssl=/home/ppq/openssl-1.0.1u/_install --with-zlib=/home/ppq/git/zlib/_install --enable-samples
+./configure --prefix=`pwd`/_install --disable-c-locale --without-openssl --disable-ssl --enable-samples
 
-./wsdl2h -o onvif/onvif.h -c -s -t ./typemap.dat https://www.onvif.org/ver10/network/wsdl/remotediscovery.wsdl https://www.onvif.org/ver10/device/wsdl/devicemgmt.wsdl https://www.onvif.org/ver10/media/wsdl/media.wsdl
+./wsdl2h -o onvif.h -P -x -c -s -t ./typemap.dat http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl http://www.onvif.org/onvif/ver10/media/wsdl/media.wsdl http://www.onvif.org/onvif/ver10/event/wsdl/event.wsdl http://www.onvif.org/onvif/ver10/display.wsdl http://www.onvif.org/onvif/ver10/deviceio.wsdl http://www.onvif.org/onvif/ver20/imaging/wsdl/imaging.wsdl http://www.onvif.org/onvif/ver20/ptz/wsdl/ptz.wsdl http://www.onvif.org/onvif/ver10/receiver.wsdl http://www.onvif.org/onvif/ver10/recording.wsdl http://www.onvif.org/onvif/ver10/search.wsdl http://www.onvif.org/onvif/ver10/network/wsdl/remotediscovery.wsdl http://www.onvif.org/onvif/ver10/replay.wsdl http://www.onvif.org/onvif/ver20/analytics/wsdl/analytics.wsdl http://www.onvif.org/onvif/ver10/analyticsdevice.wsdl http://www.onvif.org/ver10/actionengine.wsdl http://www.onvif.org/ver10/pacs/accesscontrol.wsdl http://www.onvif.org/ver10/pacs/doorcontrol.wsdl
 
-./soapcpp2 -2 -c onvif/onvif.h  -x -I . -I import -I custom -I plugin -d onvif 
-soap_in_xsd__duration
+
+./wsdl2h -c -s -t typemap.dat -o onvif/onvif.h \
+http://www.onvif.org/onvif/ver10/network/wsdl/remotediscovery.wsdl \
+http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl \
+http://www.onvif.org/onvif/ver20/analytics/wsdl/analytics.wsdl \
+http://www.onvif.org/onvif/ver10/analyticsdevice.wsdl \
+http://www.onvif.org/onvif/ver10/media/wsdl/media.wsdl \
+http://www.onvif.org/onvif/ver10/deviceio.wsdl \
+http://www.onvif.org/onvif/ver10/display.wsdl \
+http://www.onvif.org/onvif/ver10/event/wsdl/event.wsdl \
+http://www.onvif.org/onvif/ver20/imaging/wsdl/imaging.wsdl \
+http://www.onvif.org/onvif/ver10/recording.wsdl \
+http://www.onvif.org/onvif/ver10/replay.wsdl \
+http://www.onvif.org/onvif/ver10/search.wsdl \
+http://www.onvif.org/onvif/ver10/receiver.wsdl \
+http://www.onvif.org/onvif/ver20/ptz/wsdl/ptz.wsdl 
+
+./wsdl2h -x -c -s -t typemap.dat -o onvif/onvif.h http://www.onvif.org/onvif/ver10/network/wsdl/remotediscovery.wsdl http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl http://www.onvif.org/onvif/ver10/media/wsdl/media.wsdl http://www.onvif.org/onvif/ver10/event/wsdl/event.wsdl  http://www.onvif.org/onvif/ver20/imaging/wsdl/imaging.wsdl
+./soapcpp2 -L -x -2 -c onvif.h -I../share/gsoap -I../share/gsoap/import
+./soapcpp2 -x -2 -c onvif.h -I../share/gsoap -I../share/gsoap/import
+
+.\wsdl2h.exe -x -c -s -t .\typemap.dat -o onvif/onvif.h http://www.onvif.org/onvif/ver10/network/wsdl/remotediscovery.wsdl http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl http://www.onvif.org/onvif/ver10/media/wsdl/media.wsdl
+
+.\soapcpp2.exe -L -x -2 -C -c onvif.h -I .. -I ..\import 
+
+./soapcpp2 -L -x -C -2 -I../share/gsoap -I../share/gsoap/import -I../share/gsoap/plugin -I../share/gsoap/custom onvif.h
 
 Valgrind：
 ./configure --host=arm-rockchip-linux-gnueabihf CC=arm-rockchip-linux-gnueabihf-gcc CPP=arm-rockchip-linux-gnueabihf-cpp CXX=arm-rockchip-linux-gnueabihf-g++ AR=arm-rockchip-linux-gnueabihf-ar --prefix=`pwd`/_install
@@ -65,3 +91,14 @@ export VALGRIND_LIB=/data/nfs/valgrind_arm/libexec/valgrind /data/nfs/valgrind_a
 export PATH=$PATH:/data/nfs/valgrind_arm/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/nfs/valgrind_arm/libexec/valgrind
 valgrind --tool=memcheck
+
+cunit:
+autoheader
+automake --add-missing
+libtoolize --automake --copy --debug --force
+
+./configure --prefix=`pwd`/_install --host=arm-rockchip-linux-gnueabihf CC=arm-rockchip-linux-gnueabihf-gcc
+
+cmake -DCMAKE_C_COMPILER=arm-rockchip-linux-gnueabihf-gcc -DCMAKE_INSTALL_PREFIX=`pwd`/_install ../
+
+make install DESTDIR=../_install
