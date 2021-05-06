@@ -9,10 +9,6 @@
 // start for each client), change the following "False" to "True":
 Boolean reuseFirstSource = False;
 
-// To stream *only* MPEG-1 or 2 video "I" frames
-// (e.g., to reduce network bandwidth),
-// change the following "False" to "True":
-Boolean iFramesOnly = False;
 
 static void announceStream(RTSPServer *rtspServer, ServerMediaSession *sms,
                            char const *streamName, char const *inputFileName)
@@ -35,7 +31,7 @@ int main(int argc, char **argv)
   if (SAMPLE_VENC_H265_H264(1))
     return -1;
   // Begin by setting up our usage environment:
-  TaskScheduler *scheduler = BasicTaskScheduler::createNew(5000);
+  TaskScheduler *scheduler = BasicTaskScheduler::createNew(2000);
   env = BasicUsageEnvironment::createNew(*scheduler);
 
   UserAuthenticationDatabase *authDB = NULL;

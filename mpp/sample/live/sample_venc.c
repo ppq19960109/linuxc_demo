@@ -993,8 +993,8 @@ if(flag)
    /******************************************
     start stream venc
     ******************************************/
-    enRcMode=SAMPLE_RC_AVBR;
-    enGopMode = VENC_GOPMODE_SMARTP;
+    enRcMode= SAMPLE_RC_CBR;//SAMPLE_RC_AVBR;
+    enGopMode = VENC_GOPMODE_NORMALP;//VENC_GOPMODE_SMARTP;
     // enRcMode = SAMPLE_VENC_GetRcMode();
 
     // enGopMode = SAMPLE_VENC_GetGopMode();
@@ -1055,7 +1055,7 @@ if(flag)
     // SAMPLE_COMM_VENC_StopGetStream();
     return s32Ret;
 }
-EXIT_VENC_H264_UnBind:
+// EXIT_VENC_H264_UnBind:
     SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[1],VencChn[1]);
 EXIT_VENC_H264_STOP:
     SAMPLE_COMM_VENC_Stop(VencChn[1]);

@@ -1753,7 +1753,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
 
     VencChn=chId;
     // VENC_STREAM_S* stStream=&vencFrameStream;
-    VENC_STREAM_S stStream;
+    VENC_STREAM_S stStream={0};
     HI_U32 copy_addr=0,copy_size;
     if (VencChn >= VENC_MAX_CHN_NUM)
     {
@@ -1776,8 +1776,8 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
     FD_ZERO(&read_fds);
     FD_SET(VencFd[VencChn], &read_fds);
 
-    TimeoutVal.tv_sec  = 1;
-    TimeoutVal.tv_usec = 0;
+    TimeoutVal.tv_sec  = 0;
+    TimeoutVal.tv_usec = 400000;
     do{
     s32Ret = select(maxfd + 1, &read_fds, NULL, NULL, &TimeoutVal);
     if (s32Ret < 0)
@@ -1797,7 +1797,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                     /*******************************************************
                      step 2.1 : query how many packs in one-frame stream.
                     *******************************************************/
-                    memset(&stStream, 0, sizeof(stStream));
+                    // memset(&stStream, 0, sizeof(stStream));
 
                     s32Ret = HI_MPI_VENC_QueryStatus(VencChn, &stStat);
                     if (HI_SUCCESS != s32Ret)
@@ -1817,7 +1817,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                     if(0 == stStat.u32CurPacks)
                     {
                           SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
-                          continue;
+                          break;
                     }
                     /*******************************************************
                      step 2.3 : malloc corresponding number of pack nodes.
@@ -1852,7 +1852,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                     for (i = 0; i < stStream.u32PackCount; ++i)
                     {
                         copy_size=stStream.pstPack[i].u32Len - stStream.pstPack[i].u32Offset;
-                        copy_size=copy_size > (size-copy_addr)?(size-copy_addr):copy_size;
+                        // copy_size=copy_size > (size-copy_addr)?(size-copy_addr):copy_size;
 
                         memcpy(buf+copy_addr,stStream.pstPack[i].pu8Addr + stStream.pstPack[i].u32Offset,copy_size);
                         copy_addr+=copy_size;

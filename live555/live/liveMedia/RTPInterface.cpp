@@ -323,7 +323,7 @@ void RTPInterface::stopNetworkReading() {
   }
 }
 
-
+#include <sys/uio.h>
 ////////// Helper Functions - Implementation /////////
 
 Boolean RTPInterface::sendRTPorRTCPPacketOverTCP(u_int8_t* packet, unsigned packetSize,
@@ -343,9 +343,16 @@ Boolean RTPInterface::sendRTPorRTCPPacketOverTCP(u_int8_t* packet, unsigned pack
     framingHeader[1] = streamChannelId;
     framingHeader[2] = (u_int8_t) ((packetSize&0xFF00)>>8);
     framingHeader[3] = (u_int8_t) (packetSize&0xFF);
-    if (!sendDataOverTCP(socketNum, framingHeader, 4, False)) break;
+    // if (!sendDataOverTCP(socketNum, framingHeader, 4, False)) break;
 
-    if (!sendDataOverTCP(socketNum, packet, packetSize, True)) break;
+    // if (!sendDataOverTCP(socketNum, packet, packetSize, True)) break;
+
+    struct iovec iov[2];
+    iov[0].iov_base = framingHeader;
+    iov[0].iov_len = 4;
+    iov[1].iov_base = packet;
+    iov[1].iov_len = packetSize;
+    writev(socketNum, iov, 2);
 #ifdef DEBUG_SEND
     fprintf(stderr, "sendRTPorRTCPPacketOverTCP: completed\n"); fflush(stderr);
 #endif
