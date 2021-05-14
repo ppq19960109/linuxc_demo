@@ -44,7 +44,7 @@
 extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
-
+typedef int (*facedetection_callback)(VENC_STREAM_S*);
 /*******************************************************
     macro define
 *******************************************************/

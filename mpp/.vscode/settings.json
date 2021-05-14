@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "sample_comm.h": "c"
+        "sample_comm.h": "c",
+        "array": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp"
     }
 }

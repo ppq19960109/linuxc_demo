@@ -12,6 +12,7 @@ TARGET_PATH := $(PWD)
 # include $(PWD)/../$(ARM_ARCH)_$(OSTYPE).mak
 CXX = @echo "G++ $@"; $(CROSS)g++
 LIVE555_PATH:=$(TARGET_PATH)/../liblive555
+LIBFACEDETECTION = $(TARGET_PATH)/../libfacedetection
 
 CFLAGS += -I$(LIVE555_PATH)/include/BasicUsageEnvironment
 CFLAGS += -I$(LIVE555_PATH)/include/groupsock 
@@ -19,8 +20,10 @@ CFLAGS += -I$(LIVE555_PATH)/include/liveMedia
 CFLAGS += -I$(LIVE555_PATH)/include/UsageEnvironment 
 CFLAGS += -Wall -DNO_OPENSSL=1
 CFLAGS += -L$(LIVE555_PATH)/lib
+CFLAGS += -I$(LIBFACEDETECTION)/include/facedetection
+CFLAGS += -L$(LIBFACEDETECTION)/lib
 
-LIVE555_LIBS= -lBasicUsageEnvironment -lgroupsock -lliveMedia -lUsageEnvironment
+LIVE555_LIBS= -lBasicUsageEnvironment -lgroupsock -lliveMedia -lUsageEnvironment -lfacedetection
 
 %.o : %.cpp
 	$(CXX) $(CFLAGS) -c -o $@ $<

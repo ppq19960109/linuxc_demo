@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 #define VB_MAX_NUM            10
-#define ONLINE_LIMIT_WIDTH    2304
+#define ONLINE_LIMIT_WIDTH    1280
 
 typedef struct hiSAMPLE_VPSS_ATTR_S
 {
@@ -327,11 +327,11 @@ static VI_VPSS_MODE_E GetViVpssModeFromResolution(SAMPLE_SNS_TYPE_E SnsType)
 
     if (SnsSize.u32Width > ONLINE_LIMIT_WIDTH)
     {
-        ViVpssMode = VI_OFFLINE_VPSS_ONLINE;
+        ViVpssMode = VI_OFFLINE_VPSS_ONLINE;//VI_OFFLINE_VPSS_ONLINE; VI_OFFLINE_VPSS_OFFLINE
     }
     else
     {
-        ViVpssMode = VI_ONLINE_VPSS_ONLINE;
+        ViVpssMode = VI_OFFLINE_VPSS_OFFLINE;//VI_ONLINE_VPSS_ONLINE
     }
 
     return ViVpssMode;
@@ -887,6 +887,11 @@ HI_S32 SAMPLE_VENC_ModifyResolution(SAMPLE_SNS_TYPE_E   enSnsType,PIC_SIZE_E *pe
 
     return HI_SUCCESS;
 }
+// #define SNAP_MODE
+
+int facedetection(VENC_STREAM_S* stStream);
+
+extern facedetection_callback facedetection_cb;
 /******************************************************************************
 * function: H.265e + H264e@720P, H.265 Channel resolution adaptable with sensor
 ******************************************************************************/
@@ -894,16 +899,16 @@ HI_S32 SAMPLE_VENC_H265_H264(int flag)
 {
     HI_S32 i;
     HI_S32 s32Ret;
-    SIZE_S          stSize[2];
-    PIC_SIZE_E      enSize[2]     = {PIC_1080P, SMALL_STREAM_SIZE};//PIC_1080P
-    HI_S32          s32ChnNum     = 2;
-    VENC_CHN        VencChn[2]    = {0,1};
-    HI_U32          u32Profile[2] = {0,0};
-    PAYLOAD_TYPE_E  enPayLoad[2]  = {PT_H264, PT_H265};//PT_H264
+    SIZE_S          stSize[3];
+    PIC_SIZE_E      enSize[3]     = {PIC_720P, PIC_VGA,PIC_CIF};//PIC_1080P
+    HI_S32          s32ChnNum     = 3;
+    VENC_CHN        VencChn[3]    = {0,1,2};
+    HI_U32          u32Profile[3] = {0,0,0};
+    PAYLOAD_TYPE_E  enPayLoad[3]  = {PT_H264, PT_H265,PT_JPEG};//PT_H264
     VENC_GOP_MODE_E enGopMode;
     VENC_GOP_ATTR_S stGopAttr;
     SAMPLE_RC_E     enRcMode;
-    HI_BOOL         bRcnRefShareBuf = HI_TRUE;
+    HI_BOOL         bRcnRefShareBuf = HI_FALSE;
 
     VI_DEV          ViDev        = 0;
     VI_PIPE         ViPipe       = 0;
@@ -911,10 +916,12 @@ HI_S32 SAMPLE_VENC_H265_H264(int flag)
     SAMPLE_VI_CONFIG_S stViConfig;
 
     VPSS_GRP        VpssGrp        = 0;
-    VPSS_CHN        VpssChn[2]     = {0,1};
-    HI_BOOL         abChnEnable[VPSS_MAX_PHY_CHN_NUM] = {1,1,0};
+    VPSS_CHN        VpssChn[3]     = {0,1,2};
+    HI_BOOL         abChnEnable[VPSS_MAX_PHY_CHN_NUM] = {1,1,1};
     SAMPLE_VPSS_CHN_ATTR_S stParam;
     SAMPLE_VB_ATTR_S commVbAttr;
+
+    HI_BOOL         bSupportDcf   = HI_FALSE;
 if(flag)
 {
     for(i=0; i<s32ChnNum; i++)
@@ -947,12 +954,14 @@ if(flag)
     SAMPLE_VENC_GetDefaultVpssAttr(stViConfig.astViInfo[0].stSnsInfo.enSnsType, abChnEnable, stSize, &stParam);
     stParam.enCompressMode[0] = COMPRESS_MODE_NONE;
     stParam.enCompressMode[1] = COMPRESS_MODE_NONE;
+    stParam.enCompressMode[2] = COMPRESS_MODE_NONE;
     /******************************************
       step 1: init sys alloc common vb
     ******************************************/
     memset(&commVbAttr, 0, sizeof(commVbAttr));
-    commVbAttr.supplementConfig = HI_FALSE;
-    SAMPLE_VENC_GetCommVbAttr(stViConfig.astViInfo[0].stSnsInfo.enSnsType, &stParam, HI_FALSE, &commVbAttr);
+    // commVbAttr.supplementConfig = HI_FALSE;
+    commVbAttr.supplementConfig = VB_SUPPLEMENT_JPEG_MASK;
+    SAMPLE_VENC_GetCommVbAttr(stViConfig.astViInfo[0].stSnsInfo.enSnsType, &stParam, bSupportDcf, &commVbAttr);
 
     
     s32Ret = SAMPLE_VENC_SYS_Init(&commVbAttr);
@@ -989,7 +998,10 @@ if(flag)
         SAMPLE_PRT("VI Bind VPSS err for %#x!\n", s32Ret);
         goto EXIT_VPSS_STOP;
     }
-
+    SAMPLE_VENC_SetDCFInfo(ViPipe);
+    VI_VPSS_MODE_S      stVIVPSSMode;
+    s32Ret = HI_MPI_SYS_GetVIVPSSMode(&stVIVPSSMode);
+    SAMPLE_PRT("VIVPSSMode for %d!\n", stVIVPSSMode.aenMode[ViPipe]);
    /******************************************
     start stream venc
     ******************************************/
@@ -1020,6 +1032,7 @@ if(flag)
         goto EXIT_VENC_H265_STOP;
     }
 
+
     /***encode h.264 **/
     s32Ret = SAMPLE_COMM_VENC_Start(VencChn[1], enPayLoad[1], enSize[1], enRcMode,u32Profile[1],bRcnRefShareBuf,&stGopAttr);
     if (HI_SUCCESS != s32Ret)
@@ -1035,6 +1048,31 @@ if(flag)
         goto EXIT_VENC_H264_STOP;
     }
 
+    /***encode Jpege **/
+    s32Ret = SAMPLE_COMM_VENC_SnapStart(VencChn[2], &stSize[2], bSupportDcf);
+    if (HI_SUCCESS != s32Ret)
+    {
+        SAMPLE_PRT("Venc Start failed for %#x!\n", s32Ret);
+        goto EXIT_VENC_H264_UnBind;
+    }
+
+    VENC_JPEG_ENCODE_MODE_E penJpegEncodeMode=JPEG_ENCODE_BUTT;
+    if(0==HI_MPI_VENC_GetJpegEncodeMode(VencChn[2],&penJpegEncodeMode))
+    {
+        SAMPLE_PRT("Venc JpegEncodeMode %d\n", penJpegEncodeMode);
+    }
+
+    s32Ret = SAMPLE_COMM_VPSS_Bind_VENC(VpssGrp, VpssChn[2],VencChn[2]);
+    if (HI_SUCCESS != s32Ret)
+    {
+        SAMPLE_PRT("Venc bind Vpss failed for %#x!\n", s32Ret);
+        goto EXIT_VENC_JPEGE_STOP;
+    }
+
+    HI_MPI_VENC_StopRecvFrame(VencChn[0]);
+    HI_MPI_VENC_StopRecvFrame(VencChn[1]);
+    HI_MPI_VENC_StopRecvFrame(VencChn[2]);
+    facedetection_cb=facedetection;
     /******************************************
      stream save process
     ******************************************/
@@ -1055,7 +1093,43 @@ if(flag)
     // SAMPLE_COMM_VENC_StopGetStream();
     return s32Ret;
 }
-// EXIT_VENC_H264_UnBind:
+#ifdef SNAP_MODE
+    /******************************************
+     stream venc process -- get jpeg stream, then save it to file.
+    ******************************************/
+   printf("press 'q' to exit snap!\nperess any other key to capture one picture to file\n");
+    i = 0;
+    char  ch;
+    while ((ch = (char)getchar()) != 'q')
+    {
+        printf("prepare to snap one picture! Please wait...\n");
+        s32Ret = SAMPLE_COMM_VENC_SnapProcess(VencChn[2], 1, HI_TRUE, HI_FALSE);
+        if (HI_SUCCESS != s32Ret)
+        {
+            SAMPLE_PRT("%s: sanp process failed!\n", __FUNCTION__);
+            continue;
+        }
+        printf("snap %d success!\n", i);
+        i++;
+
+        printf("\npress 'q' to exit snap!\nperess any other key to capture one picture to file\n");
+        
+    }
+    printf("exit this sample!\n");
+
+#else
+    char  ch;
+    while ((ch = (char)getchar()) != 'q')
+    {
+        // SAMPLE_MISC_ViDump(ViPipe, 1, 16);
+        SAMPLE_MISC_ViDump(ViPipe, ViChn, 1, 1);
+    }
+#endif
+EXIT_VENC_JPEGE_UnBind:
+    SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[2],VencChn[2]);
+EXIT_VENC_JPEGE_STOP:
+    SAMPLE_COMM_VENC_Stop(VencChn[2]);
+EXIT_VENC_H264_UnBind:
     SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[1],VencChn[1]);
 EXIT_VENC_H264_STOP:
     SAMPLE_COMM_VENC_Stop(VencChn[1]);

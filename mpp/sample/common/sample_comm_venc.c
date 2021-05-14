@@ -1145,6 +1145,14 @@ HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_CHN VencChn, SIZE_S* pstSize, HI_BOOL bSu
                    VencChn, s32Ret);
         return s32Ret;
     }
+    // VENC_RECV_PIC_PARAM_S  stRecvParam;
+    // stRecvParam.s32RecvPicNum = -1;
+    // s32Ret = HI_MPI_VENC_StartRecvFrame(VencChn, &stRecvParam);
+    // if (HI_SUCCESS != s32Ret)
+    // {
+    //     SAMPLE_PRT("HI_MPI_VENC_StartRecvPic faild with%#x!\n", s32Ret);
+    //     return HI_FAILURE;
+    // }
     return HI_SUCCESS;
 }
 
@@ -1169,6 +1177,7 @@ HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_CHN VencChn)
     return HI_SUCCESS;
 }
 
+facedetection_callback facedetection_cb;
 /******************************************************************************
 * funciton : snap process
 ******************************************************************************/
@@ -1239,18 +1248,20 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, HI_U32 SnapCnt, HI_BOOL bS
     {
         FD_ZERO(&read_fds);
         FD_SET(s32VencFd, &read_fds);
-        TimeoutVal.tv_sec  = 10;
+        TimeoutVal.tv_sec  = 4;
         TimeoutVal.tv_usec = 0;
         s32Ret = select(s32VencFd + 1, &read_fds, NULL, NULL, &TimeoutVal);
         if (s32Ret < 0)
         {
             SAMPLE_PRT("snap select failed!\n");
-            return HI_FAILURE;
+            s32Ret = HI_FAILURE;
+            break;
         }
         else if (0 == s32Ret)
         {
             SAMPLE_PRT("snap time out!\n");
-            return HI_FAILURE;
+            s32Ret = HI_FAILURE;
+            break;
         }
         else
         {
@@ -1363,7 +1374,8 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, HI_U32 SnapCnt, HI_BOOL bS
                     fclose(pFile);
                     gs_s32SnapCnt++;
                 }
-
+                if(facedetection_cb!=NULL)
+                    facedetection_cb(&stStream);
                 s32Ret = HI_MPI_VENC_ReleaseStream(VencChn, &stStream);
                 if (HI_SUCCESS != s32Ret)
                 {
@@ -1383,13 +1395,15 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, HI_U32 SnapCnt, HI_BOOL bS
     /******************************************
      step 5:  stop recv picture
     ******************************************/
-    s32Ret = HI_MPI_VENC_StopRecvFrame(VencChn);
+   {
+    HI_S32 s32Ret = HI_MPI_VENC_StopRecvFrame(VencChn);
     if (s32Ret != HI_SUCCESS)
     {
         SAMPLE_PRT("HI_MPI_VENC_StopRecvPic failed with %#x!\n",  s32Ret);
         return HI_FAILURE;
     }
-    return HI_SUCCESS;
+    }
+    return s32Ret;
 }
 
 HI_S32 SAMPLE_COMM_VENC_SaveJpeg(VENC_CHN VencChn, HI_U32 SnapCnt)
@@ -1742,6 +1756,7 @@ HI_S32 SAMPLE_COMM_VENC_QpmapSendFrame(VPSS_GRP VpssGrp,VPSS_CHN VpssChn[],VENC_
 // static VENC_STREAM_S vencFrameStream;
 int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
 {
+    SAMPLE_PRT("getVencFrame:%d\n",chId);
     HI_S32 VencFd[VENC_MAX_CHN_NUM];
     VENC_CHN VencChn;
     HI_S32 s32Ret;
@@ -1752,6 +1767,15 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
     VENC_CHN_STATUS_S stStat;
 
     VencChn=chId;
+
+    VENC_RECV_PIC_PARAM_S  stRecvParam;
+    stRecvParam.s32RecvPicNum = 1;
+    s32Ret = HI_MPI_VENC_StartRecvFrame(VencChn,&stRecvParam);
+    if (HI_SUCCESS != s32Ret)
+    {
+        SAMPLE_PRT("HI_MPI_VENC_StartRecvPic faild with%#x! \n", s32Ret);
+    } 
+    
     // VENC_STREAM_S* stStream=&vencFrameStream;
     VENC_STREAM_S stStream={0};
     HI_U32 copy_addr=0,copy_size;
@@ -1833,7 +1857,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                      step 2.4 : call mpi to get one-frame stream
                     *******************************************************/
                     stStream.u32PackCount = stStat.u32CurPacks;
-                    s32Ret = HI_MPI_VENC_GetStream(VencChn, &stStream, HI_TRUE);
+                    s32Ret = HI_MPI_VENC_GetStream(VencChn, &stStream, 0);
                     if (HI_SUCCESS != s32Ret)
                     {
                         free(stStream.pstPack);
@@ -1852,7 +1876,7 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                     for (i = 0; i < stStream.u32PackCount; ++i)
                     {
                         copy_size=stStream.pstPack[i].u32Len - stStream.pstPack[i].u32Offset;
-                        // copy_size=copy_size > (size-copy_addr)?(size-copy_addr):copy_size;
+                        copy_size=copy_size > (size-copy_addr)?(size-copy_addr):copy_size;
 
                         memcpy(buf+copy_addr,stStream.pstPack[i].pu8Addr + stStream.pstPack[i].u32Offset,copy_size);
                         copy_addr+=copy_size;
@@ -1886,6 +1910,8 @@ int getVencFrame(int chId,int srcId,unsigned char* buf,int size)
                 }
     } 
     }while(0);
+    // HI_MPI_VENC_CloseFd(VencChn);
+    HI_MPI_VENC_StopRecvFrame(VencChn);
     return copy_addr;
 }
 /******************************************************************************

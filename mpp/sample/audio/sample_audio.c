@@ -987,7 +987,7 @@ HI_S32 SAMPLE_AUDIO_AiAo(HI_VOID)
     HI_S32 s32Ret;
     HI_S32 s32AiChnCnt;
     HI_S32 s32AoChnCnt;
-    AI_CHN      AiChn = 0;
+    AI_CHN      AiChn = 0;//AI_MAX_CHN_NUM
     AO_CHN      AoChn = 0;
     AIO_ATTR_S stAioAttr;
 

@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 #include "announceURL.hh"
@@ -7,8 +9,7 @@
 // To make the second and subsequent client for each stream reuse the same
 // input stream as the first client (rather than playing the file from the
 // start for each client), change the following "False" to "True":
-Boolean reuseFirstSource = False;
-
+Boolean reuseFirstSource = True;
 
 static void announceStream(RTSPServer *rtspServer, ServerMediaSession *sms,
                            char const *streamName, char const *inputFileName)
@@ -25,11 +26,10 @@ static void announceStream(RTSPServer *rtspServer, ServerMediaSession *sms,
 //   return 0;
 // }
 // #define ACCESS_CONTROL
-int main(int argc, char **argv)
+void *rtsp_server_thread(void *args)
 {
   UsageEnvironment *env;
-  if (SAMPLE_VENC_H265_H264(1))
-    return -1;
+
   // Begin by setting up our usage environment:
   TaskScheduler *scheduler = BasicTaskScheduler::createNew(2000);
   env = BasicUsageEnvironment::createNew(*scheduler);
@@ -60,28 +60,28 @@ int main(int argc, char **argv)
   // "ServerMediaSubsession" objects for each audio/video substream.
 
   // A MPEG-4 video elementary stream:
-  {
-    char const *streamName = "mpeg4ESVideoTest";
-    char const *inputFileName = "test.m4e";
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    sms->addSubsession(MPEG4VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
-    rtspServer->addServerMediaSession(sms);
+  // {
+  //   char const *streamName = "mpeg4ESVideoTest";
+  //   char const *inputFileName = "test.m4e";
+  //   ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
+  //                                                           descriptionString);
+  //   sms->addSubsession(MPEG4VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
+  //   rtspServer->addServerMediaSession(sms);
 
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
+  //   announceStream(rtspServer, sms, streamName, inputFileName);
+  // }
 
   // A H.264 video elementary stream:
-  {
-    char const *streamName = "h264ESVideoTest";
-    char const *inputFileName = "test.264";
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    sms->addSubsession(H264VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
-    rtspServer->addServerMediaSession(sms);
+  // {
+  //   char const *streamName = "h264ESVideoTest";
+  //   char const *inputFileName = "test.264";
+  //   ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
+  //                                                           descriptionString);
+  //   sms->addSubsession(H264VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
+  //   rtspServer->addServerMediaSession(sms);
 
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
+  //   announceStream(rtspServer, sms, streamName, inputFileName);
+  // }
 
   // A H.264 live video elementary stream:
   {
@@ -105,16 +105,16 @@ int main(int argc, char **argv)
   }
 
   // A H.265 video elementary stream:
-  {
-    char const *streamName = "h265ESVideoTest";
-    char const *inputFileName = "test.265";
-    ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
-                                                            descriptionString);
-    sms->addSubsession(H265VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
-    rtspServer->addServerMediaSession(sms);
+  // {
+  //   char const *streamName = "h265ESVideoTest";
+  //   char const *inputFileName = "test.265";
+  //   ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
+  //                                                           descriptionString);
+  //   sms->addSubsession(H265VideoFileServerMediaSubsession ::createNew(*env, inputFileName, reuseFirstSource));
+  //   rtspServer->addServerMediaSession(sms);
 
-    announceStream(rtspServer, sms, streamName, inputFileName);
-  }
+  //   announceStream(rtspServer, sms, streamName, inputFileName);
+  // }
 
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
   // Try first with the default HTTP port (80), and then with the alternative HTTP
@@ -130,6 +130,20 @@ int main(int argc, char **argv)
   }
 
   env->taskScheduler().doEventLoop(); // does not return
+  return 0;
+}
+
+int main(int argc, char **argv)
+{
+  pthread_t tid;
+  pthread_create(&tid, NULL, rtsp_server_thread, NULL);
+
+  if (SAMPLE_VENC_H265_H264(1))
+    return -1;
+
+  sleep(1);
   SAMPLE_VENC_H265_H264(0);
+  pthread_cancel(tid);
+  pthread_join(tid, NULL);
   return 0; // only to prevent compiler warning
 }
