@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 #define VB_MAX_NUM            10
-#define ONLINE_LIMIT_WIDTH    1080
+#define ONLINE_LIMIT_WIDTH    2304
 
 typedef struct hiSAMPLE_VPSS_ATTR_S
 {
@@ -1759,12 +1759,12 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
     HI_S32 i;
     char  ch;
     HI_S32 s32Ret;
-    SIZE_S          stSize[3];
-    PIC_SIZE_E      enSize[3]     = {PIC_1080P, SMALL_STREAM_SIZE, SMALL_STREAM_SIZE};
-    HI_S32          s32ChnNum     = 3;
-    VENC_CHN        VencChn[3]    = {0,1,2};
-    HI_U32          u32Profile[3] = {0,0};
-    PAYLOAD_TYPE_E  enPayLoad[3]  = {PT_H264, PT_H265,PT_JPEG};
+    SIZE_S          stSize[2];
+    PIC_SIZE_E      enSize[2]     = {SMALL_STREAM_SIZE, BIG_STREAM_SIZE};
+    HI_S32          s32ChnNum     = 2;
+    VENC_CHN        VencChn[2]    = {0,1};
+    HI_U32          u32Profile[2] = {0,0};
+    PAYLOAD_TYPE_E  enPayLoad[2]  = {PT_MJPEG, PT_JPEG};
     VENC_GOP_MODE_E enGopMode     = VENC_GOPMODE_NORMALP;
     VENC_GOP_ATTR_S stGopAttr;
     SAMPLE_RC_E     enRcMode;
@@ -1776,8 +1776,8 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
     SAMPLE_VI_CONFIG_S stViConfig;
 
     VPSS_GRP        VpssGrp        = 0;
-    VPSS_CHN        VpssChn[3]     = {0,1,2};
-    HI_BOOL         abChnEnable[VPSS_MAX_PHY_CHN_NUM] = {1,1,1};
+    VPSS_CHN        VpssChn[2]     = {0,1};
+    HI_BOOL         abChnEnable[VPSS_MAX_PHY_CHN_NUM] = {1,1,0};
     SAMPLE_VPSS_CHN_ATTR_S stParam;
     SAMPLE_VB_ATTR_S commVbAttr;
 
@@ -1802,10 +1802,10 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
         return HI_FAILURE;
     }
 
-    s32Ret = SAMPLE_VENC_CheckSensor(stViConfig.astViInfo[0].stSnsInfo.enSnsType,stSize[0]);
+    s32Ret = SAMPLE_VENC_CheckSensor(stViConfig.astViInfo[0].stSnsInfo.enSnsType,stSize[1]);
     if(s32Ret != HI_SUCCESS)
     {
-        for (i = 0; i < s32ChnNum; i++)
+        for (i = 1; i < s32ChnNum; i++)
         {
             s32Ret = SAMPLE_VENC_ModifyResolution(stViConfig.astViInfo[0].stSnsInfo.enSnsType,&enSize[i],&stSize[i]);
             if(s32Ret != HI_SUCCESS)
@@ -1816,11 +1816,11 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
     }
 
     SAMPLE_VENC_GetDefaultVpssAttr(stViConfig.astViInfo[0].stSnsInfo.enSnsType, abChnEnable, stSize, &stParam);
-    // stParam.stOutPutSize[0]  = stSize[1];
-    // stParam.stOutPutSize[1]  = stSize[0];
+    stParam.stOutPutSize[0]  = stSize[1];
+    stParam.stOutPutSize[1]  = stSize[0];
     stParam.enCompressMode[0] = COMPRESS_MODE_NONE;
     stParam.enCompressMode[1] = COMPRESS_MODE_NONE;
-    stParam.enCompressMode[2] = COMPRESS_MODE_NONE;
+
     /******************************************
       step 1: init sys alloc common vb
     ******************************************/
@@ -1868,9 +1868,7 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
         goto EXIT_VPSS_STOP;
     }
     SAMPLE_VENC_SetDCFInfo(ViPipe);
-    VI_VPSS_MODE_S      stVIVPSSMode;
-    s32Ret = HI_MPI_SYS_GetVIVPSSMode(&stVIVPSSMode);
-    SAMPLE_PRT("VIVPSSMode for %d!\n", stVIVPSSMode.aenMode[ViPipe]);
+
    /******************************************
      start stream venc
     ******************************************/
@@ -1893,54 +1891,37 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
         goto EXIT_VI_VPSS_UNBIND;
     }
 
-    s32Ret = SAMPLE_COMM_VPSS_Bind_VENC(VpssGrp, VpssChn[0],VencChn[0]);
+    s32Ret = SAMPLE_COMM_VPSS_Bind_VENC(VpssGrp, VpssChn[1],VencChn[0]);
     if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("Venc Get GopAttr failed for %#x!\n", s32Ret);
         goto EXIT_VENC_MJPEGE_STOP;
     }
 
-    s32Ret = SAMPLE_COMM_VENC_Start(VencChn[1], enPayLoad[1],enSize[1], enRcMode,u32Profile[1],HI_FALSE,&stGopAttr);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("Venc Start failed for %#x!\n", s32Ret);
-        goto EXIT_VI_VPSS_UNBIND;
-    }
-
-    s32Ret = SAMPLE_COMM_VPSS_Bind_VENC(VpssGrp, VpssChn[1],VencChn[1]);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("Venc Get GopAttr failed for %#x!\n", s32Ret);
-        goto EXIT_VENC_MJPEGE_STOP;
-    }
     /***encode Jpege **/
-    s32Ret = SAMPLE_COMM_VENC_SnapStart(VencChn[2], &stSize[2], bSupportDcf);
+    s32Ret = SAMPLE_COMM_VENC_SnapStart(VencChn[1], &stSize[1], bSupportDcf);
     if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("Venc Start failed for %#x!\n", s32Ret);
         goto EXIT_VENC_MJPEGE_UnBind;
     }
 
-    s32Ret = SAMPLE_COMM_VPSS_Bind_VENC(VpssGrp, VpssChn[2],VencChn[2]);
+    s32Ret = SAMPLE_COMM_VPSS_Bind_VENC(VpssGrp, VpssChn[0],VencChn[1]);
     if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("Venc bind Vpss failed for %#x!\n", s32Ret);
         goto EXIT_VENC_JPEGE_STOP;
     }
-    VENC_JPEG_ENCODE_MODE_E penJpegEncodeMode=JPEG_ENCODE_BUTT;
-    if(0==HI_MPI_VENC_GetJpegEncodeMode(VencChn[2],&penJpegEncodeMode))
-    {
-        SAMPLE_PRT("Venc JpegEncodeMode %d\n", penJpegEncodeMode);
-    }
+
     /******************************************
      stream save process
     ******************************************/
-    // s32Ret = SAMPLE_COMM_VENC_StartGetStream(VencChn,1);
-    // if (HI_SUCCESS != s32Ret)
-    // {
-    //     SAMPLE_PRT("Start Venc failed!\n");
-    //     goto EXIT_VENC_JPEGE_UnBind;
-    // }
+    s32Ret = SAMPLE_COMM_VENC_StartGetStream(VencChn,1);
+    if (HI_SUCCESS != s32Ret)
+    {
+        SAMPLE_PRT("Start Venc failed!\n");
+        goto EXIT_VENC_JPEGE_UnBind;
+    }
 
     /******************************************
      stream venc process -- get jpeg stream, then save it to file.
@@ -1950,7 +1931,7 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
     while ((ch = (char)getchar()) != 'q')
     {
         printf("prepare to snap one picture! Please wait...\n");
-        s32Ret = SAMPLE_COMM_VENC_SnapProcess(VencChn[2], 1, HI_TRUE, HI_TRUE);
+        s32Ret = SAMPLE_COMM_VENC_SnapProcess(VencChn[1], 1, HI_TRUE, HI_TRUE);
         if (HI_SUCCESS != s32Ret)
         {
             SAMPLE_PRT("%s: sanp process failed!\n", __FUNCTION__);
@@ -1966,14 +1947,14 @@ HI_S32 SAMPLE_VENC_MJPEG_JPEG(void)
     /******************************************
      exit process
     ******************************************/
-    // SAMPLE_COMM_VENC_StopGetStream();
+    SAMPLE_COMM_VENC_StopGetStream();
 
 EXIT_VENC_JPEGE_UnBind:
-    SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[1],VencChn[1]);
+    SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[0],VencChn[1]);
 EXIT_VENC_JPEGE_STOP:
     SAMPLE_COMM_VENC_Stop(VencChn[1]);
 EXIT_VENC_MJPEGE_UnBind:
-    SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[0],VencChn[0]);
+    SAMPLE_COMM_VPSS_UnBind_VENC(VpssGrp,VpssChn[1],VencChn[0]);
 EXIT_VENC_MJPEGE_STOP:
     SAMPLE_COMM_VENC_Stop(VencChn[0]);
 EXIT_VI_VPSS_UNBIND:

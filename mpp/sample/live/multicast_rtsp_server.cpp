@@ -41,9 +41,8 @@ void play() {
   videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
 }
 
-int main2(int argc, char** argv) {
-  if (SAMPLE_VENC_H265_H264(1))
-    return -1;
+int multicast_rtsp_server_thread() {
+
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);

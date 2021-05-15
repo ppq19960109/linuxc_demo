@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "generateQrBmp.h"
+#include "generate_bitmap.h"
 
 // #pragma pack(1)
 
@@ -57,7 +57,7 @@ static int saveBitmap(const char *bmpName, void *bmpData, int width, int height,
 
     bitMapInfoHeader.biSize = sizeof(BITMAPINFOHEADER);
     bitMapInfoHeader.biWidth = width;
-    bitMapInfoHeader.biHeight = height;
+    bitMapInfoHeader.biHeight = -height;
     bitMapInfoHeader.biPlanes = 1;
     bitMapInfoHeader.biBitCount = bmpBitCount;
     bitMapInfoHeader.biCompression = 0;
@@ -95,28 +95,30 @@ fail:
     return -1;
 }
 
-int saveQrcodeBmp(const char *bmpName, void *bmpData, int width, int height, const unsigned char bmpBitCount)
+int save_rgb_bmp(const char *bmpName, void *bmpData, int width, int height, const unsigned char bmpBitCount)
 {
-    int widthByte = (width * bmpBitCount / 8 + 3) / 4 * 4; //每line字节数必须为4的倍数
+    const unsigned char bmpByteCount = bmpBitCount / 8;
+    int widthByte = (width * bmpByteCount + 3) / 4 * 4; //每line字节数必须为4的倍数
     int bodySize = widthByte * height;
-    unsigned char bmpByteCount = bmpBitCount / 8;
-
+    // width=width*bmpByteCount;
+    printf("bmpByteCount:%d,widthByte:%d,width:%d\n", bmpByteCount, widthByte, width);
     unsigned char *dstBmpData = malloc(bodySize);
     if (dstBmpData == NULL || bmpData == NULL)
     {
         return -1;
     }
-    // memset(dstBmpData, 255, bodySize);
+    memset(dstBmpData, 255, bodySize);
 
     unsigned char *srcBmpData = bmpData;
     int i, j;
+    // for (i = height - 1; i >= 0; --i)
     for (i = 0; i < height; ++i)
     {
-        for (j = 0; j < width; j += 3)
+        for (j = 0; j < width * bmpByteCount; j += bmpByteCount)
         {
-            dstBmpData[i * widthByte + j + 0] = srcBmpData[i * widthByte + j + 0];
-            dstBmpData[i * widthByte + j + 1] = srcBmpData[i * widthByte + j + 1];
-            dstBmpData[i * widthByte + j + 2] = srcBmpData[i * widthByte + j + 2];
+            dstBmpData[i * widthByte + j + 0] = srcBmpData[i * width * bmpByteCount + j + 0];
+            dstBmpData[i * widthByte + j + 1] = srcBmpData[i * width * bmpByteCount + j + 1];
+            dstBmpData[i * widthByte + j + 2] = srcBmpData[i * width * bmpByteCount + j + 2];
         }
     }
     unsigned char error = saveBitmap(bmpName, dstBmpData, width, height, bodySize, bmpBitCount);
@@ -130,14 +132,12 @@ int saveQrcodeBmp(const char *bmpName, void *bmpData, int width, int height, con
     return 0;
 }
 
-#define YUV420SP_NV12 0
-#define YUV420SP_NV21 0
-void YUV420SPToRGBAByte(unsigned char *src, unsigned char *dst, int width, int height, int format)
+void YUV420SPToRGBByte(unsigned char *src, unsigned char *dst, int width, int height, enum YUV420_FORMAT format)
 {
     if (format == YUV420SP_NV12 || format == YUV420SP_NV21)
     {
         int pos = 0;
-        unsigned char *pRGBA = dst;
+        unsigned char *pRGB = dst;
         unsigned char *pY = src;
         unsigned char *pUV = src + width * height;
         for (int y = 0; y < height; y++)
@@ -157,13 +157,17 @@ void YUV420SPToRGBAByte(unsigned char *src, unsigned char *dst, int width, int h
                     uOffset = uvOffset + 1;
                     vOffset = uvOffset;
                 }
-                // rgbaIntToBytes(YUV2RGBA(*pY++, pUV[uOffset], pUV[vOffset]), pRGBA);
                 unsigned char Y = *pY++;
                 unsigned char U = pUV[uOffset];
                 unsigned char V = pUV[vOffset];
-                pRGBA[pos++] = Y + 1.779 * (U - 128);
-                pRGBA[pos++] = Y - 0.3455 * (U - 128) - 0.7169 * (V - 128);
-                pRGBA[pos++] = Y + 1.4075 * (V - 128);
+
+                pRGB[pos++] = Y + 1.779 * (U - 128);
+                pRGB[pos++] = Y - 0.3455 * (U - 128) - 0.7169 * (V - 128);
+                pRGB[pos++] = Y + 1.4075 * (V - 128);
+
+                // pRGB[pos++] = Y + 1.402 * (V - 128);
+                // pRGB[pos++] = Y - 0.34413 * (U - 128) - 0.71414 * (V - 128);
+                // pRGB[pos++] = Y + 1.772 * (U - 128);
             }
         }
     }

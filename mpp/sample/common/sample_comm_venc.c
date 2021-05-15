@@ -1177,7 +1177,6 @@ HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_CHN VencChn)
     return HI_SUCCESS;
 }
 
-facedetection_callback facedetection_cb;
 /******************************************************************************
 * funciton : snap process
 ******************************************************************************/
@@ -1374,8 +1373,7 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, HI_U32 SnapCnt, HI_BOOL bS
                     fclose(pFile);
                     gs_s32SnapCnt++;
                 }
-                if(facedetection_cb!=NULL)
-                    facedetection_cb(&stStream);
+
                 s32Ret = HI_MPI_VENC_ReleaseStream(VencChn, &stStream);
                 if (HI_SUCCESS != s32Ret)
                 {

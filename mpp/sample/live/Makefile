@@ -13,6 +13,8 @@ TARGET_PATH := $(PWD)
 CXX = @echo "G++ $@"; $(CROSS)g++
 LIVE555_PATH:=$(TARGET_PATH)/../liblive555
 LIBFACEDETECTION = $(TARGET_PATH)/../libfacedetection
+LIBFACEDETECTION_SRCS := $(wildcard $(LIBFACEDETECTION)/*.c)
+LIBFACEDETECTION_SRCS += $(wildcard $(LIBFACEDETECTION)/*.cpp)
 
 CFLAGS += -I$(LIVE555_PATH)/include/BasicUsageEnvironment
 CFLAGS += -I$(LIVE555_PATH)/include/groupsock 
@@ -21,6 +23,7 @@ CFLAGS += -I$(LIVE555_PATH)/include/UsageEnvironment
 CFLAGS += -Wall -DNO_OPENSSL=1
 CFLAGS += -L$(LIVE555_PATH)/lib
 CFLAGS += -I$(LIBFACEDETECTION)/include/facedetection
+CFLAGS += -I$(LIBFACEDETECTION)
 CFLAGS += -L$(LIBFACEDETECTION)/lib
 
 LIVE555_LIBS= -lBasicUsageEnvironment -lgroupsock -lliveMedia -lUsageEnvironment -lfacedetection
@@ -31,6 +34,8 @@ LIVE555_LIBS= -lBasicUsageEnvironment -lgroupsock -lliveMedia -lUsageEnvironment
 #OBJS  := $(SRCS:%.c=%.o)
 OBJS := $(filter %.o,$(SRCS:%.c=%.o))
 OBJS += $(filter %.o,$(SRCS:%.cpp=%.o))
+OBJS += $(filter %.o,$(LIBFACEDETECTION_SRCS:%.c=%.o))
+OBJS += $(filter %.o,$(LIBFACEDETECTION_SRCS:%.cpp=%.o))
 
 CFLAGS += $(COMM_INC)
 

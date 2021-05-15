@@ -135,15 +135,18 @@ void *rtsp_server_thread(void *args)
 
 int main(int argc, char **argv)
 {
+  if(argc > 1)
+  {
+    return SAMPLE_VENC_H265_H264(2);;
+  }
   pthread_t tid;
   pthread_create(&tid, NULL, rtsp_server_thread, NULL);
 
-  if (SAMPLE_VENC_H265_H264(1))
-    return -1;
+  SAMPLE_VENC_H265_H264(1);
 
   sleep(1);
   SAMPLE_VENC_H265_H264(0);
   pthread_cancel(tid);
   pthread_join(tid, NULL);
-  return 0; // only to prevent compiler warning
+  return 0; 
 }
