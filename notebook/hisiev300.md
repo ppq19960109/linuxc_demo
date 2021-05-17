@@ -3,12 +3,16 @@ pub/bin/pc/mkfs.jffs2 -d pub/rootfs_glibc -l -e 0x10000 -o rootfs_glibc_64k.jffs
 pub/bin/pc/mkfs.jffs2 -d pub/rootfs_uclibc -l -e 0x10000 -o rootfs_glibc_64k.jffs2
 
 tools/pc/jffs2_tool/mkfs.jffs2 -d rootfs_scripts/rootfs -l -e 0x10000 -o rootfs_scripts/rootfs_uclibc_64k.jffs2
+osdrv/pub/bin/pc/mkfs.jffs2 -d osdrv/pub/rootfs_glibc -l -e 0x10000 -o osdrv/pub/rootfs_glibc_64k.jffs2
+make ARCH=arm CROSS_COMPILE=arm-himix200-linux- menuconfig
+make ARCH=arm CROSS_COMPILE=arm-himix200-linux- uImage
 --------------------------------
 setenv bootargs 'mem=32M console=ttyAMA0,115200 root=/dev/mtdblock2 rootfstype=jffs2 rw mtdparts=hi_sfc:1M(boot),4M(kernel),25M(rootfs)'
 setenv bootargs 'mem=64M console=ttyAMA0,115200 root=/dev/mtdblock2 rootfstype=jffs2 rw mtdparts=hi_sfc:1M(boot),4M(kernel),25M(rootfs)'
+setenv bootargs 'mem=96M console=ttyAMA0,115200 root=/dev/mtdblock2 rootfstype=jffs2 rw mtdparts=hi_sfc:1M(boot),4M(kernel),25M(rootfs)'
 setenv bootargs 'mem=128M console=ttyAMA0,115200 root=/dev/mtdblock2 rootfstype=jffs2 rw mtdparts=hi_sfc:1M(boot),4M(kernel),25M(rootfs)'
 setenv bootcmd 'sf probe 0;sf read 0x42000000 0x100000 0x400000;bootm 0x42000000'
-setenv serverip 192.168.1.45
+setenv serverip 192.168.1.16
 setenv ipaddr 192.168.1.99
 setenv ethaddr 5E:6A:F9:E6:8B:28
 setenv netmask 255.255.255.0
@@ -21,13 +25,15 @@ route add default gw 192.168.1.1
 mount -o nolock,tcp -t nfs 192.168.1.177:/home/ppq/nfs /nfsroot
 
 --------------------------------
-#!/bin/sh
-
 ifconfig eth0 192.168.1.199
 route add default gw 192.168.1.1
+#!/bin/sh
+ifconfig eth0 up
+udhcpc -b
 telnetd&
 ./load3516ev300 -i -sensor0 imx335 -osmem 32M
 ./load3516ev300 -i -sensor0 imx335 -osmem 64M
+cd /mpp && ./load3516ev300 -i -sensor0 imx335 -osmem 96M
 ./load3516ev300 remove_ko
 
 vi /etc/resolv.conf

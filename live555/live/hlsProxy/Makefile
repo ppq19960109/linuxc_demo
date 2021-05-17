@@ -6,7 +6,7 @@ libBasicUsageEnvironment_LIB_SUFFIX = $(LIB_SUFFIX)
 libUsageEnvironment_LIB_SUFFIX = $(LIB_SUFFIX)
 libgroupsock_LIB_SUFFIX = $(LIB_SUFFIX)
 ##### Change the following for your environment:
-CROSS_COMPILE?=		arm-himix100-linux-
+CROSS_COMPILE?=		arm-himix200-linux-
 COMPILE_OPTS =		$(INCLUDES)  -I. -Os -DSOCKLEN_T=socklen_t -DNO_SSTREAM=1 -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64 -DNO_OPENSSL=1 -DLOCALE_NOT_USED
 C =			c
 C_COMPILER =		$(CROSS_COMPILE)gcc
@@ -24,7 +24,7 @@ LIB_SUFFIX =			a
 LIBS_FOR_CONSOLE_APPLICATION = #-lssl -lcrypto
 LIBS_FOR_GUI_APPLICATION =
 EXE =
-PREFIX= ../hisi##### End of variables to change
+PREFIX= ../hisi200##### End of variables to change
 
 HLS_PROXY = live555HLSProxy$(EXE)
 

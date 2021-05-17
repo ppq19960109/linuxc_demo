@@ -102,3 +102,10 @@ libtoolize --automake --copy --debug --force
 cmake -DCMAKE_C_COMPILER=arm-rockchip-linux-gnueabihf-gcc -DCMAKE_INSTALL_PREFIX=`pwd`/_install ../
 
 make install DESTDIR=../_install
+
+opencv：BUILD_SHARED_LIBS
+-DBUILD_JAVA=OFF -DBUILD_opencv_java=OFF
+
+dlib: -DCMAKE_BUILD_TYPE=Debug Release   
+cmake .. -DCMAKE_INSTALL_PREFIX=./_install -DCMAKE_BUILD_TYPE=Release -DDLIB_NO_GUI_SUPPORT=OFF -DCMAKE_C_COMPILER=arm-rockchip-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-rockchip-linux-gnueabihf-g++ 
+cmake .. -DCMAKE_INSTALL_PREFIX=./_install -DCMAKE_BUILD_TYPE=Release -DDLIB_NO_GUI_SUPPORT=OFF -DCMAKE_C_COMPILER=arm-himix200-linux-gcc -DCMAKE_CXX_COMPILER=arm-himix200-linux-g++ 

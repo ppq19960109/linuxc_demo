@@ -11,8 +11,8 @@ TARGET_PATH := $(PWD)
 # compile linux or HuaweiLite
 # include $(PWD)/../$(ARM_ARCH)_$(OSTYPE).mak
 CXX = @echo "G++ $@"; $(CROSS)g++
-LIVE555_PATH:=$(TARGET_PATH)/../liblive555
-LIBFACEDETECTION = $(TARGET_PATH)/../libfacedetection
+LIVE555_PATH:=$(TARGET_PATH)/../liblive555_hisi200
+LIBFACEDETECTION = $(TARGET_PATH)/../libfacedetection_hisi200
 LIBFACEDETECTION_SRCS := $(wildcard $(LIBFACEDETECTION)/*.c)
 LIBFACEDETECTION_SRCS += $(wildcard $(LIBFACEDETECTION)/*.cpp)
 
