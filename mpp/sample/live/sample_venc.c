@@ -331,7 +331,7 @@ static VI_VPSS_MODE_E GetViVpssModeFromResolution(SAMPLE_SNS_TYPE_E SnsType)
     }
     else
     {
-        ViVpssMode = VI_OFFLINE_VPSS_OFFLINE;//VI_ONLINE_VPSS_ONLINE
+        ViVpssMode = VI_ONLINE_VPSS_OFFLINE;//VI_ONLINE_VPSS_ONLINE
     }
 
     return ViVpssMode;
