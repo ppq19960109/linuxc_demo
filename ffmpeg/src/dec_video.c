@@ -2,7 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "dec_video.h"
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/timestamp.h>
+#include <libavutil/opt.h>
+#include <libswscale/swscale.h>
 
 static int refcount = 0;
 int open_codec_context(int *stream_idx,
@@ -64,8 +71,32 @@ int open_codec_context(int *stream_idx,
     return 0;
 }
 
+static int yuv_rgb(AVFrame *frame, int width, int height, enum AVPixelFormat pix_fmt)
+{
+    int ret;
+    uint8_t *rgb_data;
+    const enum AVPixelFormat dst_pix_fmt = AV_PIX_FMT_BGR24;
+    int rgb_size = avpicture_get_size(dst_pix_fmt, width, height);
+    rgb_data = av_malloc(rgb_size);
+    if (!rgb_data)
+    {
+        exit(1);
+    }
+    AVFrame *frm_rgb = av_frame_alloc();
+    avpicture_fill((AVPicture *)frm_rgb, rgb_data, dst_pix_fmt, width, height);
+    struct SwsContext *sws = sws_getContext(width, height, pix_fmt, width, height, dst_pix_fmt,
+                                            SWS_BILINEAR, NULL, NULL, NULL);
+    ret = sws_scale(sws, frame->data, frame->linesize, 0, 0, frm_rgb->data, frm_rgb->linesize);
+    printf("sws_scale return:%d\n", ret);
+
+    sws_freeContext(sws);
+
+    av_frame_free(&frm_rgb);
+    av_free(rgb_data);
+    return 0;
+}
 static void decode(AVCodecContext *dec_ctx, int stream_idx, AVFrame *frame, AVPacket *pkt,
-                   FILE *dst_file, int (*cb)(AVFrame *frame))
+                   FILE *dst_file)
 {
     int ret, i;
     if (pkt->stream_index == stream_idx)
@@ -90,10 +121,7 @@ static void decode(AVCodecContext *dec_ctx, int stream_idx, AVFrame *frame, AVPa
             printf("saving frame %d\n", dec_ctx->frame_number);
 
             printf("frame width:%d,height:%d,pix fmt:%d\n", frame->width, frame->height, dec_ctx->pix_fmt);
-            if (cb)
-            {
-                cb(frame);
-            }
+
             if (dec_ctx->pix_fmt == AV_PIX_FMT_YUV420P || dec_ctx->pix_fmt == AV_PIX_FMT_YUVJ420P)
             {
                 if (dst_file != NULL)
@@ -125,42 +153,25 @@ static void decode(AVCodecContext *dec_ctx, int stream_idx, AVFrame *frame, AVPa
 //------------------------------
 static AVFormatContext *dec_fmt_ctx = NULL;
 static AVCodecContext *dec_ctx = NULL;
-static AVStream *dec_stream = NULL;
-static int dec_stream_idx = -1;
-static FILE *dec_dst_file = NULL;
+static AVStream *dec_video_stream = NULL;
+static int dec_video_stream_idx = -1;
 
 static AVFrame *frame = NULL;
 static AVPacket pkt;
 
-int decode_video_run(int (*cb)(AVFrame *frame))
+int main(int argc, char **argv)
 {
-    /* read frames from the file */
-    while (av_read_frame(dec_fmt_ctx, &pkt) >= 0)
-    {
-        AVPacket orig_pkt = pkt;
-        decode(dec_ctx, dec_stream_idx, frame, &pkt, dec_dst_file, cb);
-        av_packet_unref(&orig_pkt);
-    }
-    return 0;
-}
+    int width, height;
+    enum AVPixelFormat pix_fmt;
+    enum AVCodecID codec_id;
 
-int decode_video_close()
-{
-    if (dec_dst_file)
-        fclose(dec_dst_file);
+    FILE *video_dst_file = NULL;
 
-    av_frame_free(&frame);
+    printf("%s start\n", __FILE__);
 
-    avcodec_free_context(&dec_ctx);
-    avformat_close_input(&dec_fmt_ctx);
-
-    printf("ffmpeg decode video end!!!!!!!\n");
-    return 0;
-}
-int decode_video_open(const char *src_filename, const char *dst_filename, int *width, int *height, enum AVPixelFormat *pix_fmt, enum AVCodecID *codec_id)
-{
-    printf("ffmpeg decode video start...\n");
-
+    const char *src_filename = argv[1];
+    const char *video_dst_filename = argv[2];
+    avformat_network_init();
     /* open input file, and allocate format context */
     if (avformat_open_input(&dec_fmt_ctx, src_filename, NULL, NULL) < 0)
     {
@@ -175,25 +186,26 @@ int decode_video_open(const char *src_filename, const char *dst_filename, int *w
         exit(1);
     }
 
-    if (open_codec_context(&dec_stream_idx, &dec_ctx, dec_fmt_ctx, AVMEDIA_TYPE_VIDEO) < 0)
+    if (open_codec_context(&dec_video_stream_idx, &dec_ctx, dec_fmt_ctx, AVMEDIA_TYPE_VIDEO) < 0)
     {
         fprintf(stderr, "open_codec_context error\n");
         exit(1);
     }
-    dec_stream = dec_fmt_ctx->streams[dec_stream_idx];
-    if (!dec_stream)
+    dec_video_stream = dec_fmt_ctx->streams[dec_video_stream_idx];
+    if (!dec_video_stream)
     {
         fprintf(stderr, "Could not find video stream in the input, aborting\n");
         exit(1);
     }
 
-    printf("dec video width:%d,height:%d,pix fmt:%d,codec_id:%d\n", dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt, dec_stream->codecpar->codec_id);
+    printf("dec video width:%d,height:%d,pix fmt:%d,codec_id:%d\n", dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt, dec_video_stream->codecpar->codec_id);
     printf("framerate den:%d,num:%d\n", dec_ctx->framerate.den, dec_ctx->framerate.num);
     printf("time_base den:%d,num:%d\n", dec_ctx->time_base.den, dec_ctx->time_base.num);
-    *width = dec_ctx->width;
-    *height = dec_ctx->height;
-    *pix_fmt = dec_ctx->pix_fmt;
-    *codec_id = dec_stream->codecpar->codec_id;
+
+    width = dec_ctx->width;
+    height = dec_ctx->height;
+    pix_fmt = dec_ctx->pix_fmt;
+    codec_id = dec_video_stream->codecpar->codec_id;
     /* dump input information to stderr */
     av_dump_format(dec_fmt_ctx, 0, src_filename, 0);
 
@@ -210,15 +222,30 @@ int decode_video_open(const char *src_filename, const char *dst_filename, int *w
     pkt.data = NULL;
     pkt.size = 0;
 
-    if (dst_filename != NULL)
+    if (video_dst_filename != NULL)
     {
-        dec_dst_file = fopen(dst_filename, "wb+");
-        if (!dec_dst_file)
+        video_dst_file = fopen(video_dst_filename, "wb+");
+        if (!video_dst_file)
         {
-            fprintf(stderr, "Could not open destination file %s\n", dst_filename);
+            fprintf(stderr, "Could not open destination file %s\n", video_dst_filename);
             exit(1);
         }
     }
 
+    while (av_read_frame(dec_fmt_ctx, &pkt) >= 0)
+    {
+        AVPacket orig_pkt = pkt;
+        decode(dec_ctx, dec_video_stream_idx, frame, &pkt, video_dst_file);
+        av_packet_unref(&orig_pkt);
+    }
+
+    if (video_dst_file)
+        fclose(video_dst_file);
+
+    av_frame_free(&frame);
+    avcodec_free_context(&dec_ctx);
+    avformat_close_input(&dec_fmt_ctx);
+
+    printf("%s end\n", __FILE__);
     return 0;
 }

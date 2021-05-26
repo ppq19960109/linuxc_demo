@@ -63,7 +63,7 @@ int file_push_stream(const char *in_filename, const char *out_url)
     }
     else
     {
-        goto end;
+        // goto end;
     }
 
     avformat_alloc_output_context2(&ofmt_ctx, NULL, ofmt_name, out_url);
@@ -236,8 +236,15 @@ int file_push_stream(const char *in_filename, const char *out_url)
         ret = av_interleaved_write_frame(ofmt_ctx, &pkt);
         if (ret < 0)
         {
-            printf("Error muxing packet\n");
-            break;
+            if (ret == -22)
+            {
+                continue;
+            }
+            else
+            {
+                printf("Error muxing packet\n");
+                break;
+            }
         }
         printf("write frame:%d\n", frame++);
         av_packet_unref(&pkt);
@@ -265,9 +272,9 @@ end:
     return 0;
 }
 
-int main1(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    printf("ffmpeg push stream start...\n");
+    printf("%s start\n", __FILE__);
     if (argc <= 2)
     {
         fprintf(stderr, "Usage: %s <input file> <output url>\n", argv[0]);
@@ -275,6 +282,6 @@ int main1(int argc, char **argv)
     }
 
     file_push_stream(argv[1], argv[2]);
-    printf("ffmpeg push stream end...\n");
+    printf("%s end\n", __FILE__);
     return 0;
 }

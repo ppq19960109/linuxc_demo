@@ -1,7 +1,7 @@
-prefix=/home/ppq/ffmpeg-4.2.4/_install
+prefix=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install
 exec_prefix=${prefix}
-libdir=/home/ppq/ffmpeg-4.2.4/_install/lib
-includedir=/home/ppq/ffmpeg-4.2.4/_install/include
+libdir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/lib
+includedir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/include
 
 Name: libavfilter
 Description: FFmpeg audio/video filtering library

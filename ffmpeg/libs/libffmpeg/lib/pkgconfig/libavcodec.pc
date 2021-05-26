@@ -1,7 +1,7 @@
-prefix=/home/ppq/ffmpeg-4.2.4/_install
+prefix=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install
 exec_prefix=${prefix}
-libdir=/home/ppq/ffmpeg-4.2.4/_install/lib
-includedir=/home/ppq/ffmpeg-4.2.4/_install/include
+libdir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/lib
+includedir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/include
 
 Name: libavcodec
 Description: FFmpeg codec library
@@ -10,5 +10,5 @@ Requires:
 Requires.private: libswresample >= 3.5.100, libavutil >= 56.31.100
 Conflicts:
 Libs: -L${libdir}  -lavcodec 
-Libs.private: -pthread -lm -lz -lfdk-aac -lmp3lame -lm -lx264 -pthread -lm -L/home/ppq/x265_3.2.1/build/_install/lib -lx265 -lxvidcore
+Libs.private: -pthread -lm -lz -lx264 -pthread -lm
 Cflags: -I${includedir}

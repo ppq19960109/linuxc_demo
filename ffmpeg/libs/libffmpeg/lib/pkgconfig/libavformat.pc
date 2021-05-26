@@ -1,7 +1,7 @@
-prefix=/home/ppq/ffmpeg-4.2.4/_install
+prefix=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install
 exec_prefix=${prefix}
-libdir=/home/ppq/ffmpeg-4.2.4/_install/lib
-includedir=/home/ppq/ffmpeg-4.2.4/_install/include
+libdir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/lib
+includedir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/include
 
 Name: libavformat
 Description: FFmpeg container format library
@@ -10,5 +10,5 @@ Requires:
 Requires.private: libavcodec >= 58.54.100, libswresample >= 3.5.100, libavutil >= 56.31.100
 Conflicts:
 Libs: -L${libdir}  -lavformat 
-Libs.private: -lm -lz -L/home/ppq/openssl-1.0.1u/_install/lib -lssl -lcrypto -L/home/ppq/git/rtmpdump-2.3/librtmp/_install/lib -L/home/ppq/openssl-1.0.1u/_install/lib -lrtmp -lz -lssl -lcrypto
+Libs.private: -lm -lz
 Cflags: -I${includedir}

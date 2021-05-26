@@ -1,4 +1,4 @@
-CROSS_COMPILE = 
+CROSS_COMPILE =  arm-rockchip-linux-gnueabihf-
 
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 CXX = @echo "G++ $@"; $(CROSS_COMPILE)g++
@@ -11,7 +11,7 @@ TOPDIR = .
 
 
 CFLAGS += -Isrc
-CFLAGS += -Wall -g #-lmcheck
+CFLAGS += -Wall -g -lmcheck
 
 LDFLAGS += -L$(TOPDIR)
 

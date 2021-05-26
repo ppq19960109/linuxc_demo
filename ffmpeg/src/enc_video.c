@@ -2,14 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-// #include <sys/stat.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "enc_video.h"
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/timestamp.h>
+#include <libavutil/opt.h>
 
-void encode_video(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
-                  int (*enc_cb)(AVPacket *pkt))
+void encode_video(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt, FILE *outfile)
 {
     int ret;
 
@@ -36,7 +41,8 @@ void encode_video(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
         }
         printf("Write packet %ld (size=%5d)\n", pkt->pts, pkt->size);
 
-        enc_cb(pkt);
+        printf("Write packet %3" PRId64 " (size=%5d)\n", pkt->pts, pkt->size);
+        fwrite(pkt->data, 1, pkt->size, outfile);
         av_packet_unref(pkt);
     }
 }
@@ -48,56 +54,33 @@ static FILE *enc_file = NULL;
 static AVFrame *frame;
 static AVPacket *pkt;
 
-// static unsigned int enc_frame_pts = 0;
-
-static int enc_cb(AVPacket *pkt)
-{
-    if (enc_file != NULL)
-        fwrite(pkt->data, 1, pkt->size, enc_file);
-    return 0;
-}
-
-int encode_video_run(AVFrame *enc_frame)
-{
-    if (av_frame_make_writable(frame) < 0)
-    {
-        fprintf(stderr, "enc frame not write\n");
-        return -1;
-    }
-    // enc_frame->pts = enc_frame_pts++;
-    /* encode the image */
-    encode_video(enc_codec_ctx, enc_frame, pkt, enc_cb);
-    return 0;
-}
-
-int encode_video_close()
-{
-    /* flush the encoder */
-    encode_video(enc_codec_ctx, NULL, pkt, enc_cb);
-
-    if (enc_file)
-        fclose(enc_file);
-    av_frame_free(&frame);
-    av_packet_free(&pkt);
-
-    avcodec_free_context(&enc_codec_ctx);
-
-    printf("ffmpeg encode end!!!!!!!\n");
-    return 0;
-}
-
-int encode_video_open(const char *dst_filename, int width, int height, enum AVPixelFormat pix_fmt, enum AVCodecID codec_id)
+int main(int argc, char **argv)
 {
     int ret = -1;
-    printf("ffmpeg encode video start...\n");
-    printf("encode video width:%d,height:%d,pix fmt:%d rtp_codec id:%d\n", width, height, pix_fmt, codec_id);
-    //------------------------------
-    enc_codec = avcodec_find_encoder(codec_id);
+    printf("%s start\n", __FILE__);
+
+    const char *src_filename = argv[1];
+    const char *dst_filename = argv[2];
+    const char *codec_name = argv[3];
+
+    int width = 2304;
+    int height = 1296;
+    enum AVPixelFormat pix_fmt = AV_PIX_FMT_YUVJ420P; // AV_PIX_FMT_YUV420P;
+    printf("encode video width:%d,height:%d,pix fmt:%d\n", width, height, pix_fmt);
+
+    // enc_codec = avcodec_find_encoder(codec_id);
+    // if (!enc_codec)
+    // {
+    //     fprintf(stderr, "Codec id not found\n");
+    //     exit(1);
+    // }
+    enc_codec = avcodec_find_encoder_by_name(codec_name);
     if (!enc_codec)
     {
-        fprintf(stderr, "Codec id not found\n");
+        fprintf(stderr, "Codec '%s' not found\n", codec_name);
         exit(1);
     }
+    printf("codec id:%d\n", enc_codec->id);
     enc_codec_ctx = avcodec_alloc_context3(enc_codec);
     if (!enc_codec_ctx)
     {
@@ -164,6 +147,48 @@ int encode_video_open(const char *dst_filename, int width, int height, enum AVPi
             exit(1);
         }
     }
+    FILE *src_file = fopen(src_filename, "rb");
+    if (!src_file)
+    {
+        fprintf(stderr, "Could not open %s\n", src_filename);
+        exit(1);
+    }
+    int enc_frame_pts = 0;
+    while (1)
+    {
+        if (av_frame_make_writable(frame) < 0)
+        {
+            fprintf(stderr, "enc frame not write\n");
+            return -1;
+        }
 
+        if ((ret = fread(frame->data[0], width * height, 1, src_file)) < 1)
+        {
+            printf("fread end:%d\n", ret);
+            break;
+        }
+        if (fread(frame->data[1], width * height / 4, 1, src_file) < 1)
+        {
+            break;
+        }
+        if (fread(frame->data[2], width * height / 4, 1, src_file) < 1)
+        {
+            break;
+        }
+
+        frame->pts = enc_frame_pts++;
+        /* encode the image */
+        encode_video(enc_codec_ctx, frame, pkt, enc_file);
+    }
+    /* flush the encoder */
+    encode_video(enc_codec_ctx, NULL, pkt, enc_file);
+
+    fclose(src_file);
+    if (enc_file)
+        fclose(enc_file);
+    av_frame_free(&frame);
+    av_packet_free(&pkt);
+    avcodec_free_context(&enc_codec_ctx);
+    printf("%s end\n", __FILE__);
     return 0;
 }

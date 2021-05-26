@@ -1,4 +1,4 @@
-prefix=/home/ppq/git/x264-master/_install
+prefix=/home/ppq/ffmpeg/x264-master/_install
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include

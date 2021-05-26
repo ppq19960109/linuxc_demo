@@ -12,12 +12,12 @@ int main2()
     memset(text, 0, 100);
     memcpy(text, "hello,world!", 8);
 
-    // printf("%s\n", text);
+    printf("%s\n", text);
     // free(text);
     // int *p = (int *)malloc(2 * sizeof(int));
     muntrace();
     // unsetenv("MALLOC_TRACE");
     while(1);
-    muntrace();
+    // muntrace();
     return 0;
 }

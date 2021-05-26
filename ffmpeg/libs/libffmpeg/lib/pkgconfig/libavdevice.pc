@@ -1,7 +1,7 @@
-prefix=/home/ppq/ffmpeg-4.2.4/_install
+prefix=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install
 exec_prefix=${prefix}
-libdir=/home/ppq/ffmpeg-4.2.4/_install/lib
-includedir=/home/ppq/ffmpeg-4.2.4/_install/include
+libdir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/lib
+includedir=/home/ppq/ffmpeg/ffmpeg-4.2.4/_install/include
 
 Name: libavdevice
 Description: FFmpeg device handling library
@@ -10,5 +10,5 @@ Requires:
 Requires.private: libavfilter >= 7.57.100, libswscale >= 5.5.100, libpostproc >= 55.5.100, libavformat >= 58.29.100, libavcodec >= 58.54.100, libswresample >= 3.5.100, libavutil >= 56.31.100
 Conflicts:
 Libs: -L${libdir}  -lavdevice 
-Libs.private: -lm
+Libs.private: -lm -lxcb -lxcb-shm -lxcb-shape -lxcb-xfixes
 Cflags: -I${includedir}

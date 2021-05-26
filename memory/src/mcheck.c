@@ -8,7 +8,7 @@ void mcheck_func_cb(enum mcheck_status mc_status)
     printf("\n[%s:%d] mcheck_status=%d\n", __FILE__, __LINE__, mc_status);
 }
 
-int main1(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     // int ret = mcheck(mcheck_func_cb);
     // if (0 != ret)
@@ -25,7 +25,7 @@ int main1(int argc, char *argv[])
 
     free(ptr);
     ptr = NULL;
-    printf("process end\n");
+    // printf("process end\n");
     while(1);
     return 0;
 }

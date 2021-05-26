@@ -4,10 +4,13 @@
 
 void dumpCrash()
 {
-    char *ptr = "test";
-    free(ptr);
+    // char *ptr = "test";
+    // free(ptr);
+
+    unsigned char *ptr = 0x00;
+    *ptr = 0x00;
 }
-int main()
+int main3()
 {
     dumpCrash();
     return 0;
