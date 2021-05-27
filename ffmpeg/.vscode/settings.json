@@ -17,6 +17,7 @@
         "fcntl.h": "c",
         "stdbool.h": "c",
         "timestamp.h": "c",
-        "opt.h": "c"
+        "opt.h": "c",
+        "swscale.h": "c"
     }
 }

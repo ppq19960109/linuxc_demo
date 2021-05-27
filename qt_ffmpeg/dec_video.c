@@ -76,33 +76,34 @@ int open_codec_context(int *stream_idx,
     return 0;
 }
 
-static int yuv_rgb(AVFrame *frame, int width, int height, enum AVPixelFormat pix_fmt)
+static int yuv_rgb(AVFrame *frame, int width, int height, enum AVPixelFormat pix_fmt,unsigned char*out_data)
 {
     int ret;
-    uint8_t *rgb_data;
+    uint8_t *rgb_data=out_data;
+    pix_fmt=AV_PIX_FMT_YUV420P;
     const enum AVPixelFormat dst_pix_fmt = AV_PIX_FMT_RGB24;
-    int rgb_size = av_image_get_buffer_size(dst_pix_fmt, width, height, 1);
-    rgb_data = av_malloc(rgb_size);
-    if (!rgb_data)
-    {
-        exit(1);
-    }
+    //    int rgb_size = av_image_get_buffer_size(dst_pix_fmt, width, height, 1);
+    //    rgb_data = av_malloc(rgb_size);
+    //    if (!rgb_data)
+    //    {
+    //        exit(1);
+    //    }
     AVFrame *frm_rgb = av_frame_alloc();
     av_image_fill_arrays(frm_rgb->data, frm_rgb->linesize, rgb_data, dst_pix_fmt, width, height, 1);
 
     struct SwsContext *sws = sws_getContext(width, height, pix_fmt, width, height, dst_pix_fmt,
                                             SWS_BILINEAR, NULL, NULL, NULL);
-    ret = sws_scale(sws, frame->data, frame->linesize, 0, 0, frm_rgb->data, frm_rgb->linesize);
+    ret = sws_scale(sws, frame->data, frame->linesize, 0, height, frm_rgb->data, frm_rgb->linesize);
     printf("sws_scale return:%d\n", ret);
 
     sws_freeContext(sws);
 
     av_frame_free(&frm_rgb);
-    av_free(rgb_data);
+    //    av_free(rgb_data);
     return 0;
 }
 static void decode(AVCodecContext *dec_ctx, int stream_idx, AVFrame *frame, AVPacket *pkt,
-                   FILE *dst_file)
+                   FILE *dst_file,unsigned char*out_data)
 {
     int ret, i;
     if (pkt->stream_index == stream_idx)
@@ -149,6 +150,7 @@ static void decode(AVCodecContext *dec_ctx, int stream_idx, AVFrame *frame, AVPa
                         fwrite(frame->data[2] + i * frame->linesize[2], frame->width / 2, 1, dst_file);
                     }
                 }
+                yuv_rgb(frame,frame->width,frame->height,dec_ctx->pix_fmt,out_data);
             }
 
             if (refcount)
@@ -164,27 +166,26 @@ static int dec_video_stream_idx = -1;
 
 static AVFrame *frame = NULL;
 static AVPacket pkt;
+static FILE *video_dst_file = NULL;
 
-int main(int argc, char **argv)
+int dec_open(const char *src_filename,const char *video_dst_filename,int* w,int* h)
 {
     int width, height;
     enum AVPixelFormat pix_fmt;
     enum AVCodecID codec_id;
 
-    FILE *video_dst_file = NULL;
-
     printf("%s start\n", __FILE__);
 
-    const char *src_filename = argv[1];
-    const char *video_dst_filename = argv[2];
     avformat_network_init();
     /* open input file, and allocate format context */
-    if (avformat_open_input(&dec_fmt_ctx, src_filename, NULL, NULL) < 0)
-    {
-        fprintf(stderr, "Could not open source file %s\n", src_filename);
-        exit(1);
-    }
-
+    do{
+        if (avformat_open_input(&dec_fmt_ctx, src_filename, NULL, NULL) < 0)
+        {
+            fprintf(stderr, "Could not open source file %s\n", src_filename);
+            continue;
+        }
+        break;
+    }while(1);
     /* retrieve stream information */
     if (avformat_find_stream_info(dec_fmt_ctx, NULL) < 0)
     {
@@ -237,14 +238,26 @@ int main(int argc, char **argv)
             exit(1);
         }
     }
+    *w=width;
+    *h=height;
+    return 0;
+}
 
-    while (av_read_frame(dec_fmt_ctx, &pkt) >= 0)
+int dec_run(unsigned char*out_data)
+{
+    if (av_read_frame(dec_fmt_ctx, &pkt) < 0)
     {
-        AVPacket orig_pkt = pkt;
-        decode(dec_ctx, dec_video_stream_idx, frame, &pkt, video_dst_file);
-        av_packet_unref(&orig_pkt);
+        return -1;
     }
+    AVPacket orig_pkt = pkt;
+    decode(dec_ctx, dec_video_stream_idx, frame, &pkt, video_dst_file,out_data);
+    av_packet_unref(&orig_pkt);
 
+    return 0;
+}
+
+void dec_close()
+{
     if (video_dst_file)
         fclose(video_dst_file);
 
@@ -253,5 +266,5 @@ int main(int argc, char **argv)
     avformat_close_input(&dec_fmt_ctx);
 
     printf("%s end\n", __FILE__);
-    return 0;
+
 }
