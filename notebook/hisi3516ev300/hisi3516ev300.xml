@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="GB2312" ?>
+<Partition_Info>
+<Part Sel="0" PartitionName="fastboot" FlashType="spi" FileSystem="none" Start="0" Length="1M" SelectFile="D:\virtulpath\notebook\hisi3516ev300\u-boot-hi3516ev300.bin"/>
+<Part Sel="1" PartitionName="kernel" FlashType="spi" FileSystem="none" Start="1M" Length="4M" SelectFile="D:\virtulpath\notebook\hisi3516ev300\uImage"/>
+<Part Sel="1" PartitionName="rootfs" FlashType="spi" FileSystem="none" Start="5M" Length="11M" SelectFile="D:\virtulpath\notebook\hisi3516ev300\rootfs_hi3516ev300_64k.jffs2"/>
+</Partition_Info>

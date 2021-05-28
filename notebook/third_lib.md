@@ -30,7 +30,14 @@ export PKG_CONFIG_PATH=/home/ppq/x265_3.2.1/build/_install/lib/pkgconfig:/home/p
 --enable-libx264 --enable-libx265 --enable-libmp3lame --enable-libxvid --enable-libfdk-aac --enable-openssl --enable-librtmp \
 --extra-cflags='-I/home/ppq/git/x264-master/_install/include -I/home/ppq/lame-3.100/_install/include -I/home/ppq/xvidcore/build/generic/_install/include -I/home/ppq/fdk-aac-2.0.1/_install/include -I/home/ppq/x265_3.2.1/build/_install/include  -I/home/ppq/openssl-1.0.1u/_install/include  -I/home/ppq/git/rtmpdump-2.3/librtmp/_install/include' \
 --extra-ldflags='-L/home/ppq/git/x264-master/_install/lib -L/home/ppq/lame-3.100/_install/lib -L/home/ppq/xvidcore/build/generic/_install/lib -L/home/ppq/fdk-aac-2.0.1/_install/lib -L/home/ppq/x265_3.2.1/build/_install/lib  -L/home/ppq/openssl-1.0.1u/_install/lib -L/home/ppq/git/rtmpdump-2.3/librtmp/_install/lib' \
---extra-libs=-ldl	
+--extra-libs=-ldl
+
+./configure --prefix=`pwd`/_install --enable-shared --enable-gpl --disable-asm \
+--extra-libs='-ldl' \
+--enable-libx264 \
+--extra-cflags='-I/home/ppq/ffmpeg/x264-master/_install/include' \
+--extra-ldflags='-L/home/ppq/ffmpeg/x264-master/_install/lib'
+
 
 ./configure --prefix=`pwd`/_install --enable-cross-compile --cpu=cortex-a7 --arch=armv7 --target-os=linux  \
 --cross-prefix=arm-himix100-linux- --cc=arm-himix100-linux-gcc \
@@ -45,7 +52,7 @@ librtmp:
 make prefix=`pwd`/_install XCFLAGS+='-I/home/ppq/openssl-1.0.1u/_install/include -I/home/ppq/git/zlib/_install/include' \
 XLDFLAGS+='-L/home/ppq/openssl-1.0.1u/_install/lib -L/home/ppq/git/zlib/_install/lib'
 libx264:
-./configure --prefix=`pwd`/_install --host=arm-himix100-linux --cross-prefix=arm-himix100-linux- --disbale-asm --enable-shared --enable-static
+./configure --prefix=`pwd`/_install --disable-asm --enable-shared --enable-static --enable-pic --host=arm-himix100-linux --cross-prefix=arm-himix100-linux-
 nginx:
 ./configure --add-module=../nginx-rtmp-module --with-http_ssl_module --prefix=`pwd`/_install
 ./configure --add-module=../nginx-http-flv-module  --with-http_ssl_module --prefix=`pwd`/_install 
@@ -109,3 +116,11 @@ opencv：BUILD_SHARED_LIBS
 dlib: -DCMAKE_BUILD_TYPE=Debug Release   
 cmake .. -DCMAKE_INSTALL_PREFIX=./_install -DCMAKE_BUILD_TYPE=Release -DDLIB_NO_GUI_SUPPORT=OFF -DCMAKE_C_COMPILER=arm-rockchip-linux-gnueabihf-gcc -DCMAKE_CXX_COMPILER=arm-rockchip-linux-gnueabihf-g++ 
 cmake .. -DCMAKE_INSTALL_PREFIX=./_install -DCMAKE_BUILD_TYPE=Release -DDLIB_NO_GUI_SUPPORT=OFF -DCMAKE_C_COMPILER=arm-himix200-linux-gcc -DCMAKE_CXX_COMPILER=arm-himix200-linux-g++ 
+
+gdb:
+target remote 192.168.1.2:2001
+../configure --target=arm-rockchip-linux-gnueabihf --prefix=`pwd`/_install
+./configure --target=arm-rockchip-linux-gnueabihf --host=arm-rockchip-linux-gnueabihf CC=arm-rockchip-linux-gnueabihf-gcc //配置
+make  //交叉编译 gdbserver
+set solib-absolute-prefix "/home/ppq/nfs/lib:/home/ppq/nfs/usrlib"
+set solib-search-path "/home/ppq/nfs/lib:/home/ppq/nfs/usrlib" 
