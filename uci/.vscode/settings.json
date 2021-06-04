@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "client.h": "c",
+        "pthread.h": "c",
+        "wifi_server.h": "c",
+        "uci_wifi.h": "c",
+        "epollserver.h": "c",
+        "ip.h": "c",
+        "types.h": "c",
+        "errno.h": "c",
+        "unistd.h": "c",
+        "string.h": "c",
+        "stdio.h": "c"
+    }
+}
