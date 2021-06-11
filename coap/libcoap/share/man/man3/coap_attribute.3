@@ -1,0 +1,154 @@
+'\" t
+.\"     Title: coap_attribute
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_attribute 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_ATTRIBUTE" "3" "06/07/2021" "coap_attribute 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_attribute, coap_add_attr, coap_find_attr \- Work with CoAP attributes
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBcoap_attr_t *coap_add_attr(coap_resource_t *\fR\fB\fIresource\fR\fR\fB, coap_str_const_t *\fR\fB\fIname\fR\fR\fB, coap_str_const_t *\fR\fB\fIvalue\fR\fR\fB, int \fR\fB\fIflags\fR\fR\fB);\fR
+.sp
+\fBcoap_attr_t *coap_find_attr(coap_resource_t *\fR\fB\fIresource\fR\fR\fB, coap_str_const_t *\fR\fB\fIname\fR\fR\fB);\fR
+.sp
+\fBcoap_str_const_t *coap_attr_get_value(coap_attr_t *\fR\fB\fIattribute\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+CoAP Resources on a CoAP Server need to be created, updated etc\&. The URI in the request packet defines the resource to work with, with possibly the Query referring to a sub\-resource\&.
+.sp
+When resources are configured on the CoAP server, the URI to match against is specified\&. Callback Handlers are then added to the resource to handle the different request methods\&.
+.sp
+Adding Attributes allows textual information to be added to the resource which can then be reported back to any client doing a Resource Discovery using a "GET /\&.well\-known/core" request with an optional query\&. See https://tools\&.ietf\&.org/html/rfc6690#section\-5 for some examples of resource discovery usage\&. Common attribute names are rt, if, sz, ct, obs, rel, anchor, rev, hreflang, media, title and type\&. href cannot be an attribute name\&.
+.sp
+Attributes are automatically deleted when a Resource is deleted\&.
+.sp
+The \fBcoap_add_attr\fR() function registers a new attribute called \fIname\fR for the \fIresource\fR\&. The value of the attribute is \fIvalue\fR which can be NULL\&.
+.sp
+\fIflags\fR can be one or more of the following, which, if set, defines what is to be internally freed off when the attribute is deleted with \fBcoap_delete_resource\fR()\&.
+.TS
+tab(:);
+lt lt
+lt lt.
+T{
+.sp
+\fBCOAP_ATTR_FLAGS_RELEASE_NAME\fR
+T}:T{
+.sp
+Free off \fIname\fR when attribute is deleted with \fBcoap_delete_resource\fR()\&.
+T}
+T{
+.sp
+\fBCOAP_ATTR_FLAGS_RELEASE_VALUE\fR
+T}:T{
+.sp
+Free off \fIvalue\fR when attribute is deleted with \fBcoap_delete_resource\fR()\&.
+T}
+.TE
+.sp 1
+.sp
+The \fBcoap_find_attr\fR() function returns the attribute with the \fIname\fR, if found, associated with \fIresource\fR\&.
+.sp
+The \fBcoap_attr_get_value\fR() function returns the \fIvalue\fR associated with the specified \fIattribute\fR\&.
+.SH "RETURN VALUES"
+.sp
+\fBcoap_add_attr\fR() function returns a pointer to the attribute that was created or NULL if there is a malloc failure\&.
+.sp
+\fBcoap_find_attr\fR() function returns a pointer to the first matching attribute or NULL if the \fIname\fR was not found\&.
+.sp
+\fBcoap_attr_get_value\fR() function returns a pointer to the value held within the attribute\&. The pointer can be NULL if the \fIvalue\fR id NULL, or NULL if \fIattribute\fR does not exist\&.
+.SH "EXAMPLE"
+.sp
+\fBInitialize Resources\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+static void
+init_resources(coap_context_t *ctx) {
+
+  coap_resource_t *r;
+
+  /* Create a resource to return general information */
+  r = coap_resource_init(NULL, 0);
+  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_index);
+
+  /* Document resource for \*(Aq\&.well\-known/core\*(Aq request */
+  coap_add_attr(r, coap_make_str_const("ct"), coap_make_str_const("0"), 0);
+  coap_add_attr(r, coap_make_str_const("title"),
+                coap_make_str_const("\e"General Info\e""), 0);
+
+  coap_add_resource(ctx, r);
+
+  /* Create a resource to return return or update time */
+  r = coap_resource_init(coap_make_str_const("time"),
+                         COAP_RESOURCE_FLAGS_NOTIFY_CON);
+  coap_resource_set_get_observable(r, 1);
+  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_time);
+  coap_register_handler(r, COAP_REQUEST_PUT, hnd_put_time);
+  coap_register_handler(r, COAP_REQUEST_DELETE, hnd_delete_time);
+
+  /* Document resource for \*(Aqtime\*(Aq request */
+  coap_add_attr(r, coap_make_str_const("ct"), coap_make_str_const("0"), 0);
+  coap_add_attr(r, coap_make_str_const("title"),
+                coap_make_str_const("\e"Internal Clock\e""), 0);
+  coap_add_attr(r, coap_make_str_const("rt"), coap_make_str_const("\e"secs\e""),
+                0);
+  coap_add_attr(r, coap_make_str_const("if"), coap_make_str_const("\e"clock\e""),
+                0);
+
+  coap_add_resource(ctx, r);
+
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBcoap_resource\fR(3) and \fBcoap_handler\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See
+.sp
+"RFC7252: The Constrained Application Protocol (CoAP)"
+.sp
+"RFC6690: Constrained RESTful Environments (CoRE) Link Format"
+.sp
+for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

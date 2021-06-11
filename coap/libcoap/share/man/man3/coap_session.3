@@ -1,0 +1,200 @@
+'\" t
+.\"     Title: coap_session
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_session 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_SESSION" "3" "06/07/2021" "coap_session 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_session, coap_session_reference, coap_session_release, coap_session_disconnected, coap_session_set_type_client, coap_session_set_app_data, coap_session_get_app_data, coap_session_get_addr_local, coap_session_get_addr_remote \- Work with CoAP sessions
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBcoap_session_t *coap_session_reference(coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBvoid coap_session_release(coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBvoid coap_session_disconnected(coap_session_t *\fR\fB\fIsession\fR\fR\fB, coap_nack_reason_t \fR\fB\fIreason\fR\fR\fB);\fR
+.sp
+\fBint coap_session_set_type_client(coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBvoid coap_session_set_app_data(coap_session_t *\fR\fB\fIsession\fR\fR\fB, void *\fR\fB\fIdata\fR\fR\fB);\fR
+.sp
+\fBvoid *coap_session_get_app_data(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBconst coap_address_t *coap_session_get_addr_local( const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBconst coap_address_t *coap_session_get_addr_remote( const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBcoap_context_t *coap_session_get_context(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBint coap_session_get_ifindex(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBcoap_proto_t coap_session_get_proto(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBcoap_session_state_t coap_session_get_state(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBvoid *coap_session_get_tls(const coap_session_t *\fR\fB\fIsession\fR\fR\fB, coap_tls_library_t *tls_lib);\fR
+.sp
+\fBcoap_session_type_t coap_session_get_type(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBconst coap_bin_const_t *coap_session_get_psk_hint( const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+\fBconst coap_bin_const_t *coap_session_get_psk_key( const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+This man page focuses on the CoAP Session and how to update or get information from the opaque coap_session_t structure\&.
+.sp
+A CoAP Session maintains the state of an ongoing connection between a Client and Server which is stored in a coap_session_t Session object\&. A CoAP session is tracked by local port, CoAP protocol, remote IP address and remote port\&.
+.sp
+The Session network traffic can be encrypted or un\-encrypted if there is an underlying TLS library\&.
+.sp
+The \fBcoap_session_reference\fR() function is used to increment the reference count of the \fIsession\fR\&. Incrementing the reference count by an application means that the library will not inadvertently remove the session when it has finished processing the session\&.
+.sp
+The \fBcoap_session_release\fR() function is be used to decrement the \fIsession\fR reference count, which when it gets to 0, will:\-
+.sp
+If type Client, free off the session which then clears all entries from the receive queue and send queue\&. \fBNOTE:\fR All client sessions start off with a reference count of 1\&.
+.sp
+If type Server, then the \fIsession\fR is added to an idle pool ready for subsequent re\-use\&. If the Server \fIsession\fR is not used for 5 minutes, then it will get completely freed off\&. \fBNOTE:\fR Unless the application increments the reference count, this is the case for all type server sessions as they start with a reference count of 0\&.
+.sp
+The \fBcoap_session_disconnected\fR() function is used to force the closure of a \fIsession\fR for the reason \fIreason\fR\&. It will cause any outstanding traffic to get dropped\&.
+.sp
+The \fBcoap_session_set_type_client\fR() function is used to convert the \fIsession\fR frrm a session endpoint type of Server to Client\&. This typically is used in a Call\-Home type environment where the roles have to change following the establishment of a session\&. The reference count is incremented by 1\&.
+.sp
+The \fBcoap_session_set_app_data\fR() function is used to define a \fIdata\fR pointer for the \fIsession\fR which can then be retrieved at a later date\&.
+.sp
+The \fBcoap_session_get_app_data\fR() function is used to retrieve the data pointer previously defined by \fBcoap_session_set_app_data\fR()\&.
+.sp
+The \fBcoap_session_get_addr_local\fR() function is used to get the local IP address and port information from the \fIsession\fR\&.
+.sp
+The \fBcoap_session_get_addr_remote\fR() function is used to get the remote (peer) IP address and port information from the \fIsession\fR\&.
+.sp
+The \fBcoap_session_get_context\fR() function is used to get the CoAP context associated with the \fIsession\fR\&.
+.sp
+The \fBcoap_session_get_ifindex\fR() function is used to get the network interface index that the traffic came in over from the \fIsession\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+COAP_PROTO_UDP
+COAP_PROTO_DTLS
+COAP_PROTO_TCP
+COAP_PROTO_TLS
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_session_get_proto\fR() function is used to get the CoAP protocol from the \fIsession\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+COAP_SESSION_STATE_NONE
+COAP_SESSION_STATE_CONNECTING
+COAP_SESSION_STATE_HANDSHAKE
+COAP_SESSION_STATE_CSM
+COAP_SESSION_STATE_ESTABLISHED
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_session_get_state\fR() function is used to get the current state of the \fIsession\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+OpenSSL:  SSL*
+GnuTLS:   gnutls_session_t (implicit *)
+Mbed TLS: mbedtls_ssl_context*
+TinyDTLS: struct dtls_context*
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_session_get_tls\fR() function is used to get the pointer to the TLS information from the \fIsession\fR\&. This is TLS library specific\&. \fItls_lib\fR is updated with the underlying (D)TLS library type\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+COAP_SESSION_TYPE_CLIENT
+COAP_SESSION_TYPE_SERVER
+COAP_SESSION_TYPE_HELLO  /* Negotiating a (D)TLS session */
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_session_get_type\fR() function is used to get the session type from the \fIsession\fR\&.
+.sp
+The \fBcoap_session_get_psk_hint\fR() function is used to get the current server \fIsession\fR\*(Aqs pre\-shared\-key identity hint\&.
+.sp
+The \fBcoap_session_get_psk_key\fR() function is used to get the current \fIsession\fR\*(Aqs pre\-shared\-key key information\&.
+.SH "RETURN VALUES"
+.sp
+\fBcoap_session_reference\fR() function returns a pointer to the session\&.
+.sp
+\fBcoap_session_set_type_client\fR() function returns 1 on success, otherwise 0\&.
+.sp
+\fBcoap_session_get_app_data\fR() function return a previously defined pointer\&.
+.sp
+\fBcoap_session_get_addr_local\fR() and \fBcoap_session_get_addr_remote\fR() return a pointer to the IP address / port or NULL on error\&.
+.sp
+\fBcoap_session_get_context\fR() returns a pointer to the current CoAP Context or NULL on error\&.
+.sp
+\fBcoap_session_get_ifindex\fR() returns the network interface the traffic last came in over, or \-1 on error\&.
+.sp
+\fBcoap_session_get_proto\fR() returns the current session\(cqs protocol or 0 on error\&.
+.sp
+\fBcoap_session_get_state\fR() returns the current session\(cqs state or 0 on error\&.
+.sp
+\fBcoap_session_get_tls\fR() returns a pointer to the current session\(cqs TLS information (TLS library dependent) or NULL if there is none or there is an error\&.
+.sp
+\fBcoap_session_get_type\fR() returns the current session\(cqs type or 0 on error\&.
+.sp
+\fBcoap_session_get_psk_hint\fR() returns the current server session\(cqs pre\-shared\-key identity hint, or NULL if not defined\&.
+.sp
+\fBcoap_session_get_psk_key\fR() returns the current session\(cqs pre\-shared\-key key information, or NULL if not defined\&.
+.SH "SEE ALSO"
+.sp
+\fBcoap_context\fR(3), \fBcoap_endpoint_client\fR(3) and \fBcoap_endpoint_server\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See "RFC7252: The Constrained Application Protocol (CoAP)" for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

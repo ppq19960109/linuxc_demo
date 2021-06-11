@@ -1,0 +1,165 @@
+'\" t
+.\"     Title: coap_async
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_async 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_ASYNC" "3" "06/07/2021" "coap_async 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_async, coap_register_async, coap_async_set_delay, coap_find_async, coap_free_async, coap_async_set_app_data, coap_async_get_app_data \- Work with CoAP async support
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBcoap_async_t *coap_register_async(coap_session_t *\fR\fB\fIsession\fR\fR\fB, const coap_pdu_t *\fR\fB\fIrequest\fR\fR\fB, coap_tick_t \fR\fB\fIdelay\fR\fR\fB);\fR
+.sp
+\fBvoid coap_async_set_delay(coap_async_t *\fR\fB\fIasync\fR\fR\fB, coap_tick_t \fR\fB\fIdelay\fR\fR\fB);\fR
+.sp
+\fBvoid coap_free_async(coap_session_t *\fR\fB\fIsession\fR\fR\fB, coap_async_t *\fR\fB\fIasync\fR\fR\fB);\fR
+.sp
+\fBcoap_async_t *coap_find_async(coap_session_t *\fR\fB\fIsession\fR\fR\fB, coap_bin_const_t \fR\fB\fItoken\fR\fR\fB);\fR
+.sp
+\fBvoid coap_async_set_app_data(coap_async_t *\fR\fB\fIasync\fR\fR\fB, void *\fR\fB\fIapp_data\fR\fR\fB);\fR
+.sp
+\fBvoid *coap_async_get_app_data(const coap_async_t *\fR\fB\fIasync\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+CoAP server responses can be piggybacked (RFC7252 5\&.2\&.1) or separate (RFC7252 5\&.2\&.2)\&.
+.sp
+For piggybacked responses, the response packet contains both the status and any data\&.
+.sp
+For separate responses, there is an initial empty ACK response (Confirmable only \- to stop the client re\-transmitting the request) followed at a later time by the packet containing the status and any data\&.
+.sp
+Usually responses are piggybacked, but this man page focuses on separate (async) support\&.
+.sp
+The \fBcoap_register_async\fR() function is used to set up an asynchronous delayed request for the \fIrequest\fR PDU associated with the \fIsession\fR\&. The application request handler will get called with a copy of \fIrequest\fR after \fIdelay\fR ticks which will then cause a response to be sent\&. If \fIdelay\fR is 0, then the application request handler will not get called\&.
+.sp
+The \fBcoap_async_set_delay\fR() function is used to update the remaining \fIdelay\fR before the application request handler is called for the \fIasync\fR definition\&. If \fIdelay\fR is set to 0, then the application request handler will not get called\&.
+.sp
+An example of usage here is \fBcoap_register_async\fR() sets \fIdelay\fR to 0, and then when the response is ready at an indeterminate point in the future, \fBcoap_async_set_delay\fR() is called setting \fIdelay\fR to 1\&.
+.sp
+The \fBcoap_free_async\fR() function is used to delete an \fIasync\fR definition\&.
+.sp
+The \fBcoap_find_async\fR() function is used to determine if there is an async definition based on the \fIsession\fR and token \fItoken\fR\&.
+.sp
+The \fBcoap_async_set_app_data\fR() function is used to add in user defined \fIapp_data\fR to the \fIasync\fR definition\&. It is the responsibility of the application to release this data if appropriate\&.
+.sp
+The \fBcoap_async_get_app_data\fR() function is used to retrieve any defines application data from the \fIasync\fR definition\&.
+.SH "RETURN VALUES"
+.sp
+\fBcoap_register_async\fR() and \fBcoap_find_async\fR() return a pointer to an async definition or NULL if there is an error\&.
+.sp
+\fBcoap_async_get_app_data\fR() returns a pointer to the user defined data\&.
+.SH "EXAMPLES"
+.sp
+\fBCoAP Server Non\-Encrypted Setup\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+/*
+ * This example is used to demonstrate how to set up and use a "separate"
+ * response (empty ACK followed by data response at a later stage)\&.
+ */
+static void
+hnd_get_with_delay(coap_session_t *session,
+              coap_resource_t *resource,
+              coap_pdu_t *request,
+              coap_string_t *query,
+              coap_pdu_t *response) {
+  unsigned long delay = 5;
+  size_t size;
+
+  /*
+   * See if this is the initial, or delayed request
+   */
+  if (request) {
+    coap_async_t *async;
+    coap_bin_const_t token = coap_pdu_get_token(request);
+
+    async = coap_find_async(session, token);
+    if (!async) {
+      /* Set up an async request to trigger delay in the future */
+      if (query) {
+        const uint8_t *p = query\->s;
+
+        delay = 0;
+        for (size = query\->length; size; \-\-size, ++p)
+          delay = delay * 10 + (*p \- \*(Aq0\*(Aq);
+        if (delay == 0) {
+          coap_log(LOG_INFO, "async: delay of 0 not supported\en");
+          coap_pdu_set_code(response, COAP_RESPONSE_CODE_BAD_REQUEST);
+          return;
+        }
+      }
+      async = coap_register_async(session,
+                                  request,
+                                  COAP_TICKS_PER_SECOND * delay);
+      if (async == NULL) {
+        coap_pdu_set_code(response, COAP_RESPONSE_CODE_SERVICE_UNAVAILABLE);
+        return;
+      }
+      /*
+       * Not setting response code will cause empty ACK to be sent
+       * if Confirmable
+       */
+      return;
+    }
+  }
+  /* no request (observe) or async set up, so this is the delayed request */
+
+  /* Send back the appropriate data */
+  coap_add_data_large_response(resource, session, request, response,
+                               query, COAP_MEDIATYPE_TEXT_PLAIN, \-1, 0, 4,
+                               (const uint8_t *)"done", NULL, NULL);
+  coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTENT);
+
+  /* async is automatically removed by libcoap on return from this handler */
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBcoap_handler\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See
+.sp
+"RFC7252: The Constrained Application Protocol (CoAP)"
+.sp
+for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

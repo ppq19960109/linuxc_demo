@@ -1,0 +1,417 @@
+'\" t
+.\"     Title: coap-server
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: coap-server Manual
+.\"    Source: coap-server 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP\-SERVER" "5" "06/07/2021" "coap\-server 4\&.3\&.0rc3" "coap\-server Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap-server, coap-server-gnutls, coap-server-mbedtls, coap-server-openssl, coap-server-notls \- CoAP Server based on libcoap
+.SH "SYNOPSIS"
+.sp
+\fBcoap\-server\fR [\fB\-d\fR max] [\fB\-e\fR] [\fB\-g\fR group] [\fB\-G\fR group_if] [\fB\-l\fR loss] [\fB\-p\fR port] [\fB\-v\fR num] [\fB\-A\fR address] [\fB\-L\fR value] [\fB\-N\fR] [\fB\-P\fR scheme://addr[:port],name1[,name2\&.\&.]] [[\fB\-h\fR hint] [\fB\-i\fR match_identity_file] [\fB\-k\fR key] [\fB\-s\fR match_psk_sni_file] [\fB\-u\fR user]] [[\fB\-c\fR certfile] [\fB\-j\fR keyfile] [\fB\-n\fR] [\fB\-C\fR cafile] [\fB\-J\fR pkcs11_pin] [\fB\-M\fR rpk_file] [\fB\-R\fR trust_casfile] [\fB\-S\fR match_pki_sni_file]]
+.sp
+For \fBcoap\-server\fR versions that use libcoap compiled for different (D)TLS libraries, \fBcoap\-server\-notls\fR, \fBcoap\-server\-gnutls\fR, \fBcoap\-server\-openssl\fR, \fBcoap\-server\-mbedtls\fR or \fBcoap\-server\-tinydtls\fR may be available\&. Otherwise, \fBcoap\-server\fR uses the default libcoap (D)TLS support\&.
+.SH "DESCRIPTION"
+.sp
+\fBcoap\-server\fR is an example server for the \*(AqConstrained Application Protocol` (RFC 7252)\&.
+.SH "OPTIONS \- GENERAL"
+.PP
+\fB\-d\fR max
+.RS 4
+Enable support for creation of dynamic resources when doing a PUT up to a limit of
+\fImax\fR\&. If
+\fImax\fR
+is reached, a 4\&.06 code is returned until one of the dynamic resources has been deleted\&.
+.RE
+.PP
+\fB\-e\fR
+.RS 4
+Echo back the data sent with a PUT\&.
+.RE
+.PP
+\fB\-g\fR group
+.RS 4
+Join specified multicast
+\fIgroup\fR
+on start up\&.
+\fBNote:\fR
+DTLS over multicast is not currently supported\&.
+.RE
+.PP
+\fB\-G\fR group_if
+.RS 4
+Use this interface for listening for the multicast group\&. This can be different from the implied interface if the
+\fB\-A\fR
+option is used\&.
+.RE
+.PP
+\fB\-l\fR list
+.RS 4
+Fail to send some datagrams specified by a comma separated list of numbers or number ranges (debugging only)\&.
+.RE
+.PP
+\fB\-l\fR loss%
+.RS 4
+Randomly failed to send datagrams with the specified probability \- 100% all datagrams, 0% no datagrams (debugging only)\&.
+.RE
+.PP
+\fB\-p\fR port
+.RS 4
+The
+\fIport\fR
+on the given address will be listening for incoming connections\&. If (D)TLS is supported, then
+\fIport\fR
++ 1 will also be listened on for (D)TLS connections\&. The default port is 5683 if not given any other value\&.
+.RE
+.PP
+\fB\-v\fR num
+.RS 4
+The verbosity level to use (default 3, maximum is 9)\&. Above 7, there is increased verbosity in GnuTLS and OpenSSL logging\&.
+.RE
+.PP
+\fB\-A\fR address
+.RS 4
+The local address of the interface which the server has to listen on\&.
+.RE
+.PP
+\fB\-L\fR value
+.RS 4
+Sum of one or more COAP_BLOCK_* flag values for different block handling methods\&. Default is 1 (COAP_BLOCK_USE_LIBCOAP)\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+COAP_BLOCK_USE_LIBCOAP  1
+COAP_BLOCK_SINGLE_BODY  2
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-N\fR
+.RS 4
+Send NON\-confirmable message for "observe" responses\&. If option
+\fB\-N\fR
+is not specified, a confirmable response will be sent\&. Even if set, every fifth response will still be sent as a confirmable response (RFC 7641 requirement)\&.
+.RE
+.PP
+\fB\-P\fR scheme://address[:port],name1[,name2[,name3\&.\&.]]
+.RS 4
+Scheme, address, optional port of how to connect to the next proxy server and one or more names (comma separated) that this proxy server is known by\&. If the hostname of the incoming proxy request matches one of these names, then this server is considered to be the final endpoint\&. If scheme://address[:port] is not defined before the leading , (comma) of the first name, then the ongoing connection will be a direct connection\&. Scheme is one of coap, coaps, coap+tcp and coaps+tcp\&.
+.RE
+.SH "OPTIONS \- PSK"
+.sp
+(If supported by underlying (D)TLS library)
+.PP
+\fB\-h\fR hint
+.RS 4
+Identity Hint to send\&. Default is
+\fBCoAP\fR\&. Zero length is no hint\&.
+.RE
+.PP
+\fB\-i\fR match_identiity_file
+.RS 4
+This is a file that contains one or more lines of Identity Hints and (user) Identities to match for a different new Pre\-Shared Key (PSK) (comma separated) to be used\&. E\&.g\&., per line
+
+hint_to_match,identity_to_match,use_key
+
+A line that starts with # is treated as a comment\&.
+
+Note:
+\fB\-k\fR
+still needs to be defined for the default case\&.
+
+Note: A match using the
+\fB\-s\fR
+option may mean that the current Identity Hint is different to that defined by
+\fB\-h\fR\&.
+.RE
+.PP
+\fB\-k\fR key
+.RS 4
+Pre\-shared key to use for inbound connections\&. This cannot be empty if defined\&.
+
+Note: if
+\fB\-c cafile\fR
+is defined, you need to define
+\fB\-k key\fR
+as well to have the server support both PSK and PKI\&.
+.RE
+.PP
+\fB\-s\fR match_psk_sni_file
+.RS 4
+This is a file that contains one or more lines of received Subject Name Identifier (SNI) to match to use a different Identity Hint and associated Pre\-Shared Key (PSK) (comma separated) instead of the
+\fB\-h hint\fR
+and
+\fB\-k key\fR
+options\&. E\&.g\&., per line
+
+sni_to_match,use_hint,with_key
+
+Note:
+\fB\-k key\fR
+still needs to be defined for the default case if there is not a match\&.
+
+Note: The associated Pre\-Shared Key will get updated if there is also a
+\fB\-i\fR
+match\&. The update checking order is
+\fB\-s\fR
+followed by
+\fB\-i\fR\&.
+.RE
+.PP
+\fB\-u\fR user
+.RS 4
+User identity for pre\-shared key mode (only used if option
+\fB\-P\fR
+is set)\&.
+.RE
+.SH "OPTIONS \- PKI"
+.sp
+(If supported by underlying (D)TLS library)
+.sp
+\fBNote:\fR If any one of \fBcertfile\fR, \fBkeyfile\fR or \fBcafile\fR is in PKCS11 URI naming format (pkcs11: prefix), then any remaining non PKCS11 URI file definitions have to be in DER, not PEM, format\&. Otherwise all of \fBcertfile\fR, \fBkeyfile\fR or \fBcafile\fR are in PEM format\&.
+.PP
+\fB\-c\fR certfile
+.RS 4
+PEM file or PKCS11 URI for the certificate\&. The private key can also be in the PEM file, or has the same PKCS11 URI\&. If not, the private key is defined by
+\fB\-j keyfile\fR\&.
+
+Note: if
+\fB\-k key\fR
+is defined, you need to define
+\fB\-c certfile\fR
+as well to have the server support both PSK and PKI\&.
+.RE
+.PP
+\fB\-j\fR keyfile
+.RS 4
+PEM file or PKCS11 URI for the private key for the certificate in
+\fB\-c certfile\fR
+if the parameter is different from certfile in
+\fB\-c certfile\fR\&.
+.RE
+.PP
+\fB\-n\fR
+.RS 4
+Disable remote peer certificate checking\&. This gives clients the ability to use PKI, but without any defined certificates\&.
+.RE
+.PP
+\fB\-C\fR cafile
+.RS 4
+PEM file or PKCS11 URI that contains a list of one or more CAs that are to be passed to the client for the client to determine what client certificate to use\&. Normally, this list of CAs would be the root CA and and any intermediate CAs\&. Ideally the server certificate should be signed by the same CA so that mutual authentication can take place\&. The contents of
+\fBcafile\fR
+are added to the trusted store of root CAs\&. Using the
+\fB\-C\fR
+or
+\fB\-R\fR
+options will will trigger the validation of the client certificate unless overridden by the
+\fB\-n\fR
+option\&.
+.RE
+.PP
+\fB\-J\fR pkcs11_pin
+.RS 4
+The user pin to unlock access to the PKCS11 token\&.
+.RE
+.PP
+\fB\-M\fR
+.RS 4
+Raw Public Key (RPK) PEM file or PKCS11 URI that contains both PUBLIC KEY and PRIVATE KEY or just EC PRIVATE KEY\&. (GnuTLS and TinyDTLS(PEM) support only)\&.
+\fB\-C cafile\fR
+or
+\fB\-R trust_casfile\fR
+are not required\&.
+.RE
+.PP
+\fB\-R\fR trust_casfile
+.RS 4
+PEM file containing the set of trusted root CAs that are to be used to validate the client certificate\&. Alternatively, this can point to a directory containing a set of CA PEM files\&. The
+\fB\-C cafile\fR
+CA does not have to be in this list and is trusted for the validation\&. Using
+\fB\-R trust_casfile\fR
+disables common CA mutual authentication which can only be done by using
+\fB\-C cafile\fR\&. Using the
+\fB\-C\fR
+or
+\fB\-R\fR
+options will will trigger the validation of the server certificate unless overridden by the
+\fB\-n\fR
+option\&.
+.RE
+.PP
+\fB\-S\fR match_pki_sni_file
+.RS 4
+This option denotes a file that contains one or more lines of Subject Name Identifier (SNI) to match for new certificate File and new CA File (comma separated) to be used\&. E\&.g\&., entry per line
+
+sni_to_match,new_cert_file,new_ca_file
+
+A line that starts with # is treated as a comment\&.
+
+Note:
+\fB\-c certfile\fR
+and
+\fB\-C cafile\fR
+still needs to be defined for the default case
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-server \-A ::1
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Let the server listen on localhost (port \fI5683\fR) for UDP/TCP\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-server \-A ::1 \-k mysecretKey \-h myhint
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Let the server listen on localhost (port \fI5683\fR for UDP/TCP and port \fI5684\fR for DTLS/TLS) with the server set up for PSK authentication if the client uses coaps:// or coaps+tcp://\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-server \-A ::1 \-k mysecretKey \-h myhint \-p 13011
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The same, except the UDP/TCP listening port is \fI13011\fR and the DTLS/TLS listening port is \fI13012\fR (and not the default ports \fI5683\fR and \fI5684\fR)\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-server \-A 2001:db8:81a8:0:6ef0:dead:feed:beef \-v 5
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The listening address is set to \fI2001:db8:81a8:0:6ef0:dead:feed:beef\fR and the verbosity level is set to \fI5\fR\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-server \-A 2001:db8:81a8:0:6ef0:dead:feed:beef \-g FF02::FD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Set listening address to \fI2001:db8:81a8:0:6ef0:dead:feed:beef\fR and join the All CoAP Nodes multicast group \fIFF02::FD\fR\&.
+.SH "FILES"
+.sp
+There are no configuration files\&.
+.SH "EXIT STATUS"
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; configuration error; document processing failure; unexpected error)
+.RE
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

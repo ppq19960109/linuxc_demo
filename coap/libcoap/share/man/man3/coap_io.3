@@ -1,0 +1,437 @@
+'\" t
+.\"     Title: coap_io
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_io 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_IO" "3" "06/07/2021" "coap_io 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_io, coap_io_process, coap_io_process_with_fds, coap_context_get_coap_fd, coap_io_prepare_io, coap_io_do_io, coap_io_prepare_epoll, coap_io_do_epoll \- Work with CoAP I/O to do the packet send and receives
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBint coap_io_process(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, uint32_t \fR\fB\fItimeout_ms\fR\fR\fB)\fR;
+.sp
+\fBint coap_io_process_with_fds(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, uint32_t \fR\fB\fItimeout_ms\fR\fR\fB, int \fR\fB\fInfds\fR\fR\fB, fd_set *\fR\fB\fIreadfds\fR\fR\fB, fd_set *\fR\fB\fIwritefds\fR\fR\fB, fd_set *\fR\fB\fIexceptfds\fR\fR\fB)\fR;
+.sp
+\fBint coap_context_get_coap_fd(const coap_context_t *\fR\fB\fIcontext\fR\fR\fB)\fR;
+.sp
+\fBunsigned int coap_io_prepare_io(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, coap_socket_t *\fR\fB\fIsockets\fR\fR\fB[], unsigned int \fR\fB\fImax_sockets\fR\fR\fB, unsigned int *\fR\fB\fInum_sockets\fR\fR\fB, coap_tick_t \fR\fB\fInow\fR\fR\fB)\fR;
+.sp
+\fBvoid coap_io_do_io(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, coap_tick_t \fR\fB\fInow\fR\fR\fB)\fR;
+.sp
+\fBunsigned int coap_io_prepare_epoll(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, coap_tick_t \fR\fB\fInow\fR\fR\fB)\fR;
+.sp
+\fBvoid coap_io_do_epoll(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, struct epoll_event *\fR\fB\fIevents\fR\fR\fB, size_t \fR\fB\fInevents\fR\fR\fB)\fR;
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+After setting up all the contexts, resources, endpoints sessions etc\&., the underlying CoAP and (D)TLS need to send (and possible re\-send) created packets as well as receive packets for processing\&.
+.sp
+The \fBcoap_io_process\fR() function will process any outstanding packets to send for the specified \fIcontext\fR, process any available input packets and then wait for processing any new input packets, or for when to re\-transmit a packet, for up to \fItimeout_ms\fR milli\-seconds before returning\&. There are 2 special case \fItimeout_ms\fR values\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define COAP_IO_WAIT    0
+#define COAP_IO_NO_WAIT ((uint32_t)\-1)
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+If \fItimeout_ms\fR is set to COAP_IO_WAIT, then \fBcoap_io_process\fR() will block until the next internal action (e\&.g\&. packet retransmit) if any, or block until the next packet is received whichever is the sooner and do the necessary processing\&. If \fItimeout_ms\fR is set to COAP_IO_NO_WAIT, then \fBcoap_io_process\fR() will return immediately after processing without waiting for any new input packets to arrive\&.
+.sp
+There are two methods of how to call \fBcoap_io_process\fR()\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Have
+\fBcoap_io_process\fR() called from within a while() loop\&. Under idle conditions (no input traffic)
+\fBcoap_io_process\fR() will then get called every
+\fItimeout_ms\fR, but more frequently if there is input / retransmission traffic\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Wait on the file descriptor returned by
+\fBcoap_context_get_coap_fd\fR() using
+\fBselect\fR() or an event returned by epoll_wait()\&. If
+\fIread\fR
+is available on the file descriptor, call
+\fBcoap_io_process\fR() with
+\fItimeout_ms\fR
+set to COAP_IO_NO_WAIT\&.
+
+\fBNOTE\fR: This second method is only available for environments that support epoll (mostly Linux) with libcoap compiled to use
+\fBepoll\fR
+(the default) as libcoap will then be using
+\fBepoll\fR
+internally to process all the file descriptors of the different sessions\&.
+.RE
+.sp
+See EXAMPLES below\&.
+.sp
+The \fBcoap_io_process\fR() function is the primary function applications should use\&. There are internal functions that \fBcoap_io_process\fR() calls which are available to use if absolutely necessary\&. These internal functions and how to use them is different depending on whether libcoap has been compiled to use \fBepoll\fR (Linux systems only) or not\&.
+.sp
+For \fBepoll\fR libcoap, \fBcoap_io_process\fR() in simple terms calls \fBcoap_io_prepare_epoll()\fR, does an \fBepoll_wait\fR() and then calls \fBcoap_io_do_epoll\fR() if needed to make sure that all event based i/o has been completed\&.
+.sp
+For \fBnon\-epoll\fR libcoap, \fBcoap_io_process\fR() in simple terms calls \fBcoap_io_prepare_io\fR() to set up sockets[], sets up all of the \fBselect\fR() parameters based on the COAP_SOCKET_WANT* values in the sockets[], does a \fBselect\fR(), updates the sockets[] with COAP_SOCKET_CAN_* as appropriate and then calls \fBcoap_io_do_io\fR() to make sure that all current i/o has been completed\&.
+.sp
+The \fBcoap_io_prepare_epoll\fR() function for the specified \fIcontext\fR will iterate through the endpoints and sessions to transmit any triggered observer responses as well as handling any timed out packet re\-transmissions\&. Returned, based on \fInow\fR, is the number of milli\-secs needed to delay until the next time that \fBcoap_io_prepare_epoll\fR() needs to get called\&. After this call an \fBepoll_wait\fR() should done\&.
+.sp
+The \fBcoap_io_do_epoll\fR() function for the specified \fIcontext\fR will iterate through the \fInevents\fR of \fIevents\fR returned by \fBepoll_wait\fR() and execute the appropriate low level i/o function to send / receive / process the packets\&. Where appropriate, structure information (endpoints, sessions etc\&.) is updated with the value of \fInow\fR in the lower level functions\&.
+.sp
+The \fBcoap_io_prepare_io\fR() function for the specified \fIcontext\fR will iterate through the endpoints and sessions to add all of sockets waiting for network traffic (COAP_SOCKET_WANT_* is set) found to \fIsockets\fR (limited by \fImax_sockets\fR) and updates \fInum_sockets\fR with the number of sockets found\&. Furthermore, any triggered observer responses are transmitted as well as handling any timed out packet re\-transmissions\&. Returned, based on \fInow\fR, is the number of milli\-secs needed to delay until the next time that \fBcoap_io_prepare_io\fR() needs to get called\&. After this call a \fBselect\fR() should done on all the file descriptors (COAP_WANT_READ for readfds etc\&.), and any that are returned active should set the appropriate COAP_SOCKET_CAN_* in the \fIsockets\fR\&.
+.sp
+The \fBcoap_io_do_io\fR() function for the specified \fIcontext\fR will iterate through the endpoints and sessions to find all of sockets that have COAP_SOCKET_CAN_* set and then execute the appropriate low level i/o function to send / receive / process the packets\&. Where appropriate, structure information (endpoints, sessions etc\&.) is updated with the value of \fInow\fR in the lower level functions\&.
+.sp
+The \fBcoap_io_process_with_fds\fR() function is the same as \fBcoap_process_io\fR() but supports additional select() style parameters \fInfds\fR, \fIreadfds\fR, \fIwritefds\fR and \fIexceptfds\fR\&. This provides the ability to add in additional non libcoap FDs to test for in the internal select() call which can then tested after the return from coap_io_process_with_fds()\&. \fIreadfds\fR, \fIwritefds\fR and \fIexceptfds\fR can either point to a defined and pre\-filled fd_set structure or NULL if not required\&. \fInfds\fR needs to be set to the maximum FD to test for in \fIreadfds\fR, \fIwritefds\fR or \fIexceptfds\fR if any of them are set plus 1\&. If none of them are set, then \fInfds\fR should be set to 0\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.sp
+The additional parameters for \fBcoap_io_process_with_fds\fR() are only used if there is no epoll support in libcoap\&. If there is epoll support, then \fBcoap_context_get_coap_fd\fR() should be used and this returned FD along with other non libcoap FDs can separately be monitored using method 2 above\&.
+.sp .5v
+.RE
+.sp
+The \fBcoap_context_get_coap_fd\fR() function obtains from the specified \fIcontext\fR a single file descriptor that can be monitored by a \fBselect\fR() or as an event returned from a \fBepoll_wait\fR() call\&. This file descriptor will get updated with information (read, write etc\&. available) whenever any of the internal to libcoap file descriptors (sockets) change state\&.
+.SH "RETURN VALUES"
+.sp
+\fBcoap_io_process\fR() and \fBcoap_io_process_with_fds\fR() returns the time, in milli\-seconds, that was spent in the function\&. If \-1 is returned, there was an unexpected error\&.
+.sp
+\fBcoap_context_get_coap_fd\fR() returns a non\-negative number as the file descriptor to monitor, or \-1 if epoll is not configured in libcoap\&.
+.sp
+\fBcoap_io_prepare_io\fR() and \fBcoap_io_prepare_epoll\fR() returns the number of milli\-seconds that need to be waited before the function should next be called\&.
+.SH "EXAMPLES"
+.sp
+\fBMethod One \- use coap_io_process()\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+int main(int argc, char *argv[]){
+
+  coap_context_t *ctx = NULL;
+  unsigned wait_ms;
+  /* Remove (void) definition if variable is used */
+  (void)argc;
+  (void)argv;
+
+  /* Create the libcoap context */
+  ctx = coap_new_context(NULL);
+  if (!ctx) {
+    exit(1);
+  }
+  /* See coap_block(3) */
+  coap_context_set_block_mode(ctx,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+
+  /* Other Set up Code */
+
+  wait_ms = COAP_RESOURCE_CHECK_TIME * 1000;
+
+  while (1) {
+    int result = coap_io_process(ctx, wait_ms);
+    if (result < 0) {
+      /* There is an internal issue */
+      break;
+    }
+    /* Do any other housekeeping */
+  }
+  coap_free_context(ctx);
+
+  /* Do any other cleanup */
+
+  exit(0);
+
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBMethod One \- coap_io_process_with_fds\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+int main(int argc, char *argv[]){
+
+  coap_context_t *ctx = NULL;
+  unsigned wait_ms;
+  fd_set readfds;
+  int nfds = 0;
+  /* Remove (void) definition if variable is used */
+  (void)argc;
+  (void)argv;
+
+  /* Create the libcoap context */
+  ctx = coap_new_context(NULL);
+  if (!ctx) {
+    exit(1);
+  }
+  /* See coap_block(3) */
+  coap_context_set_block_mode(ctx,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+
+  FD_ZERO(&readfds);
+  /* Set up readfds and nfds to handle other non libcoap FDs */
+
+  /* Other Set up Code */
+
+  wait_ms = COAP_RESOURCE_CHECK_TIME * 1000;
+
+  while (1) {
+    int result = coap_io_process_with_fds(ctx, wait_ms, nfds, &readfds, NULL, NULL);
+    if (result < 0) {
+      /* There is an internal issue */
+      break;
+    }
+    /* Check if set non libcoap FDs and process accordingly */
+
+    /* Do any other housekeeping */
+  }
+  coap_free_context(ctx);
+
+  /* Do any other cleanup */
+
+  exit(0);
+
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBMethod Two \- select() based on monitorable file descriptor\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <errno\&.h>
+
+int main(int argc, char *argv[]){
+
+  coap_context_t *ctx = NULL;
+  int coap_fd;
+  fd_set m_readfds;
+  int nfds;
+  /* Remove (void) definition if variable is used */
+  (void)argc;
+  (void)argv;
+
+  /* Create the libcoap context */
+  ctx = coap_new_context(NULL);
+  if (!ctx) {
+    exit(1);
+  }
+  /* See coap_block(3) */
+  coap_context_set_block_mode(ctx,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+  coap_fd = coap_context_get_coap_fd(ctx);
+  if (coap_fd == \-1) {
+    /* epoll is not supported */
+    exit(1);
+  }
+  FD_ZERO(&m_readfds);
+  FD_SET(coap_fd, &m_readfds);
+  nfds = coap_fd + 1;
+
+  /* Other Set up Code */
+
+  while (1) {
+    fd_set readfds = m_readfds;
+    int result;
+    /* Wait until any i/o takes place */
+    result = select (nfds, &readfds, NULL, NULL, NULL);
+    if (result == \-1) {
+      if (errno != EAGAIN) {
+        coap_log(LOG_DEBUG, "select: %s (%d)\en", coap_socket_strerror(), errno);
+        break;
+      }
+    }
+    if (result > 0) {
+      if (FD_ISSET(coap_fd, &readfds)) {
+        result = coap_io_process(ctx, COAP_IO_NO_WAIT);
+        if (result < 0) {
+          /* There is an internal issue */
+          break;
+        }
+      }
+    }
+    /* Do any other housekeeping */
+  }
+  coap_free_context(ctx);
+
+  /* Do any other cleanup */
+
+  exit(0);
+
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBMethod Two \- epoll_wait() based on monitorable file descriptor\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <sys/epoll\&.h>
+
+#include <errno\&.h>
+
+#define MAX_EVENTS 10
+
+int main(int argc, char *argv[]){
+
+  coap_context_t *ctx = NULL;
+  int coap_fd;
+  int epoll_fd;
+  struct epoll_event ev;
+  struct epoll_event events[MAX_EVENTS];
+  int nevents;
+  int i;
+  /* Remove (void) definition if variable is used */
+  (void)argc;
+  (void)argv;
+
+  /* Create the libcoap context */
+  ctx = coap_new_context(NULL);
+  if (!ctx) {
+    exit(1);
+  }
+  /* See coap_block(3) */
+  coap_context_set_block_mode(ctx,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+  coap_fd = coap_context_get_coap_fd(ctx);
+  if (coap_fd == \-1) {
+    exit(1);
+  }
+  epoll_fd = epoll_create1(0);
+  if (epoll_fd == \-1) {
+    exit(2);
+  }
+  ev\&.events = EPOLLIN;
+  ev\&.data\&.fd = coap_fd;
+  if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, coap_fd, &ev) == \-1) {
+    exit(3);
+  }
+
+  /* Other Set up Code */
+
+  while (1) {
+    int result;
+    /* Wait until any i/o takes place */
+    nevents = epoll_wait(epoll_fd, events, MAX_EVENTS, \-1);
+    if (nevents == \-1) {
+      if (errno != EAGAIN) {
+        coap_log(LOG_DEBUG, "epoll_wait: %s (%d)\en", coap_socket_strerror(), errno);
+        break;
+      }
+    }
+    for (i = 0; i < nevents; i++) {
+      if (events[i]\&.data\&.fd == coap_fd) {
+        result = coap_io_process(ctx, COAP_IO_NO_WAIT);
+        if (result < 0) {
+          /* There is an internal issue */
+          break;
+        }
+      }
+      else {
+        /* Process other events */
+      }
+    }
+    /* Do any other housekeeping */
+  }
+
+  if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, coap_fd, &ev) == \-1) {
+    coap_log(LOG_DEBUG, "epoll_ctl: %s (%d)\en", coap_socket_strerror(), errno);
+  }
+  coap_free_context(ctx);
+
+  /* Do any other cleanup */
+
+  exit(0);
+
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBcoap_block\fR(3), \fBcoap_context\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See "RFC7252: The Constrained Application Protocol (CoAP)" for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

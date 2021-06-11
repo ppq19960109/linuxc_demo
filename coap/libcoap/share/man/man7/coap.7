@@ -1,0 +1,75 @@
+'\" t
+.\"     Title: coap
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP" "7" "06/07/2021" "coap 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap \- Overview of the libcoap library
+.SH "SYNOPSIS"
+.sp
+Summary of the different libcoap API manual pages\&.
+.SH "DESCRIPTION"
+.sp
+libcoap is a C implementation of a lightweight application\-protocol for devices that are constrained by their resources such as computing power, RF range, memory, bandwidth, or network packet sizes\&. This protocol, CoAP, is standardized by the IETF as RFC 7252\&. For further information related to CoAP, see http://coap\&.technology\&.
+.sp
+Documentation for the specific library calls with examples can be found in the man pages referred to in SEE ALSO\&.
+.sp
+Further information can be found in the include header files with example code provided in the examples directory\&.
+.sp
+\fBNOTE:\fR This documentation is a work in progress\&. Any missing information can be found in the include header files along with example code provided in the examples directory\&.
+.SH "SEE ALSO"
+.sp
+\fBcoap_attribute\fR(3), \fBcoap_cache\fR(3), \fBcoap_context\fR(3), \fBcoap_encryption\fR(3), \fBcoap_endpoint_client\fR(3), \fBcoap_handler\fR(3), \fBcoap_io\fR(3), \fBcoap_keepalive\fR(3), \fBcoap_logging\fR(3), \fBcoap_observe\fR(3), \fBcoap_pdu_setup\fR(3), \fBcoap_recovery\fR(3), \fBcoap_resource\fR(3), \fBcoap_session\fR(3), \fBcoap_string\fR(3) and \fBcoap_tls_library\fR(3)
+.sp
+For example executables, see \fBcoap\-client\fR(5), \fBcoap\-rd\fR(5) and \fBcoap\-server\fR(5)
+.SH "FURTHER INFORMATION"
+.sp
+See
+.sp
+"RFC7252: The Constrained Application Protocol (CoAP)"
+.sp
+"RFC7641: Observing Resources in the Constrained Application Protocol (CoAP)"
+.sp
+"RFC7959: Block\-Wise Transfers in the Constrained Application Protocol (CoAP)"
+.sp
+"RFC7967: Constrained Application Protocol (CoAP) Option for No Server Response"
+.sp
+"RFC8132: PATCH and FETCH Methods for the Constrained Application Protocol (CoAP)"
+.sp
+"RFC8323: CoAP (Constrained Application Protocol) over TCP, TLS, and WebSockets"
+.sp
+"RFC8613: Object Security for Constrained RESTful Environments (OSCORE)"
+.sp
+"RFC8768: Constrained Application Protocol (CoAP) Hop\-Limit Option"
+.sp
+for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

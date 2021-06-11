@@ -1,0 +1,453 @@
+'\" t
+.\"     Title: coap-client
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: coap-client Manual
+.\"    Source: coap-client 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP\-CLIENT" "5" "06/07/2021" "coap\-client 4\&.3\&.0rc3" "coap\-client Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap-client, coap-client-gnutls, coap-client-mbedtls, coap-client-openssl, coap-client-notls \- CoAP Client based on libcoap
+.SH "SYNOPSIS"
+.sp
+\fBcoap\-client\fR [\fB\-a\fR addr] [\fB\-b\fR [num,]size] [\fB\-e\fR text] [\fB\-f\fR file] [\fB\-l\fR loss] [\fB\-m\fR method] [\fB\-o\fR file] [\fB\-p\fR port] [\fB\-r\fR] [\fB\-s duration\fR] [\fB\-t\fR type] [\fB\-v\fR num] [\fB\-w\fR] [\fB\-A\fR type] [\fB\-B\fR seconds] [\fB\-H\fR hoplimit] [\fB\-K\fR interval] [\fB\-L\fR value] [\fB\-N\fR] [\fB\-O\fR num,text] [\fB\-P\fR scheme://addr[:port]] [\fB\-T\fR token] [\fB\-U\fR] [[\fB\-h\fR match_hint_file] [\fB\-k\fR key] [\fB\-u\fR user]] [[\fB\-c\fR certfile] [\fB\-j\fR keyfile] [\-n] [\fB\-C\fR cafile] [\fB\-J\fR pkcs11_pin] [\fB\-M\fR rpk_file] [\fB\-R\fR trust_casfile]] URI
+.sp
+For \fBcoap\-client\fR versions that use libcoap compiled for different (D)TLS libraries, \fBcoap\-client\-notls\fR, \fBcoap\-client\-gnutls\fR, \fBcoap\-client\-openssl\fR, \fBcoap\-client\-mbedtls\fR or \fBcoap\-client\-tinydtls\fR may be available\&. Otherwise, \fBcoap\-client\fR uses the default libcoap (D)TLS support\&.
+.SH "DESCRIPTION"
+.sp
+\fBcoap\-client\fR is a CoAP client to communicate with 6LoWPAN devices via the protocol CoAP (RFC 7252) using the URI given as argument on the command line\&. The URI must have the scheme \fIcoap\fR, \fIcoap+tcp\fR, \fIcoaps\fR or \fIcoaps+tcp\fR\&. \fIcoaps\fR and \fIcoaps+tcp\fR are only supported when coap\-client is built with support for secure (D)TLS communication\&.
+.sp
+If \fIcoaps\fR or \fIcoap+tcp\fR is being used, provided the CoAP server supports PKI and is configured with a certificate and private key, the coap\-client does not need to have a Pre\-Shared Key (\-k) or certificate (\-c) configured\&.
+.sp
+The URI\(cqs host part may be a DNS name or a literal IP address\&. Note that, for IPv6 address references, angle brackets are required (c\&.f\&. EXAMPLES)\&.
+.SH "OPTIONS \- GENERAL"
+.PP
+\fB\-a\fR addr
+.RS 4
+The local address of the interface that has to be used\&.
+
+Note: Do not use this option if the interface is likely to be transient \- i\&.e\&. it is a tunnel interface that may come and go, as this is likely to cause "No such device" errors on transmission\&.
+.RE
+.PP
+\fB\-b\fR [num,]size
+.RS 4
+The block size to be used in GET/PUT/POST requests (value must be a multiple of 16 not larger than 1024 as libcoap uses a fixed maximum PDU size of 1400 bytes)\&. If
+\fInum\fR
+is present, the request chain will start at block
+\fInum\fR\&. When the server includes a Block2 option in its response to a GET request, coap\-client will automatically retrieve the subsequent block from the server until there are no more outstanding blocks for the requested content\&.
+.RE
+.PP
+\fB\-e\fR text
+.RS 4
+Include text as payload (use percent\-encoding for non\-ASCII characters)\&.
+.RE
+.PP
+\fB\-f\fR file
+.RS 4
+File to send with PUT/POST (use
+\fI\-\fR
+for STDIN)\&.
+.RE
+.PP
+\fB\-l\fR list
+.RS 4
+Fail to send some datagrams specified by a comma separated list of numbers or number ranges (debugging only)\&.
+.RE
+.PP
+\fB\-l\fR loss%
+.RS 4
+Randomly failed to send datagrams with the specified probability \- 100% all datagrams, 0% no datagrams (debugging only)\&.
+.RE
+.PP
+\fB\-m\fR method
+.RS 4
+The request method for action (get|put|post|delete), default is
+\fIget\fR\&. (Note that the string passed to
+\fB\-m\fR
+is compared case\-insensitive\&.)
+.RE
+.PP
+\fB\-o\fR file
+.RS 4
+A filename to store data retrieved with GET\&.
+.RE
+.PP
+\fB\-p\fR port
+.RS 4
+The port to listen on\&.
+.RE
+.PP
+\fB\-r\fR
+.RS 4
+Use reliable protocol (TCP or TLS)\&.
+.RE
+.PP
+\fB\-s\fR duration
+.RS 4
+Subscribe to / observe the resource specified by URI for the given
+\fIduration\fR
+in seconds\&.
+.RE
+.PP
+\fB\-t\fR type
+.RS 4
+Content format for given resource for PUT/POST\&.
+\fItype\fR
+must be either a numeric value reflecting a valid CoAP content format or a string describing a registered format\&. The following registered content format descriptors are supported, with alternative shortcuts given in parentheses:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+text/plain (plain)
+application/link\-format (link, link\-format)
+application/xml (xml)
+application/octet\-stream (binary, octet\-stream)
+application/exi (exi)
+application/json (json)
+application/cbor (cbor)
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-v\fR num
+.RS 4
+The verbosity level to use (default 3, maximum is 9)\&. Above 7, there is increased verbosity in GnuTLS and OpenSSL logging\&.
+.RE
+.PP
+\fB\-w\fR
+.RS 4
+Append a newline to received data\&.
+.RE
+.PP
+\fB\-A\fR type
+.RS 4
+Accepted media type\&.
+\fItype\fR
+must be either a numeric value reflecting a valid CoAP content format or a string that specifies a registered format as described for option
+\fB\-t\fR\&.
+.RE
+.PP
+\fB\-B\fR seconds
+.RS 4
+Break operation after waiting given seconds (default is 90)\&.
+.RE
+.PP
+\fB\-H\fR hoplimit
+.RS 4
+Set the Hop Limit count to hoplimit for proxies\&. Must have a value between 1 and 255 inclusive\&. Default is
+\fI16\fR\&.
+.RE
+.PP
+\fB\-K\fR interval
+.RS 4
+Send a ping after interval seconds of inactivity\&. If not specified (or 0), keep\-alive is disabled (default)\&.
+.RE
+.PP
+\fB\-L\fR value
+.RS 4
+Sum of one or more COAP_BLOCK_* flag values for different block handling methods\&. Default is 1 (COAP_BLOCK_USE_LIBCOAP)\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+COAP_BLOCK_USE_LIBCOAP  1
+COAP_BLOCK_SINGLE_BODY  2
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-N\fR
+.RS 4
+Send NON\-confirmable message\&. If option
+\fB\-N\fR
+is not specified, a confirmable message will be sent\&.
+.RE
+.PP
+\fB\-O\fR num,text
+.RS 4
+Add option
+\fInum\fR
+with contents of
+\fItext\fR
+to the request\&. If the text begins with 0x, then the hex text (two [0\-9a\-f] per byte) is converted to binary data\&.
+.RE
+.PP
+\fB\-P\fR scheme://addr[:port]
+.RS 4
+Scheme, address and optional port to define how to connect to a CoAP proxy (automatically adds Proxy\-Uri option to request) to forward the request to\&. Scheme is one of coap, coaps, coap+tcp and coaps+tcp\&.
+.RE
+.PP
+\fB\-T\fR token
+.RS 4
+Define the initial starting
+\fItoken\fR
+for the request\&.
+.RE
+.PP
+\fB\-U\fR
+.RS 4
+Never include Uri\-Host or Uri\-Port options\&.
+.RE
+.SH "OPTIONS \- PSK"
+.sp
+(If supported by underlying (D)TLS library)
+.PP
+\fB\-h\fR match_hint_file
+.RS 4
+This is a file that contains one or more lines of received Identity Hints to match to use different user identity and associated pre\-shared key (PSK) (comma separated) instead of the
+\fB\-k key\fR
+and
+\fB\-u user\fR
+options\&. E\&.g\&., per line
+
+hint_to_match,use_user,with_key
+
+A line that starts with # is treated as a comment\&.
+
+Note:
+\fB\-k key\fR
+and
+\fB\-u user\fR
+still need to be defined for the default case in case there is no match\&.
+.RE
+.PP
+\fB\-k\fR key
+.RS 4
+Pre\-shared key for the specified user identity (\fB\-u\fR
+option also required)\&.
+.RE
+.PP
+\fB\-u\fR user
+.RS 4
+User identity to send for pre\-shared key mode (\fB\-k\fR
+option also required)\&.
+.RE
+.SH "OPTIONS \- PKI"
+.sp
+(If supported by underlying (D)TLS library)
+.sp
+\fBNote:\fR If any one of \fBcertfile\fR, \fBkeyfile\fR or \fBcafile\fR is in PKCS11 URI naming format (pkcs11: prefix), then any remaining non PKCS11 URI file definitions have to be in DER, not PEM, format\&. Otherwise all of \fBcertfile\fR, \fBkeyfile\fR or \fBcafile\fR are in PEM format\&.
+.PP
+\fB\-c\fR certfile
+.RS 4
+PEM file or PKCS11 URI for the certificate\&. The private key can also be in the PEM file, or has the same PKCS11 URI\&. If not, the private key is defined by
+\fB\-j keyfile\fR\&.
+.RE
+.PP
+\fB\-j\fR keyfile
+.RS 4
+PEM file or PKCS11 URI for the private key for the certificate in
+\fB\-c certfile\fR
+if the parameter is different from certfile in
+\fB\-c certfile\fR\&.
+.RE
+.PP
+\fB\-n\fR
+.RS 4
+Disable remote peer certificate checking\&.
+.RE
+.PP
+\fB\-C\fR cafile
+.RS 4
+PEM file or PKCS11 URI for the CA certificate that was used to sign the server certfile\&. Ideally the client certificate should be signed by the same CA so that mutual authentication can take place\&. The contents of cafile are added to the trusted store of root CAs\&. Using the
+\fB\-C\fR
+or
+\fB\-R\fR
+options will trigger the validation of the server certificate unless overridden by the
+\fB\-n\fR
+option\&.
+.RE
+.PP
+\fB\-J\fR pkcs11_pin
+.RS 4
+The user pin to unlock access to the PKCS11 token\&.
+.RE
+.PP
+\fB\-M\fR rpk_file
+.RS 4
+Raw Public Key (RPK) PEM file or PKCS11 URI that contains both PUBLIC KEY and PRIVATE KEY or just EC PRIVATE KEY\&. (GnuTLS and TinyDTLS(PEM) support only)\&.
+\fB\-C cafile\fR
+or
+\fB\-R trust_casfile\fR
+are not required\&.
+.RE
+.PP
+\fB\-R\fR trust_casfile
+.RS 4
+PEM file containing the set of trusted root CAs that are to be used to validate the server certificate\&. Alternatively, this can point to a directory containing a set of CA PEM files\&. The
+\fB\-C cafile\fR
+CA does not have to be in this list and is trusted for the validation\&. Using
+\fB\-R trust_casfile\fR
+disables common CA mutual authentication which can only be done by using
+\fB\-C cafile\fR\&. Using the
+\fB\-C\fR
+or
+\fB\-R\fR
+options will will trigger the validation of the server certificate unless overridden by the
+\fB\-n\fR
+option\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-client coap://coap\&.me
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Query the resource \fI/\fR from server \fIcoap\&.me\fR (using the GET method)\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-client \-m get coap://[::1]/
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Query the resource \fI/\fR on localhost using the \fIGET\fR method to get back the summary defined attributes\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-client \-m get coap://[::1]/\&.well\-known/core
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Query on the resource \fI\&.well\-known/core\fR on localhost to get back a list of the known resources along with their attribute definitions\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+echo \-n "mode=on" | coap\-client \-m put \e
+coap://[2001:db8:c001:f00d:221:2eff:ff00:2704]:5683/actuators/leds?color=r \-f\-
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Send text \fImode=on\fR to resource \fIactuators/leds?color=r\fR on the endpoint with address \fI2001:db8:c001:f00d:221:2eff:ff00:2704\fR and port \fI5683\fR\&. Note that the port \fI5683\fR is the default port and isn\(cqt actually required in this instance\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-client \-m put coap://[fec0::3]/ck \-T 3a \-t binary \-f to_upload
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Put the contents of file \fIto_upload\fR with content type \fIbinary\fR (i\&.e\&. application/octet\-stream) into resource \fIck\fR on \fIfec0::3\fR using a token of \fI3a\fR via the \fIPUT\fR method\&.
+.SH "FILES"
+.sp
+There are no configuration files\&.
+.SH "EXIT STATUS"
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; configuration error; document processing failure; unexpected error)
+.RE
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

@@ -1,0 +1,393 @@
+'\" t
+.\"     Title: coap_endpoint_client
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_endpoint_client 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_ENDPOINT_CLIENT" "3" "06/07/2021" "coap_endpoint_client 4\&.3\&.0" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_endpoint_client, coap_new_client_session, coap_new_client_session_psk2, coap_new_client_session_pki, coap_session_set_mtu, coap_session_max_pdu_size \- Work with CoAP client endpoints
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBcoap_session_t *coap_new_client_session(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, const coap_address_t *\fR\fB\fIlocal_if\fR\fR\fB, const coap_address_t *\fR\fB\fIserver\fR\fR\fB, coap_proto_t \fR\fB\fIproto\fR\fR\fB);\fR
+.sp
+\fBcoap_session_t *coap_new_client_session_psk2(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, const coap_address_t *\fR\fB\fIlocal_if\fR\fR\fB, const coap_address_t *\fR\fB\fIserver\fR\fR\fB, coap_proto_t \fR\fB\fIproto\fR\fR\fB, coap_dtls_cpsk_t *\fR\fB\fIsetup_data\fR\fR\fB);\fR
+.sp
+\fBcoap_session_t *coap_new_client_session_pki(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, const coap_address_t *\fR\fB\fIlocal_if\fR\fR\fB, const coap_address_t *\fR\fB\fIserver\fR\fR\fB, coap_proto_t \fR\fB\fIproto\fR\fR\fB, coap_dtls_pki_t *\fR\fB\fIsetup_data\fR\fR\fB);\fR
+.sp
+\fBvoid coap_session_set_mtu(coap_session_t *\fR\fB\fIsession\fR\fR\fB, unsigned \fR\fB\fImtu\fR\fR\fB);\fR
+.sp
+\fBsize_t coap_session_max_pdu_size(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+This man page focuses on the setting up of a CoAP client endpoint and hence creation of a CoAP Session used to connect to a server\&. For a CoAP server endpoint, see \fBcoap_endpoint_server\fR(3)\&.
+.sp
+The CoAP stack\(cqs global state is stored in a coap_context_t Context object\&. Resources, Endpoints and Sessions are associated with this context object\&. There can be more than one coap_context_t object per application, it is up to the application to manage each one accordingly\&.
+.sp
+A CoAP Ssssion maintains the state of an ongoing connection between a Client and Server which is stored in a coap_session_t Session object\&. A CoAP session is tracked by local port, CoAP protocol, remote IP address and remote port\&.
+.sp
+The Session network traffic can be encrypted or un\-encrypted if there is an underlying TLS library\&.
+.sp
+If TLS is going to be used for encrypting the network traffic, then the TLS information for Pre\-Shared Keys (PSK) or Public Key Infrastructure (PKI) needs to be configured before any network traffic starts to flow\&. For Servers, this has to be done before the Endpoint is created, for Clients, this is done during the Client Endpoint/Session set up\&.
+.sp
+For Clients, all the encryption information can be held at the TLS Context and CoAP Context levels, or at the TLS Session and CoAP Session levels\&. If defined at the Context level, then when Sessions are created, they will inherit the Context definitions, unless they have separately been defined for the Session level, in which case the Session version will get used\&. Typically the information will be configured at the Session level for Clients\&.
+.sp
+In principle the set\-up sequence for CoAP client endpoints looks like
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap_new_context()
+coap_context_set_pki_root_cas() if the root CAs need to be updated and PKI
+coap_new_client_session(), coap_new_client_session_pki() or coap_new_client_session_psk2()
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Multiple client endpoints and hence sessions are supported per Context\&.
+.sp
+Different CoAP protocols can be defined for \fIproto\fR \- the current supported list is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+COAP_PROTO_UDP
+COAP_PROTO_DTLS
+COAP_PROTO_TCP
+COAP_PROTO_TLS
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBcoap_tcp_is_supported\fR(), \fBcoap_dtls_is_supported\fR() and \fBcoap_tls_is_supported\fR() can be used for checking whether the underlying TCP or (D)TLS protocol support is available\&. See \fBcoap_tls_library(3)\fR for further information\&.
+.sp
+The \fBcoap_new_client_session\fR() function creates a client endpoint for a specific \fIcontext\fR and initiates a new client session to the specified \fIserver\fR using the CoAP protocol \fIproto\fR\&. If the port is set to 0 in \fIserver\fR, then the default CoAP port is used\&. Normally \fIlocal_if\fR would be set to NULL, but by specifying \fIlocal_if\fR the source of the network session can be bound to a specific IP address or port\&. The session will initially have a reference count of 1\&.
+.sp
+The \fBcoap_new_client_session_pki\fR() function, for a specific \fIcontext\fR, is used to configure the TLS context using the \fIsetup_data\fR variables as defined in the coap_dtls_pki_t structure in the newly created endpoint session \- see \fBcoap_encryption\fR(3)\&. The connection is to the specified \fIserver\fR using the CoAP protocol \fIproto\fR\&. If the port is set to 0 in \fIserver\fR, then the default CoAP port is used\&. Normally \fIlocal_if\fR would be set to NULL, but by specifying \fIlocal_if\fR the source of the network session can be bound to a specific IP address or port\&. The session will initially have a reference count of 1\&.
+.sp
+The \fBcoap_new_client_session_psk2\fR() function, for a specific \fIcontext\fR, is used to configure the TLS context using the \fIsetup_data\fR variables as defined in the coap_dtls_cpsk_t structure in the newly created endpoint session \- see \fBcoap_encryption\fR(3)\&. The connection is to the specified \fIserver\fR using the CoAP protocol \fIproto\fR\&. If the port is set to 0 in \fIserver\fR, then the default CoAP port is used\&. Normally \fIlocal_if\fR would be set to NULL, but by specifying \fIlocal_if\fR the source of the network session can be bound to a specific IP address or port\&. The session will initially have a reference count of 1\&.
+.sp
+To stop using a client session, the reference count must be decremented to 0 by calling \fBcoap_session_release\fR()\&. See \fBcoap_session\fR(3)\&. This will remove the client endpoint\&.
+.sp
+The \fBcoap_sesson_set_default_mtu\fR() function is used to set the MTU size (the maximum message size) of the data in a packet, excluding any IP or TCP/UDP overhead to \fImtu\fR for the client endpoint\(cqs \fIsession\fR\&. The default MTU is 1152\&.
+.sp
+The \fBcoap_session_max_pdu_size\fR() function is used to get the maximum MTU size of the data for the client endpoint\(cqs \fIsession\fR\&.
+.SH "RETURN VALUES"
+.sp
+\fBcoap_new_client_session\fR(), \fBcoap_new_client_session_psk2\fR(), \fBcoap_new_client_session_pki\fR() functions returns a newly created client session or NULL if there is a creation failure\&.
+.sp
+\fBcoap_session_max_pdu_size\fR() function returns the MTU size\&.
+.SH "EXAMPLES"
+.sp
+\fBCoAP Client Non\-Encrypted Setup\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <netinet/in\&.h>
+
+static coap_session_t *
+setup_client_session (struct in_addr ip_address) {
+  coap_session_t *session;
+  coap_address_t server;
+  /* See coap_context(3) */
+  coap_context_t *context = coap_new_context(NULL);
+
+  if (!context)
+    return NULL;
+  /* See coap_block(3) */
+  coap_context_set_block_mode(context,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+
+  coap_address_init(&server);
+  server\&.addr\&.sa\&.sa_family = AF_INET;
+  server\&.addr\&.sin\&.sin_addr = ip_address;
+  server\&.addr\&.sin\&.sin_port = htons (5683);
+
+  session = coap_new_client_session(context, NULL, &server, COAP_PROTO_UDP);
+  if (!session) {
+    coap_free_context(context);
+    return NULL;
+  }
+  /* The context is in session\->context */
+  return session;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBCoAP Client PKI Setup\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <netinet/in\&.h>
+
+static int
+verify_cn_callback(const char *cn,
+                   const uint8_t *asn1_public_cert,
+                   size_t asn1_length,
+                   coap_session_t *c_session,
+                   unsigned int depth,
+                   int validated,
+                   void *arg
+) {
+  /* Remove (void) definition if variable is used */
+  (void)cn;
+  (void)asn1_public_cert;
+  (void)asn1_length;
+  (void)c_session;
+  (void)depth;
+  (void)validated;
+  (void)arg;
+
+  /* Check that the CN is valid */
+
+  /* \&.\&.\&. */
+
+  return 1;
+}
+
+static coap_session_t *
+setup_client_session_pki (struct in_addr ip_address,
+                          const char *public_cert_file,
+                          const char *private_key_file,
+                          const char *ca_file
+) {
+  coap_session_t *session;
+  coap_address_t server;
+  coap_dtls_pki_t dtls_pki;
+  /* See coap_context(3) */
+  coap_context_t *context = coap_new_context(NULL);
+
+  if (!context)
+    return NULL;
+  /* See coap_block(3) */
+  coap_context_set_block_mode(context,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+
+  coap_address_init(&server);
+  server\&.addr\&.sa\&.sa_family = AF_INET;
+  server\&.addr\&.sin\&.sin_addr = ip_address;
+  server\&.addr\&.sin\&.sin_port = htons (5684);
+
+  memset (&dtls_pki, 0, sizeof (dtls_pki));
+
+  /* See coap_encryption(3) */
+  dtls_pki\&.version                 = COAP_DTLS_PKI_SETUP_VERSION;
+  dtls_pki\&.verify_peer_cert        = 1;
+  dtls_pki\&.check_common_ca         = 1;
+  dtls_pki\&.allow_self_signed       = 1;
+  dtls_pki\&.allow_expired_certs     = 1;
+  dtls_pki\&.cert_chain_validation   = 1;
+  dtls_pki\&.cert_chain_verify_depth = 1;
+  dtls_pki\&.check_cert_revocation   = 1;
+  dtls_pki\&.allow_no_crl            = 1;
+  dtls_pki\&.allow_expired_crl       = 1;
+  dtls_pki\&.allow_bad_md_hash       = 0;
+  dtls_pki\&.allow_short_rsa_length  = 0;
+  dtls_pki\&.is_rpk_not_cert         = 0; /* Set to 1 if RPK */
+  dtls_pki\&.validate_cn_call_back   = verify_cn_callback;
+  dtls_pki\&.cn_call_back_arg        = NULL;
+  dtls_pki\&.validate_sni_call_back  = NULL;
+  dtls_pki\&.sni_call_back_arg       = NULL;
+  dtls_pki\&.additional_tls_setup_call_back = NULL;
+  dtls_pki\&.client_sni              = NULL;
+  dtls_pki\&.pki_key\&.key_type        = COAP_PKI_KEY_PEM;
+  dtls_pki\&.pki_key\&.key\&.pem\&.ca_file = ca_file;
+  dtls_pki\&.pki_key\&.key\&.pem\&.public_cert = public_cert_file;
+  dtls_pki\&.pki_key\&.key\&.pem\&.private_key = private_key_file;
+
+  session = coap_new_client_session_pki(context, NULL, &server,
+                                        COAP_PROTO_DTLS, &dtls_pki);
+  if (!session) {
+    coap_free_context(context);
+    return NULL;
+  }
+  /* The context is in session\->context */
+  return session;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBCoAP Client PSK Setup\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <stdio\&.h>
+#include <netinet/in\&.h>
+
+#ifndef min
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#endif
+
+static const coap_dtls_cpsk_info_t *
+verify_ih_callback(coap_str_const_t *hint,
+                   coap_session_t *c_session,
+                   void *arg
+) {
+  coap_dtls_cpsk_info_t *psk_info = (coap_dtls_cpsk_info_t *)arg;
+  /* Remove (void) definition if variable is used */
+  (void)c_session;
+
+  coap_log(LOG_INFO, "Identity Hint \*(Aq%\&.*s\*(Aq provided\en", (int)hint\->length, hint\->s);
+
+  /* Just use the defined information for now as passed in by arg */
+  return psk_info;
+}
+
+static coap_dtls_cpsk_t dtls_psk;
+static char client_sni[256];
+
+static coap_session_t *
+setup_client_session_psk (const char *uri,
+                          struct in_addr ip_address,
+                          const uint8_t *identity,
+                          unsigned int identity_len,
+                          const uint8_t *key,
+                          unsigned int key_len
+) {
+  coap_session_t *session;
+  coap_address_t server;
+  /* See coap_context(3) */
+  coap_context_t *context = coap_new_context(NULL);
+
+  if (!context)
+    return NULL;
+  /* See coap_block(3) */
+  coap_context_set_block_mode(context,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+
+  coap_address_init(&server);
+  server\&.addr\&.sa\&.sa_family = AF_INET;
+  server\&.addr\&.sin\&.sin_addr = ip_address;
+  server\&.addr\&.sin\&.sin_port = htons (5684);
+
+  /* See coap_encryption(3) */
+  memset (&dtls_psk, 0, sizeof(dtls_psk));
+  dtls_psk\&.version = COAP_DTLS_CPSK_SETUP_VERSION;
+  dtls_psk\&.validate_ih_call_back = verify_ih_callback;
+  dtls_psk\&.ih_call_back_arg = &dtls_psk\&.psk_info;
+  if (uri)
+    memcpy(client_sni, uri, min(strlen(uri), sizeof(client_sni)\-1));
+  else
+    memcpy(client_sni, "localhost", 9);
+  dtls_psk\&.client_sni = client_sni;
+  dtls_psk\&.psk_info\&.identity\&.s = identity;
+  dtls_psk\&.psk_info\&.identity\&.length = identity_len;
+  dtls_psk\&.psk_info\&.key\&.s = key;
+  dtls_psk\&.psk_info\&.key\&.length = key_len;
+  session = coap_new_client_session_psk2(context, NULL, &server,
+                                        COAP_PROTO_DTLS, &dtls_psk);
+  if (!session) {
+    coap_free_context(context);
+    return NULL;
+  }
+  /* The context is in session\->context */
+  return session;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBCoAP Client Anonymous PKI Setup\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <netinet/in\&.h>
+
+static coap_session_t *
+setup_client_session_dtls (struct in_addr ip_address) {
+  coap_session_t *session;
+  coap_address_t server;
+  /* See coap_context(3) */
+  coap_context_t *context = coap_new_context(NULL);
+
+  if (!context)
+    return NULL;
+  /* See coap_block(3) */
+  coap_context_set_block_mode(context,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+
+  coap_address_init(&server);
+  server\&.addr\&.sa\&.sa_family = AF_INET;
+  server\&.addr\&.sin\&.sin_addr = ip_address;
+  server\&.addr\&.sin\&.sin_port = htons (5683);
+
+  session = coap_new_client_session(context, NULL, &server,
+                                        COAP_PROTO_DTLS);
+  if (!session) {
+    coap_free_context(context);
+    return NULL;
+  }
+  /* The context is in session\->context */
+  return session;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBcoap_block\fR(3), \fBcoap_context\fR(3), \fBcoap_encryption\fR(3), \fBcoap_endpoint_server\fR()3), \fBcoap_resource\fR(3), \fBcoap_session\fR(3) and \fBcoap_tls_library\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See "RFC7252: The Constrained Application Protocol (CoAP)" for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

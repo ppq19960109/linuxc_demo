@@ -1,0 +1,152 @@
+'\" t
+.\"     Title: coap_string
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_string 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_STRING" "3" "06/07/2021" "coap_string 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_string, coap_new_string, coap_delete_string, coap_new_str_const, coap_delete_str_const, coap_new_binary, coap_delete_binary, coap_resize_binary, coap_new_bin_const \- Work with CoAP string functions
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBcoap_string_t *coap_new_string(size_t \fR\fB\fIsize\fR\fR\fB);\fR
+.sp
+\fBvoid coap_delete_string(coap_string_t *\fR\fB\fIstring\fR\fR\fB);\fR
+.sp
+\fBcoap_str_const_t *coap_new_str_const(const uint8_t *\fR\fB\fIdata\fR\fR\fB, size_t \fR\fB\fIsize\fR\fR\fB);\fR
+.sp
+\fBvoid coap_delete_str_const(coap_str_const_t *\fR\fB\fIstring\fR\fR\fB);\fR
+.sp
+\fBcoap_str_const_t *coap_make_str_const(const char *\fR\fB\fIstring\fR\fR\fB);\fR
+.sp
+\fBint coap_string_equal(coap_string_t *\fR\fB\fIstring1\fR\fR\fB, coap_string_t *\fR\fB\fIstring2\fR\fR\fB);\fR
+.sp
+\fBcoap_binary_t *coap_new_binary(size_t \fR\fB\fIsize\fR\fR\fB);\fR
+.sp
+\fBvoid coap_delete_binary(coap_binary_t *\fR\fB\fIbinary\fR\fR\fB);\fR
+.sp
+\fBcoap_binary_t *coap_resize_binary(coap_binary_t *\fR\fB\fIbinary\fR\fR\fB, size_t \fR\fB\fInew_size\fR\fR\fB);\fR
+.sp
+\fBcoap_bin_const_t *coap_new_bin_const(const uint8_t *\fR\fB\fIdata\fR\fR\fB, size_t \fR\fB\fIsize\fR\fR\fB);\fR
+.sp
+\fBvoid coap_delete_bin_const(coap_bin_const_t *\fR\fB\fIbinary\fR\fR\fB);\fR
+.sp
+\fBint coap_binary_equal(coap_binary_t *\fR\fB\fIbinary1\fR\fR\fB, coap_binary_t *\fR\fB\fIbinary2\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+There is support for storing strings (usually readable data) and for storing binary data\&. These are used by a number of functions and provide the information in some of the callbacks\&.
+.sp
+There are 4 supported string/binary types as follows
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/*
+ * Coap string data definition
+ */
+typedef struct coap_string_t {
+  size_t length;    /* length of string */
+  uint8_t *s;       /* string data */
+} coap_string_t;
+
+/*
+ * Coap string data definition with const data
+ */
+typedef struct coap_str_const_t {
+  size_t length;    /* length of string */
+  const uint8_t *s; /* read\-only string data */
+} coap_str_const_t;
+
+/*
+ * Coap binary data definition
+ */
+typedef struct coap_binary_t {
+  size_t length;    /* length of binary data */
+  uint8_t *s;       /* binary data */
+} coap_binary_t;
+
+/*
+ * Coap binary data definition with const data
+ */
+typedef struct coap_bin_const_t {
+  size_t length;    /* length of binary data */
+  const uint8_t *s; /* read\-only binary data */
+} coap_bin_const_t;
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_new_string\fR() function allocates a new coap_string_t of \fIsize\fR where \fIs\fR points to uninitialized data of length \fIsize\fR with an extra trailing NULL at \fIsize\fR + 1\&. \fIlength\fR is set to \fIsize\fR\&.
+.sp
+The \fBcoap_delete_string\fR() function is used to delete the coap_string_t created by \fBcoap_new_string\fR()\&.
+.sp
+The \fBcoap_new_str_const\fR() function allocates a coap_str_const_t of \fIsize\fR where \fIs\fR is filled in with \fIdata\fR and has a trailing NULL added\&. \fIlength\fR is set to \fIsize\fR\&. \fIs\fR is read\-only\&.
+.sp
+The \fBcoap_delete_str_const\fR() function is used to delete the coap_str_const_t created by \fBcoap_new_str_const\fR()\&.
+.sp
+The \fBcoap_make_str_const\fR() function is used to take some read\-only text and uses a static coap_str_const_t for use in different function calls\&. There are two static entries that are cycled through so that a single function call can call \fBcoap_make_str_const\fR() twice\&.
+.sp
+The \fBcoap_string_equal\fR() function is used to compare two different string objects \fIstring1\fR and \fIstring2\fR\&.
+.sp
+The \fBcoap_new_binary\fR() function allocates a new coap_binary_t of \fIsize\fR where \fIs\fR points to uninitialized data of length \fIsize\fR\&. \fIlength\fR is set to \fIsize\fR\&.
+.sp
+The \fBcoap_resize_binary\fR() function is used resize the size of \fIs\fR to the new size of \fInew_size\fR\&. The data between the old \fIlength\fR and the \fInew_size\fR is unitialized\&. \fIlength\fR is set to \fInew_size\fR\&.
+.sp
+The \fBcoap_delete_binary\fR() function is used to delete the coap_binary_t created by \fBcoap_new_binary\fR()\&.
+.sp
+The \fBcoap_new_bin_const\fR() function allocates a coap_bin_const_t of \fIsize\fR where \fIs\fR is filled in with in with \fIdata\fR and has a trailing NULL added\&. \fIlength\fR is set to \fIsize\fR\&. \fIs\fR is read\-only\&.
+.sp
+The \fBcoap_delete_bin_const\fR() function is used to delete the coap_bin_const_t created by \fBcoap_new_bin_const\fR()\&.
+.sp
+The \fBcoap_binary_equal\fR() function is used to compare two different binary objects \fIbinary1\fR and \fIbinary2\fR\&.
+.SH "RETURN VALUES"
+.sp
+The \fBcoap_new_string\fR() function returns a pointer to an allocated coap_string_t or NULL if there was a failure\&.
+.sp
+The \fBcoap_new_str_const\fR() function returns a pointer to an allocated coap_str_const_t or NULL if there was a failure\&.
+.sp
+The \fBcoap_new_binary\fR() function returns a pointer to an allocated coap_binary_t or NULL if there was a failure\&.
+.sp
+The \fBcoap_resize_binary\fR() function returns a pointer to an re\-allocated coap_binary_t or NULL if there was a failure\&.
+.sp
+The \fBcoap_new_bin_const\fR() function returns a pointer to an allocated coap_bin_const_t or NULL if there was a failure\&.
+.SH "SEE ALSO"
+.sp
+\fBcoap_attribute\fR(3), \fBcoap_context\fR(3), \fBcoap_handler\fR(3), \fBcoap_pdu_setup\fR(3) and \fBcoap_resource\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+"RFC7252: The Constrained Application Protocol (CoAP)"
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

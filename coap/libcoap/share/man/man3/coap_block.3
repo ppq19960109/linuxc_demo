@@ -1,0 +1,366 @@
+'\" t
+.\"     Title: coap_block
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_block 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_BLOCK" "3" "06/07/2021" "coap_block 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_block, coap_context_set_block_mode, coap_add_data_large_request, coap_add_data_large_response, coap_get_data_large, coap_block_build_body \- Work with CoAP Blocks
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBvoid coap_context_set_block_mode(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, uint8_t \fR\fB\fIblock_mode\fR\fR\fB);\fR
+.sp
+\fBint coap_add_data_large_request(coap_session_t *\fR\fB\fIsession\fR\fR\fB, coap_pdu_t *\fR\fB\fIpdu\fR\fR\fB, size_t \fR\fB\fIlength\fR\fR\fB, const uint8_t *\fR\fB\fIdata\fR\fR\fB, coap_release_large_data_t \fR\fB\fIrelease_func\fR\fR\fB, void *\fR\fB\fIapp_ptr\fR\fR\fB);\fR
+.sp
+\fBint coap_add_data_large_response(coap_resource_t *\fR\fB\fIresource\fR\fR\fB, coap_session_t *\fR\fB\fIsession\fR\fR\fB, const coap_pdu_t *\fR\fB\fIrequest\fR\fR\fB, coap_pdu_t *\fR\fB\fIresponse\fR\fR\fB, const coap_string_t *query, uint16_t \fR\fB\fImedia_type\fR\fR\fB, int \fR\fB\fImaxage\fR\fR\fB, uint64_t etag, size_t \fR\fB\fIlength\fR\fR\fB, const uint8_t *\fR\fB\fIdata\fR\fR\fB, coap_release_large_data_t \fR\fB\fIrelease_func\fR\fR\fB, void *\fR\fB\fIapp_ptr\fR\fR\fB);\fR
+.sp
+\fBint coap_get_data_large(const coap_pdu_t *\fR\fB\fIpdu\fR\fR\fB, size_t *\fR\fB\fIlength, const uint8_t **_data\fR\fR\fB, size_t *\fR\fB\fIoffset\fR\fR\fB, size_t *\fR\fB\fItotal\fR\fR\fB);\fR
+.sp
+\fBcoap_binary_t * coap_block_build_body(coap_binary_t *\fR\fB\fIbody_data\fR\fR\fB, size_t \fR\fB\fIlength\fR\fR\fB, const uint8_t *\fR\fB\fIdata\fR\fR\fB, size_t \fR\fB\fIoffset\fR\fR\fB, size_t \fR\fB\fItotal\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+Regular setting up of a PDU and transmission is covered in coap_pdu_setup(3) where all the payload data can fit into a single packet\&. This man page covers how to work with PDUs where the overall body of information may need to be split across several packets by using CoAP Block\-Wise Transfers (RFC 7959)\&.
+.sp
+The block\-wise transfers can be controlled by the application, or libcoap is instructed to do all the requests for the next blocks and only present the final body of the result to the application\&. This man page focuses on getting libcoap to do all the work, not how to do it all in the application\&.
+.sp
+However, if the client supplies a BLOCK1 or BLOCK2 Option in the PDU where the block number is not 0, this is assumed to be a random access request and any other blocks will not be requested by libcoap even if instructed otherwise\&.
+.sp
+The functions that are named \fB_large\fR are intended as replacements for the equivalent functions as described in coap_pdu_setup(3)\&.
+.sp
+The \fBcoap_context_set_block_mode\fR() function is used to set up the \fIcontext\fR level \fIblock_mode\fR block handling bits for supporting RFC7959\&. \fIblock_mode\fR flows down to a session when a session is created and if the peer does not support the respective block mode, an appropriate bit may get disabled in the session \fIblock_mode\fR\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define COAP_BLOCK_USE_LIBCOAP  0x01 /* Use libcoap to do block requests */
+#define COAP_BLOCK_SINGLE_BODY  0x02 /* Deliver the data as a single body */
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fIblock_mode\fR is an or\(cqd set of zero or more COAP_BLOCK_* definitions\&.
+.sp
+If COAP_BLOCK_SINGLE_BODY is set, then the entire body of data is presented to the receiving handler, otherwise each individual block is presented on arrival\&. To obtain the data, length and current offset, \fBcoap_get_data_large\fR() must be used instead of \fBcoap_get_data\fR()\&. It may be appropriate not to set COAP_BLOCK_SINGLE_BODY if there are RAM limitations\&.
+.sp
+\fBNOTE:\fR It is the responsibility of the receiving application to re\-assemble the \fIdata\fR as appropriate (using \fBcoap_block_build_body\fR()) if COAP_BLOCK_SINGLE_BODY is not set\&.
+.sp
+\fBNOTE:\fR If COAP_BLOCK_SINGLE_BODY is not set, then the CoAP server on receiving request data split over multiple blocks data must respond with 2\&.31 (more data still to come), 2\&.01 or 2\&.04 (all data successfully received) as appropriate\&.
+.sp
+If COAP_BLOCK_USE_LIBCOAP is set, then any PDUs presented to the application handlers will get the tokens set back to the initiating token so that requests can be matched with responses even if different tokens had to be used for the series of packet interchanges\&. Furthermore, if COAP_BLOCK_SINGLE_BODY is set, then the PDU that presents the entire body will have any BLOCKx option removed\&.
+.sp
+\fBNOTE:\fR COAP_BLOCK_USE_LIBCOAP must be set if libcoap is to do all the block tracking and requesting, otherwise the application will have to do all of this work (the default if \fBcoap_context_set_block_mode\fR() is not called)\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/**
+ * Callback handler for de\-allocating the data based on @p app_ptr provided to
+ * coap_add_data_large_*() functions following transmission of the supplied
+ * data\&.
+ *
+ * @param session The session that this data is associated with
+ * @param app_ptr The application provided pointer to the
+ *                coap_add_data_large_*() functions
+ */
+typedef void (*coap_release_large_data_t)(coap_session_t *session,
+                                          void *app_ptr);
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_add_data_large_request\fR() function is similar to \fBcoap_add_data\fR(), but supports the transmission of data that has a body size that is potentially larger than can be fitted into a single client request PDU\&. The specified payload \fIdata\fR of length \fIlength\fR is associated with the \fIsession\fR with the first block of data added to the PDU \fIpdu\fR along with the appropriate CoAP options such as BLOCK1, and SIZE1 if the data does not fit into a single PDU\&. When the block has been acknowledged by the peer, the library will then send the next block of data until all the data has been transmitted\&. This function must only be called once per \fIpdu\fR\&. When the final block is transmitted, the callback function \fIrelease_func\fR (if not NULL) with the user defined parameter of \fIapp_ptr\fR is called so that the data can be released\&.
+.sp
+The \fBcoap_add_data_large_response\fR() function is responsible for handling the server\(cqs large responses to requests\&. \fBcoap_add_data_large_response\fR() should be used as a direct replacement for \fBcoap_add_data\fR() if it is possible that the \fIlength\fR of \fIdata\fR will not fit into a single server\(cqs response pdu\&. This function adds in the initial part of the payload \fIdata\fR of length \fIlength\fR to the PDU \fIpdu\fR\&. \fIrelease_func\fR (if not NULL) and \fIapp_ptr\fR are used for releasing the data when the body transfer is complete\&. It also adds in the appropriate CoAP options such as BLOCK2, SIZE2 and ETAG to handle Block\-Wise transfer if the data does not fit into a single PDU\&. \fIresource\fR, \fIquery\fR, \fIsession\fR, \fIrequest\fR, and \fIresponse\fR are the same parameters as in the called resource handler that invokes \fBcoap_add_data_large_response\fR()\&. If \fIetag\fR is 0, then a unique ETag value will be generated, else is the ETag value to use\&. The \fImedia_type\fR is for the format of the \fIdata\fR and \fImaxage\fR defines the lifetime of the response\&. If \fImaxage\fR is set to \-1, then the MAXAGE option does not get included (which indicates the default value of 60 seconds according to RFC 7252)\&. This function must only be called once per \fIpdu\fR\&. The application handler for the resource is only called once instead of potentially multiple times\&.
+.sp
+The \fBcoap_get_data_large\fR() function is used abstract from the \fIpdu\fR information about the received data by updating \fIlength\fR with the length of data available, \fIdata\fR with a pointer to where the data is located, \fIoffset\fR with where this block of data starts and \fItotal\fR with the total amount of data\&. \fIoffset\fR will always be zero if block_mode includes COAP_BLOCK_SINGLE_BODY\&. All of the body\(cqs data has been received if "\fIoffset\fR + \fIlength\fR == \fItotal\fR"\&.
+.sp
+\fBNOTE:\fR \fItotal\fR is potentially only an indication of the total size of the body and is only exact when all of the data has been received\&.
+.sp
+The \fBcoap_block_build_body\fR() function is used to re\-assemble the received data as returned by \fBcoap_get_data_large\fR() into a single blob of data\&. Data from \fIdata\fR of length \fIlength\fR starting from offset \fIoffset\fR is added to \fIbody_data\fR\&. The resultant state of \fIbody_data\fR is returned\&. If \fIbody_data\fR is NULL, or \fItotal\fR is larger than the current size of \fIbody_data\fR, then \fIbody_data\fR is re\-allocated and returned\&. If there is an error, \fIbody_data\fR gets de\-allocated\&.
+.sp
+If \fIblock_mode\fR (as set by \fBcoap_context_set_block_mode\fR()) includes COAP_BLOCK_SINGLE_BODY is used, then the response handler will only get called once with the entire body containing the data from all of the individual blocks\&. If there is a change of data during the blocks receipt (e\&.g\&. ETag value changes), then the entire set of data is re\-requested and the partial body dropped\&.
+.SH "RETURN VALUES"
+.sp
+The \fBcoap_add_data_large_request\fR(), \fBcoap_add_data_large_response\fR(), and \fBcoap_get_data_large\fR() functions return 0 on failure, 1 on success\&.
+.sp
+The \fBcoap_block_build_body\fR() returns the current state of the body\(cqs data (which may have some missing gaps) or NULL on error\&.
+.SH "EXAMPLES"
+.sp
+\fBSetup PDU and Transmit\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+static int
+build_send_pdu(coap_context_t *context, coap_session_t *session,
+uint8_t msgtype, uint8_t request_code, const char *uri, const char *query,
+unsigned char *data, size_t length, int observe) {
+
+  coap_pdu_t *pdu;
+  uint8_t buf[1024];
+  size_t buflen;
+  uint8_t *sbuf = buf;
+  int res;
+  coap_optlist_t *optlist_chain = NULL;
+  /* Remove (void) definition if variable is used */
+  (void)context;
+
+  /* Create the pdu with the appropriate options */
+  pdu = coap_pdu_init(msgtype, request_code, coap_new_message_id(session),
+                      coap_session_max_pdu_size(session));
+  if (!pdu)
+    return 0;
+
+  /*
+   * Create unique token for this request for handling unsolicited /
+   * delayed responses
+   */
+  coap_session_new_token(session, &buflen, buf);
+  if (!coap_add_token(pdu, buflen, buf)) {
+    coap_log(LOG_DEBUG, "cannot add token to request\en");
+    goto error;
+  }
+
+  if (uri) {
+    /* Add in the URI options */
+    buflen = sizeof(buf);
+    res = coap_split_path((const uint8_t*)uri, strlen(uri), sbuf, &buflen);
+    while (res\-\-) {
+      if (!coap_insert_optlist(&optlist_chain,
+                               coap_new_optlist(COAP_OPTION_URI_PATH,
+                        coap_opt_length(sbuf), coap_opt_value(sbuf))))
+        goto error;
+      sbuf += coap_opt_size(sbuf);
+    }
+  }
+
+  if (query) {
+    /* Add in the QUERY options */
+    buflen = sizeof(buf);
+    res = coap_split_query((const uint8_t*)query, strlen(query), sbuf, &buflen);
+    while (res\-\-) {
+      if (!coap_insert_optlist(&optlist_chain,
+                               coap_new_optlist(COAP_OPTION_URI_QUERY,
+                        coap_opt_length(sbuf), coap_opt_value(sbuf))))
+        goto error;
+      sbuf += coap_opt_size(sbuf);
+    }
+  }
+
+  if (request_code == COAP_REQUEST_GET && observe) {
+    /* Indicate that we want to observe this resource */
+    if (!coap_insert_optlist(&optlist_chain,
+                             coap_new_optlist(COAP_OPTION_OBSERVE,
+                               coap_encode_var_safe(buf, sizeof(buf),
+                               COAP_OBSERVE_ESTABLISH), buf)
+                             ))
+      goto error;
+  }
+
+  /* \&.\&.\&. Other code / options etc\&. \&.\&.\&. */
+
+  /* Add in all the options (after internal sorting) to the pdu */
+  if (!coap_add_optlist_pdu(pdu, &optlist_chain))
+    goto error;
+
+  if (data && length) {
+    /* Add in the specified data */
+    if (!coap_add_data_large_request(session, pdu, length, data, NULL, NULL))
+      goto error;
+  }
+
+  if (coap_send(session, pdu) == COAP_INVALID_MID)
+    goto error;
+  return 1;
+
+error:
+
+  if (pdu)
+    coap_delete_pdu(pdu);
+  return 0;
+
+}
+
+int main(int argc, char *argv[]) {
+  coap_context_t *context = NULL;
+  coap_session_t *session = NULL;
+  unsigned char *data = NULL;
+  size_t data_length = 0;
+
+  (void)argc;
+  (void)argv;
+
+  /* \&.\&.\&. Set up context, session etc\&. \&.\&.\&. */
+
+  /* Set up using libcoap to do the block work */
+  coap_context_set_block_mode(context,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+  /* \&.\&.\&. Other code etc\&. \&.\&.\&. */
+
+  /* \&.\&. build data and define data_length \&.\&.\&. */
+
+  build_send_pdu(context, session, COAP_MESSAGE_CON, COAP_REQUEST_PUT,
+                 "/example/uri", NULL, data, data_length, 0);
+
+  /* \&.\&.\&. Other code etc\&. \&.\&.\&. */
+
+  return 0;
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+\fBResource Handler Response PDU Update\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <coap3/coap\&.h>
+
+#include <stdio\&.h>
+
+static void
+hnd_get_time(coap_resource_t *resource, coap_session_t *session,
+const coap_pdu_t *request, const coap_string_t *query, coap_pdu_t *response) {
+
+  unsigned char buf[40];
+  size_t len;
+  time_t now;
+
+  /* Note that request may be NULL if triggered by an observe response */
+
+  /* \&.\&.\&. Additional analysis code for resource, request pdu etc\&.  \&.\&.\&. */
+
+  /* After analysis, generate a failure response and return if needed */
+
+  now = time(NULL);
+
+  if (query != NULL && coap_string_equal(query, coap_make_str_const("secs"))) {
+    /* Output secs since Jan 1 1970 */
+    len = snprintf((char *)buf, sizeof(buf), "%lu", now);
+  }
+  else {
+    /* Output human\-readable time */
+    struct tm *tmp;
+    tmp = gmtime(&now);
+    if (!tmp) {
+      /* If \*(Aqnow\*(Aq is not valid */
+      coap_pdu_set_code(response, COAP_RESPONSE_CODE_NOT_FOUND);
+      return;
+    }
+    len = strftime((char *)buf, sizeof(buf), "%b %d %H:%M:%S", tmp);
+  }
+  coap_pdu_set_code(response, COAP_RESPONSE_CODE_CONTENT);
+  /*
+   * Invoke coap_add_data_large_response() to do all the hard work\&.
+   * [A good practice, even though ins this case, the amount of data is small]
+   *
+   * Define the format \- COAP_MEDIATYPE_TEXT_PLAIN \- to add in
+   * Define how long this response is valid for (secs) \- 1 \- to add in\&.
+   *
+   * OBSERVE Option added internally if needed within the function
+   * BLOCK2 Option added internally if output too large
+   * SIZE2 Option added internally
+   * ETAG Option added internally
+   */
+  coap_add_data_large_response(resource, session, request, response,
+                               query, COAP_MEDIATYPE_TEXT_PLAIN, 1, 0,
+                               len,
+                               buf,
+                               NULL, NULL);
+}
+
+int main(int argc, char *argv[]) {
+  coap_context_t *context = NULL;
+  coap_resource_t *r;
+
+  (void)argc;
+  (void)argv;
+
+  /* \&.\&.\&. Set up context etc\&. \&.\&.\&. */
+
+  /* Set up using libcoap to do the block work */
+  coap_context_set_block_mode(context,
+                              COAP_BLOCK_USE_LIBCOAP | COAP_BLOCK_SINGLE_BODY);
+
+  /* Create a resource to return time */
+  r = coap_resource_init(coap_make_str_const("time"),
+                         COAP_RESOURCE_FLAGS_NOTIFY_CON);
+  coap_resource_set_get_observable(r, 1);
+  coap_register_handler(r, COAP_REQUEST_GET, hnd_get_time);
+
+  /* Document resource for \*(Aqtime\*(Aq request */
+  coap_add_attr(r, coap_make_str_const("ct"), coap_make_str_const("0"), 0);
+  coap_add_attr(r, coap_make_str_const("title"),
+                coap_make_str_const("\e"Internal Clock\e""), 0);
+  coap_add_attr(r, coap_make_str_const("rt"), coap_make_str_const("\e"secs\e""),
+                0);
+  coap_add_attr(r, coap_make_str_const("if"), coap_make_str_const("\e"clock\e""),
+                0);
+
+  coap_add_resource(context, r);
+
+  /* \&.\&.\&. Loop waiting for incoming traffic \&.\&.\&. */
+
+}
+.fi
+.if n \{\
+.RE
+.\}
+.SH "SEE ALSO"
+.sp
+\fBcoap_pdu_setup\fR(3), \fBcoap_observe\fR(3), and \fBcoap_resource\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See
+.sp
+"RFC7252: The Constrained Application Protocol (CoAP)"
+.sp
+"RFC7959: Block\-Wise Transfers in the Constrained Application Protocol (CoAP)"
+.sp
+for further information\&.
+.sp
+See https://www\&.iana\&.org/assignments/core\-parameters/core\-parameters\&.xhtml#option\-numbers for the current set of defined CoAP Options\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

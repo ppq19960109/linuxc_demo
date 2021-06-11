@@ -124,3 +124,13 @@ target remote 192.168.1.2:2001
 make  //交叉编译 gdbserver
 set solib-absolute-prefix "/home/ppq/nfs/lib:/home/ppq/nfs/usrlib"
 set solib-search-path "/home/ppq/nfs/lib:/home/ppq/nfs/usrlib" 
+
+libcoap：
+./configure --prefix=`pwd`/_install --disable-doxygen --disable-dtls  --host=mipsel-openwrt-linux CC=/home/ppq/lede-toolchain-ramips-mt7688_gcc-5.4.0_musl-1.1.16.Linux-x86_64/toolchain-mipsel_24kc_gcc-5.4.0_musl-1.1.16/bin/mipsel-openwrt-linux-gcc --without-openssl  --disable-manpages
+
+i2ctools:
+export CC=mipsel-openwrt-linux-gcc
+export STRIP=mipsel-openwrt-linux-strip
+export AR=mipsel-openwrt-linux-ar
+make USE_STATIC_LIB=1 
+make install PREFIX=$(pwd)/_install

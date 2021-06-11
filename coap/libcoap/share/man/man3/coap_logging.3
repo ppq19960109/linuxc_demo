@@ -1,0 +1,164 @@
+'\" t
+.\"     Title: coap_logging
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_logging 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_LOGGING" "3" "06/07/2021" "coap_logging 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_logging, coap_log, coap_get_log_level, coap_set_log_level, coap_set_log_handler, coap_package_name, coap_package_version, coap_set_show_pdu_output, coap_show_pdu \- Work with CoAP logging
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBvoid coap_log(coap_log_t \fR\fB\fIlevel\fR\fR\fB, const char *\fR\fB\fIformat\fR\fR\fB, \&...);\fR
+.sp
+\fBvoid coap_set_log_level(coap_log_t \fR\fB\fIlevel\fR\fR\fB);\fR
+.sp
+\fBcoap_log_t coap_get_log_level(void);\fR
+.sp
+\fBvoid coap_dtls_set_log_level(int \fR\fB\fIlevel\fR\fR\fB);\fR
+.sp
+\fBint coap_dtls_get_log_level(void);\fR
+.sp
+\fBvoid coap_set_log_handler(coap_log_handler_t \fR\fB\fIhandler\fR\fR\fB);\fR
+.sp
+\fBconst char *coap_package_name(void);\fR
+.sp
+\fBconst char *coap_package_version(void);\fR
+.sp
+\fBvoid coap_set_show_pdu_output(int \fR\fB\fIuse_fprintf\fR\fR\fB);\fR
+.sp
+\fBvoid coap_show_pdu(coap_log_t \fR\fB\fIlevel\fR\fR\fB, const coap_pdu_t *\fR\fB\fIpdu\fR\fR\fB);\fR
+.sp
+\fBconst char *coap_endpoint_str(const coap_endpoint_t *\fR\fB\fIendpoint\fR\fR\fB);\fR
+.sp
+\fBconst char *coap_session_str(const coap_session_t *\fR\fB\fIsession\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+The logging sub\-system supports logging at different levels, and depending on the selected logging level, outputs the appropriate information\&.
+.sp
+Logging by default is to stderr or stdout depending on the logging level of the log entry\&. It ia possible to send the logging information to an application logging callback handler for processing by the application\&.
+.sp
+The \fBcoap_log\fR() function is used to log information at the appropriate \fIlevel\fR\&. The rest of the parameters follow the standard \fBprintf\fR() function format\&.
+.sp
+Logging levels (\fBcoap_log_t\fR) are defined by (the same as for \fBsyslog\fR()), which are numerically incrementing in value:
+.PP
+\fBLOG_EMERG\fR
+.RS 4
+Emergency level (0)\&.
+.RE
+.PP
+\fBLOG_ALERT\fR
+.RS 4
+Alert level (1)\&.
+.RE
+.PP
+\fBLOG_CRIT\fR
+.RS 4
+Critical level (2)\&.
+.RE
+.PP
+\fBLOG_ERR\fR
+.RS 4
+Error level (3)\&.
+.RE
+.PP
+\fBLOG_WARNING\fR
+.RS 4
+Warning level (the default) (4)\&.
+.RE
+.PP
+\fBLOG_NOTICE\fR
+.RS 4
+Notice level (5)\&.
+.RE
+.PP
+\fBLOG_INFO\fR
+.RS 4
+Information level (6)\&.
+.RE
+.PP
+\fBLOG_DEBUG\fR
+.RS 4
+Debug level (7)\&.
+.RE
+.sp
+The \fBcoap_set_log_level\fR() function is used to set the current logging \fIlevel\fR for output by any subsequent \fBcoap_log\fR() calls\&. Output is only logged if the \fBcoap_log\fR() \fIlevel\fR definition is smaller than or equal to the current logging \fIlevel\fR\&.
+.sp
+The \fBcoap_get_log_level\fR() function is used to get the current logging level\&.
+.sp
+The \fBcoap_dtls_set_log_level\fR() function is used to set the logging \fIlevel\fR for output by the DTLS library for specific DTLS information\&. Usually, both \fBcoap_set_log_level\fR() and \fBcoap_dtls_set_log_level\fR() would be set to the same \fIlevel\fR value\&. If the logging level is set to greater than LOG_DEBUG, the underlying TLS library may get more verbose in its output\&.
+.sp
+The \fBcoap_dtls_get_log_level\fR() function is used to get the current logging level for the DTLS library\&.
+.sp
+The \fBcoap_set_log_handler\fR()* function can be used to define an alternative logging handler for processing the logging messages\&. The logging handler prototype is defined as:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+typedef void (*coap_log_handler_t) (coap_log_t level, const char *message);
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The \fBcoap_package_name\fR() function returns the name of this library\&.
+.sp
+The \fBcoap_package_version\fR() function returns the version of this library\&.
+.sp
+The \fBcoap_set_show_pdu_output\fR() function defines whether the output from \fBcoap_show_pdu\fR() is to be either sent to stdout/stderr, or output using \fBcoap_log\fR()\&. \fIuse_fprintf\fR is set to 1 for stdout/stderr (the default), and \fIuse_fprintf\fR is set to 0 for \fBcoap_log\fR()\&.
+.sp
+The \fBcoap_show_pdu\fR() function is used to decode the \fIpdu\fR, outputting as appropriate for logging \fIlevel\fR\&. Where the output goes is dependent on \fBcoap_set_show_pdu_output\fR()\&.
+.sp
+The \fBcoap_endpoint_str\fR() function returns a description string of the \fIendpoint\fR\&.
+.sp
+The \fBcoap_session_str\fR() function is used to get a string containing the information about the \fIsession\fR\&.
+.SH "RETURN VALUES"
+.sp
+The \fBcoap_package_name\fR() and \fBcoap_package_version\fR() return the appropriate zero\-terminated character string\&.
+.sp
+The \fBcoap_get_log_level\fR() function returns the current logging level\&.
+.sp
+The \fBcoap_dtls_get_log_level\fR() function returns the current logging level for the DTLS library specifics\&.
+.sp
+The \fBcoap_endpoint_str\fR() function returns a description string of the \fIendpoint\fR\&.
+.sp
+The \fBcoap_session_str\fR() function returns a description string of the \fIsession\fR\&.
+.SH "SEE ALSO"
+.sp
+\fBcoap_context\fR(3) and \fBcoap_session\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+See "RFC7252: The Constrained Application Protocol (CoAP)" for further information\&.
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

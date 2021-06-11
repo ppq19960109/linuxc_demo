@@ -1,0 +1,65 @@
+'\" t
+.\"     Title: coap_keepalive
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: libcoap Manual
+.\"    Source: coap_keepalive 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP_KEEPALIVE" "3" "06/07/2021" "coap_keepalive 4\&.3\&.0rc3" "libcoap Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap_keepalive, coap_context_set_keepalive \- Work with CoAP keepalive
+.SH "SYNOPSIS"
+.sp
+\fB#include <coap3/coap\&.h>\fR
+.sp
+\fBvoid coap_context_set_keepalive(coap_context_t *\fR\fB\fIcontext\fR\fR\fB, unsigned int \fR\fB\fIseconds\fR\fR\fB);\fR
+.sp
+For specific (D)TLS library support, link with \fB\-lcoap\-3\-notls\fR, \fB\-lcoap\-3\-gnutls\fR, \fB\-lcoap\-3\-openssl\fR, \fB\-lcoap\-3\-mbedtls\fR or \fB\-lcoap\-3\-tinydtls\fR\&. Otherwise, link with \fB\-lcoap\-3\fR to get the default (D)TLS library support\&.
+.SH "DESCRIPTION"
+.sp
+There may be a requirement to send out keepalive traffic when the CoAP session is idle (no packets have been sent or received for a specified period) to keep, say, an interim NAT device "warm" with the NAT translation state, or to periodically check whether the device at the other end of the session has "gone away"\&.
+.sp
+For UDP/DTLS, this is done with the confirmable CoAP (0\&.00) Ping packet, which solicits a CoAP RST response\&. For TCP/TLS, this is done with CoAP (7\&.02) Ping packet, which solicits a CoAP (7\&.03) Pong response, all handled by libcoap\&.
+.sp
+The \fBcoap_context_set_keepalive\fR() function needs to be called to update the \fIcontext\fR with the keepalive for idle traffic timeout of \fIseconds\fR\&. If \fIseconds\fR is set to 0 (the default), then the sending of keepalives is disabled\&. Any sessions created from this \fIcontext\fR will use the same \fIseconds\fR value to determine whether a keepalive "ping" is to be sent out or not\&.
+.sp
+Applications can track the usage of the receipt of "pings" and receipt of "responses" by defining the respective handlers to use by using \fBcoap_register_ping_handler\fR() and \fBcoap_register_pong_handler\fR()\&.
+.sp
+If the keepalive fails to solicit a response, then this can be tracked by defining the handler to use by using \fBcoap_register_nack_handler\fR() which will be called with a reason of COAP_NACK_TOO_MANY_RETRIES\&.
+.sp
+\fBNOTE:\fR \fBcoap_context_set_keepalive\fR() is supported by both the CoAP client and CoAP server\&.
+.SH "SEE ALSO"
+.sp
+\fBcoap_handler\fR(3)
+.SH "FURTHER INFORMATION"
+.sp
+"RFC7252: The Constrained Application Protocol (CoAP)"
+.sp
+"RFC8323: CoAP (Constrained Application Protocol) over TCP, TLS, and WebSockets"
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

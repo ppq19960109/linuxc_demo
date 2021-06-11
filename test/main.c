@@ -357,12 +357,48 @@ int read_file()
 
 #define log_debug(fmt, ...) log_color(BLUE, fmt, ##__VA_ARGS__)
 #define log_warn(fmt, ...) log_color(YELLOW, fmt, ##__VA_ARGS__)
-void log_printf(char* format, ...) {
+void log_printf(char *format, ...)
+{
     va_list args;
 
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
+}
+
+#include <ifaddrs.h>
+#include <net/if.h>
+#include <linux/sockios.h>
+#include <linux/ethtool.h>
+
+#include <arpa/inet.h>
+
+const char *getNetworkIp(const char *eth_inf, char *ip, unsigned char len)
+{
+    // struct sockaddr_in sin;
+    struct ifreq ifr;
+
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (-1 == fd)
+    {
+        printf("socket error: %s\n", strerror(errno));
+        return NULL;
+    }
+
+    strncpy(ifr.ifr_name, eth_inf, IFNAMSIZ);
+
+    if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
+    {
+        printf("ioctl error: %s\n", strerror(errno));
+        close(fd);
+        return NULL;
+    }
+    close(fd);
+
+    // memcpy(&sin, &ifr.ifr_addr, sizeof(struct sockaddr_in));
+    // snprintf(ip, len, "%s", inet_ntoa(sin.sin_addr));
+
+    return inet_ntop(AF_INET, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, ip, len);
 }
 int main(int agrc, char *agrv[])
 {
@@ -370,8 +406,12 @@ int main(int agrc, char *agrv[])
     // udp_broadcast_client();
     // udp_broadcast_client_eth("wlan0");
     // uart_test();
-    log_debug("abcd:%d",5);
-    log_warn("abcd:%d\n",5);
-    log_debug("abcd:%d\n",5);
+    log_debug("abcd:%d", 5);
+    log_warn("abcd:%d\n", 5);
+    log_debug("abcd:%d\n", 5);
+
+    char ip[16];
+    printf("ip:%s\n", getNetworkIp("enp0s3", ip, sizeof(ip)));
+    printf("ip:%s\n", getNetworkIp("enp0s32", ip, sizeof(ip)));
     return 0;
 }

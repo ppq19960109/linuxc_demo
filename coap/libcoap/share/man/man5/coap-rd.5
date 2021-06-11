@@ -1,0 +1,277 @@
+'\" t
+.\"     Title: coap-rd
+.\"    Author: [see the "AUTHORS" section]
+.\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
+.\"      Date: 06/07/2021
+.\"    Manual: coap-rd Manual
+.\"    Source: coap-rd 4.3.0rc3
+.\"  Language: English
+.\"
+.TH "COAP\-RD" "5" "06/07/2021" "coap\-rd 4\&.3\&.0rc3" "coap\-rd Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+coap-rd, coap-rd-gnutls, coap-rd-mbedtls, coap-rd-openssl, coap-rd-notls \- A CoAP Resource Directory based on libcoap
+.SH "SYNOPSIS"
+.sp
+\fBcoap\-rd\fR [\fB\-g\fR group] [\fB\-G\fR group_if] [\fB\-p\fR port] [\fB\-v\fR num] [\fB\-A\fR address] [[\fB\-h\fR hint] [\fB\-k\fR key]] [[\fB\-c\fR certfile] [\fB\-n\fR] [\fB\-C\fR cafile] [\fB\-R\fR trusted_casfile]]
+.sp
+For \fBcoap\-rd\fR versions that use libcoap compiled for different (D)TLS libraries, \fBcoap\-rd\-notls\fR, \fBcoap\-rd\-gnutls\fR, \fBcoap\-rd\-openssl\fR, \fBcoap\-rd\-mbedtls\fR or \fBcoap\-rd\-tinydtls\fR may be available\&. Otherwise, \fBcoap\-rd\fR uses the default libcoap (D)TLS support\&.
+.SH "DESCRIPTION"
+.sp
+\fBcoap\-rd\fR is a simple CoAP Resource Directory server that can handle resource registrations using the protocol CoAP (RFC 7252)\&.
+.SH "OPTIONS"
+.PP
+\fB\-g\fR group
+.RS 4
+Join specified multicast
+\fIgroup\fR
+on startup\&.
+\fBNote:\fR
+DTLS over multicast is not currently supported\&.
+.RE
+.PP
+\fB\-G\fR group_if
+.RS 4
+Use this interface for listening for the multicast group\&. This can be different from the implied interface if the
+\fB\-A\fR
+option is used\&.
+.RE
+.PP
+\fB\-p\fR port
+.RS 4
+The
+\fIport\fR
+on the given address will be listening for incoming connections\&. If (D)TLS is supported, then
+\fIport\fR
++ 1 will also be listened on for (D)TLS connections\&. The default port is 5683 if not given any other value\&.
+.RE
+.PP
+\fB\-v\fR num
+.RS 4
+The verbosity level to use (default: 3, maximum is 9)\&. Above 7, there is increased verbosity in GnuTLS and OpenSSL logging\&.
+.RE
+.PP
+\fB\-A\fR address
+.RS 4
+The local address of the interface which the server has to listen on\&.
+.RE
+.SH "OPTIONS \- PSK"
+.sp
+(If supported by underlying (D)TLS library)
+.PP
+\fB\-h\fR hint
+.RS 4
+Identity Hint to send\&. Default is
+\fBCoAP\fR\&. Zero length is no hint\&.
+.RE
+.PP
+\fB\-k\fR key
+.RS 4
+Pre\-shared key to use for inbound connections\&. This cannot be empty if defined\&.
+\fBNote:\fR
+if
+\fB\-c cafile\fR
+is defined, you need to define
+\fB\-k key\fR
+as well to have the server support both PSK and PKI\&.
+.RE
+.SH "OPTIONS \- PKI"
+.sp
+(If supported by underlying (D)TLS library)
+.PP
+\fB\-c\fR certfile
+.RS 4
+Use the specified PEM file which contains the CERTIFICATE and PRIVATE KEY information\&. Note: if
+\fB\-k key\fR
+is defined, you need to define
+\fB\-c certfile\fR
+as well to have the server support both PSK and PKI\&.
+.RE
+.PP
+\fB\-n\fR
+.RS 4
+Disable remote peer certificate checking\&. This gives clients the ability to use PKI, but without any defined certificates\&.
+.RE
+.PP
+\fB\-C\fR cafile
+.RS 4
+PEM file that contains a list of one or more CAs that are to be passed to the client for the client to determine what client certificate to use\&. Normally, this list of CAs would be the root CA and and any intermediate CAs\&. Ideally the server certificate should be signed by the same CA so that mutual authentication can take place\&. The contents of
+\fBcafile\fR
+are added to the trusted store of root CAs\&. Using the
+\fB\-C\fR
+or
+\fB\-R\fR
+options will will trigger the validation of the client certificate unless overridden by the
+\fB\-n\fR
+option\&.
+.RE
+.PP
+\fB\-R\fR trust_casfile
+.RS 4
+PEM file containing the set of trusted root CAs that are to be used to validate the client certificate\&. Alternatively, this can point to a directory containing a set of CA PEM files\&. The
+\fB\-C cafile\fR
+CA does not have to be in this list and is trusted for the validation\&. Using
+\fB\-R trust_casfile\fR
+disables common CA mutual authentication which can only be done by using
+\fB\-C cafile\fR\&. Using the
+\fB\-C\fR
+or
+\fB\-R\fR
+options will will trigger the validation of the server certificate unless overridden by the
+\fB\-n\fR
+option\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-rd \-A ::1
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Let the server listen on localhost (port 5683)\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-rd \-A ::1 \-k mysecretKey \-h myhint
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Let the server listen on localhost (port \fI5683\fR and \fI5684\fR) with the server set up for PSK authentication\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-rd \-A ::1 \-p 13011
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Quite the same, except listening port is \fI13011\fR (and not the default port 5683)\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-rd \-A 2001:db8:81a8:0:6ef0:dead:feed:beef  \-v 5
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The listening address is set to \fI2001:db8:81a8:0:6ef0:dead:feed:beef\fR and the verbosity level is set to \fI5\fR\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Example
+.RE
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+coap\-rd \-A 2001:db8:81a8:0:6ef0:dead:feed:beef  \-g FF02::FD
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Set listening address to \fI2001:db8:81a8:0:6ef0:dead:feed:beef\fR and join the All CoAP Nodes multicast group \fIFF02::FD\fR\&.
+.SH "FILES"
+.sp
+There are no configuration files\&.
+.SH "EXIT STATUS"
+.PP
+\fB0\fR
+.RS 4
+Success
+.RE
+.PP
+\fB1\fR
+.RS 4
+Failure (syntax or usage error; configuration error; document processing failure; unexpected error)
+.RE
+.SH "BUGS"
+.sp
+Please report bugs on the mailing list for libcoap: libcoap\-developers@lists\&.sourceforge\&.net or raise an issue on GitHub at https://github\&.com/obgm/libcoap/issues
+.SH "AUTHORS"
+.sp
+The libcoap project <libcoap\-developers@lists\&.sourceforge\&.net>

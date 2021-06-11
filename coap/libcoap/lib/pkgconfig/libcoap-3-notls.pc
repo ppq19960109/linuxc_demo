@@ -1,0 +1,12 @@
+prefix=/home/ppq/git/libcoap/_install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libcoap
+Description: C-Implementation of CoAP.
+Version: 4.3.0rc3
+URL: https://libcoap.net/
+Libs: -L${libdir} -lcoap-3-notls
+Libs.private: 
+Cflags: -I${includedir}
