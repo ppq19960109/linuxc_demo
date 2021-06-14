@@ -45,14 +45,34 @@ export PKG_CONFIG_PATH=/home/ppq/x265_3.2.1/build/_install/lib/pkgconfig:/home/p
 --enable-libx264 \
 --extra-cflags='-I../x264-master/_install/include' \
 --extra-ldflags='-L../x264-master/_install/lib' \
---extra-libs=-ldl
+--extra-libs='-ldl -lm -lpthread'
 -mcpu=cortex-a7 -mfloat-abi=softfp -mfpu=neon-vfpv4 
+
+./configure --prefix=`pwd`/_install  \
+--cross-prefix=arm-linux-gnueabihf- --cc=arm-linux-gnueabihf-gcc \
+--enable-shared --enable-gpl --disable-asm --enable-pthreads --disable-programs \
+--enable-libx264 --enable-libx265 \
+--extra-cflags='-I /home/ppq/libs/x264-master/_install/include -I /home/ppq/git/x265/buf/_install/include' \
+--extra-ldflags='-L /home/ppq/libs/x264-master/_install/lib -L /home/ppq/git/x265/buf/_install/lib' \
+--extra-libs=-ldl --enable-cross-compile --target-os=linux --arch=arm --cpu=cortex-a7
+
+export PKG_CONFIG_PATH=/home/ppq/git/x265/buf/_install/lib/pkgconfig:/home/ppq/libs/x264-master/_install/lib/pkgconfig
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ppq/git/x265/buf/_install/lib
+./configure --prefix=`pwd`/_install  \
+--cross-prefix=arm-linux-gnueabihf- --cc=arm-linux-gnueabihf-gcc \
+--enable-shared --enable-gpl --disable-asm --enable-pthreads --disable-programs \
+--enable-libx264 --enable-libx265 \
+--extra-cflags='-I/home/ppq/libs/x264-master/_install/include -I/home/ppq/git/x265/buf/_install/include' \
+--extra-ldflags='-L/home/ppq/libs/x264-master/_install/lib -L/home/ppq/git/x265/buf/_install/lib' \
+--extra-libs=-ldl --enable-cross-compile --target-os=linux --arch=arm --cpu=cortex-a7 
+
 
 librtmp:
 make prefix=`pwd`/_install XCFLAGS+='-I/home/ppq/openssl-1.0.1u/_install/include -I/home/ppq/git/zlib/_install/include' \
 XLDFLAGS+='-L/home/ppq/openssl-1.0.1u/_install/lib -L/home/ppq/git/zlib/_install/lib'
 libx264:
 ./configure --prefix=`pwd`/_install --disable-asm --enable-shared --enable-static --enable-pic --host=arm-himix100-linux --cross-prefix=arm-himix100-linux-
+./configure --prefix=`pwd`/_install --disable-asm --enable-shared --enable-static --enable-pic --host=arm-linux-gnueabihf --cross-prefix=arm-linux-gnueabihf-
 nginx:
 ./configure --add-module=../nginx-rtmp-module --with-http_ssl_module --prefix=`pwd`/_install
 ./configure --add-module=../nginx-http-flv-module  --with-http_ssl_module --prefix=`pwd`/_install 
