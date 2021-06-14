@@ -901,7 +901,7 @@ HI_S32 SAMPLE_VENC_H265_H264(int flag)
     HI_S32          s32ChnNum     = 3;
     VENC_CHN        VencChn[3]    = {0,1,2};
     HI_U32          u32Profile[3] = {0,0,0};
-    PAYLOAD_TYPE_E  enPayLoad[3]  = {PT_H264, PT_H265,PT_JPEG};//PT_H264
+    PAYLOAD_TYPE_E  enPayLoad[3]  = {PT_H265, PT_H264,PT_JPEG};//PT_H264
     VENC_GOP_MODE_E enGopMode;
     VENC_GOP_ATTR_S stGopAttr;
     SAMPLE_RC_E     enRcMode;

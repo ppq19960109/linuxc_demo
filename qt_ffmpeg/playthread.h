@@ -4,11 +4,13 @@
 #include <QObject>
 #include <QThread>
 #include <QImage>
+#include <QString>
 class playThread : public QThread
 {
     Q_OBJECT
 
 public:
+    static QString rtsp_ip;
     playThread();
     void stop();
 protected:

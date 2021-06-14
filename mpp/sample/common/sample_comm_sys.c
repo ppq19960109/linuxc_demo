@@ -141,7 +141,7 @@ HI_S32 SAMPLE_COMM_SYS_GetPicSize(PIC_SIZE_E enPicSize, SIZE_S* pstSize)
     {
         case PIC_CIF:   /* 352 * 288 */
             pstSize->u32Width  = 352;
-            pstSize->u32Height = 288;
+            pstSize->u32Height = 272;
             break;
 
         case PIC_VGA:   /* 640 * 480 */

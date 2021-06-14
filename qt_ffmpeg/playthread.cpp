@@ -1,7 +1,7 @@
 #include <QDebug>
 #include "playthread.h"
 #include "dec_video.h"
-
+#include <sys/stat.h>
 playThread::playThread()
 {
 
@@ -12,6 +12,7 @@ void playThread::stop()
     qDebug() <<  "playThread stop";
     runing=false;
 }
+QString playThread::rtsp_ip="123";
 
 void playThread::run()
 {
@@ -20,12 +21,20 @@ void playThread::run()
     qDebug() <<  "playThread start";
     runing=true;
 
-    dec_open("rtsp://192.168.1.16:8554/live",nullptr,&mWidth,&mHeight);
+//    rtsp_ip="rtsp://192.168.0.108:8554/h264Live";
+    QByteArray rtsp_ip_byte=rtsp_ip.toUtf8();
+    char* rip=rtsp_ip_byte.data();
+    qDebug() <<  "ffmpeg rtsp_ip:" << rip << endl;
+
+    sleep(2);
+    dec_open(rip,NULL,&mWidth,&mHeight);
     uchar* rgbBuffer=new uchar[mWidth*mHeight*3];
     qDebug() <<  "w:"<<mWidth << "h:"<< mHeight;
+
+
     while(runing)
     {
-        qDebug() <<  "playThread run";
+//        qDebug() <<  "playThread run";
         //        sleep(1);
 
         if(dec_run(rgbBuffer)<0)

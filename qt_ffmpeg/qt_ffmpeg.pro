@@ -23,8 +23,14 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui
 
-INCLUDEPATH +=/home/ppq/git/linuxc_demo/ffmpeg/libs/libffmpeg/include
-LIBS += -L/home/ppq/git/linuxc_demo/ffmpeg/libs/libffmpeg/lib -lavcodec	-lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale
+#INCLUDEPATH +=/home/ppq/git/linuxc_demo/ffmpeg/libs/libffmpeg/include
+#LIBS += -L/home/ppq/git/linuxc_demo/ffmpeg/libs/libffmpeg/lib -lavcodec	-lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale
 
-INCLUDEPATH +=/home/ppq/git/linuxc_demo/ffmpeg/libs/libx264/include
-LIBS += -L/home/ppq/git/linuxc_demo/ffmpeg/libs/libx264/lib -lx264
+#INCLUDEPATH +=/home/ppq/git/linuxc_demo/ffmpeg/libs/libx264/include
+#LIBS += -L/home/ppq/git/linuxc_demo/ffmpeg/libs/libx264/lib -lx264
+
+INCLUDEPATH +=/home/ppq/libs/ffmpeg-4.2.4/_install/include
+LIBS += -L/home/ppq/libs/ffmpeg-4.2.4/_install/lib -lavcodec	-lavdevice -lavfilter -lavformat -lavutil -lpostproc -lswresample -lswscale
+
+INCLUDEPATH +=/home/ppq/libs/x264-master/_install/include
+LIBS += -L/home/ppq/libs/x264-master/_install/lib -lx264

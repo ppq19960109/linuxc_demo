@@ -88,7 +88,7 @@ void *rtsp_server_thread(void *args)
     char const *streamName = "h264Live";
     ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
                                                             descriptionString);
-    sms->addSubsession(H264VideoLiveServerMediaSubsession::createNew(*env, getVencFrame, 0, 0, reuseFirstSource));
+    sms->addSubsession(H264VideoLiveServerMediaSubsession::createNew(*env, getVencFrame, 1, 0, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, "hisih264Live");
@@ -98,7 +98,7 @@ void *rtsp_server_thread(void *args)
     char const *streamName = "h265Live";
     ServerMediaSession *sms = ServerMediaSession::createNew(*env, streamName, streamName,
                                                             descriptionString);
-    sms->addSubsession(H265VideoLiveServerMediaSubsession::createNew(*env, getVencFrame, 1, 0, reuseFirstSource));
+    sms->addSubsession(H265VideoLiveServerMediaSubsession::createNew(*env, getVencFrame, 0, 0, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, "hisih265Live");

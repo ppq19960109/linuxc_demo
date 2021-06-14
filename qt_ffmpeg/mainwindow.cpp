@@ -8,6 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     connect(&play_thread, &playThread::sig_GetOneFrame,
             this, &MainWindow::displayRGB);
+
+    play_thread.start();
 }
 
 MainWindow::~MainWindow()
