@@ -35,3 +35,75 @@ export TSLIB_PLUGINDIR=$TSLIB_ROOT/lib/ts
 export LD_PRELOAD=$TSLIB_ROOT/lib/libts.so
 export QT_QPA_FB_TSLIB=1
 export TSLIB_CALIBFILE=/etc/pointercal
+
+export QT_ROOT=/usr/lib/arm-qt
+export QT_QPA_GENERIC_PLUGINS=tslib:/dev/input/event1
+export QT_QPA_PLATFORM_PLUGIN_PATH=$QT_ROOT/plugins
+export QT_QPA_PLATFORM=linuxfb:tty=/dev/fb0
+export QT_PLUGIN_PATH=$QT_ROOT/plugins
+export LD_LIBRARY_PATH=$QT_ROOT/lib:$QT_ROOT/plugins/platforms
+export QML2_IMPORT_PATH=$QT_ROOT/qml
+export QT_QPA_FB_TSLIB=1
+export QT_QPA_FONTDIR=/usr/share/fonts
+
+./configure -prefix /home/ppq/qt-everywhere-src-5.12.9/arm-qt \
+-opensource \
+-confirm-license \
+-release \
+-strip \
+-shared \
+-xplatform linux-arm-gnueabi-g++ \
+-optimized-qmake \
+-c++std c++11 \
+--rpath=no \
+-pch \
+-skip qt3d \
+-skip qtactiveqt \
+-skip qtandroidextras \
+-skip qtcanvas3d \
+-skip qtconnectivity \
+-skip qtdatavis3d \
+-skip qtdoc \
+-skip qtgamepad \
+-skip qtlocation \
+-skip qtmacextras \
+-skip qtnetworkauth \
+-skip qtpurchasing \
+-skip qtremoteobjects \
+-skip qtscript \
+-skip qtscxml \
+-skip qtsensors \
+-skip qtspeech \
+-skip qtsvg \
+-skip qttools \
+-skip qttranslations \
+-skip qtwayland \
+-skip qtwebengine \
+-skip qtwebview \
+-skip qtwinextras \
+-skip qtx11extras \
+-skip qtxmlpatterns \
+-make libs \
+-make examples \
+-nomake tools -nomake tests \
+-gui \
+-widgets \
+-dbus-runtime \
+--glib=no \
+--iconv=no \
+--pcre=qt \
+--zlib=qt \
+-no-openssl \
+--freetype=qt \
+--harfbuzz=qt \
+-no-opengl \
+-linuxfb \
+--xcb=no \
+-tslib \
+--libpng=qt \
+--libjpeg=qt \
+--sqlite=qt \
+-plugin-sql-sqlite \
+-I/home/ppq/git/tslib/arm_tslib/include \
+-L/home/ppq/git/tslib/arm_tslib/lib \
+-recheck-all

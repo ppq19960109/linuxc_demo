@@ -1,5 +1,5 @@
 
-CROSS_COMPILE = #/home/ppq/lede-toolchain-ramips-mt7688_gcc-5.4.0_musl-1.1.16.Linux-x86_64/toolchain-mipsel_24kc_gcc-5.4.0_musl-1.1.16/bin/mipsel-openwrt-linux-#armv8l-linux-gnueabihf-
+CROSS_COMPILE = mipsel-openwrt-linux-#armv8l-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -24,7 +24,7 @@ SRC += $(wildcard $(SRC_PATH)/*.c)
 
 # OBJ += $(SRC:%.c=%.o)
 # OBJ := arp.o
-OBJ := main.o
+OBJ := main.o i2c.o
 
 %.o : %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
