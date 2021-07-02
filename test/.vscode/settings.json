@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "i2c-dev.h": "c"
+        "i2c-dev.h": "c",
+        "socket.h": "c",
+        "unistd.h": "c",
+        "tcp.h": "c",
+        "stdlib.h": "c",
+        "types.h": "c"
     }
 }

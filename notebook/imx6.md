@@ -3,6 +3,8 @@ ifconfig eth0 up
 udhcpc -b
 telnetd&
 
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
 
 setenv ipaddr 192.168.0.199
 setenv ethaddr 00:04:9f:04:d2:35 

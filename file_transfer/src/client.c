@@ -29,7 +29,7 @@ static int connect(void)
     file = fopen("install.bin", "rb+");
     return 0;
 }
-#define ADDR "192.168.1.56"
+// #define ADDR "192.168.1.56"
 // #define ADDR "127.0.0.1"
 int client_main(char* remote_ip)
 {

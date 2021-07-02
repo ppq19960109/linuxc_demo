@@ -139,6 +139,15 @@ uci set wireless.@wifi-iface[1].key=hongyana11
     }
 }
 
+{
+   "action":"network_confirm",
+   "requestId": "",
+   "params":{
+       "sid":"abedkkqiqq",
+       "ip":"192.168.1.6"
+   }
+}
+
 
 iw dev wlan0 link | grep -i SSID | wc -l
 cat /sys/class/net/wlan0/operstate
