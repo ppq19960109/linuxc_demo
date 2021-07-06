@@ -13,3 +13,18 @@ tcpdump -i eth0 tcp port 5683 -w log.cap
 sudo blkid /dev/sdb1
 
 echo 4 4 1 7 > /proc/sys/kernel/printk
+
+#!/bin/bash
+
+name="hilinkapp"
+
+while true
+do
+    count=`ps -ef | grep $name | grep -v "grep" | wc -l`
+    if [[ $count == 0 ]];then
+        echo "process not exist"
+    else
+        echo "process exist"
+    fi
+    sleep 3
+done
