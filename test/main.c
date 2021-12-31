@@ -24,9 +24,25 @@
 int main(int agrc, char *agrv[])
 {
     printf("main start \n");
-    // i2c_read_reg();
-    i2c_only_write();
+    if (UINT_MAX + 2 > UINT_MAX)
+    {
+        printf("UINT_MAX+2>UINT_MAX\n");
+    }
+    else
+    {
+        printf("UINT_MAX+2<UINT_MAX\n");
+    }
+    printf("UINT_MAX+2=%u\n", (unsigned int)(UINT_MAX + 2));
 
-    i2c_only_read();
+    unsigned int val = 1;
+    if (val - 2 < val)
+    {
+        printf("val - 2 < val\n");
+    }
+    else
+    {
+        printf("val - 2 > val\n");
+    }
+    printf("val - 2=%u\n", (unsigned int)(val - 2));
     return 0;
 }

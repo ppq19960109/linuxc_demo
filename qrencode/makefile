@@ -1,5 +1,5 @@
 
-CROSS_COMPILE =
+CROSS_COMPILE = arm-rockchip-linux-gnueabihf-
 CC = @echo "GCC $@"; $(CROSS_COMPILE)gcc
 RM = rm -f
 
@@ -7,13 +7,12 @@ TOPDIR = .
 SRC_INCPATH = $(TOPDIR)
 SRC_PATH = $(TOPDIR)
 
-CFLAGS += -I$(TOPDIR)$(TOPDIR)/libs/qrencode/include/
+CFLAGS += -Iqrencode/include/
 CFLAGS += -I$(SRC_INCPATH)
 
 CFLAGS += -g -Wall
 
-LDFLAGS += -L$(TOPDIR)$(TOPDIR)/libs
-LDFLAGS += -L$(TOPDIR)$(TOPDIR)/libs/qrencode/lib
+LDFLAGS += -Lqrencode/lib
 
 LIBS += -Wl,--start-group	\
 		-Wl,-Bstatic -lqrencode	\
