@@ -56,7 +56,6 @@ rootfs:
 7、CONFIG delete connman nfs rpcbind adbd 
 
 	
-	
 misc.img:/device/rockchip/rockimg/blank-misc.img
 rootfs.img:buildroot
 parameter.txt:/device/rockchip/
@@ -67,3 +66,61 @@ uboot.img:u-boot
 boot.img:kernel
 MiniLoaderAll.bin:u-boot
 trust.img:u-boot
+
+
+
+
+
+CONFIG_DM_VIDEO=y
+CONFIG_OF_LIVE=y
+make ARCH=arm rk3308_linux_aarch32_debug_defconfig
+make ARCH=arm menuconfig
+make ARCH=arm rk3308-voice-module-board-v10-aarch32.img -j8
+/usr/bin/time -f "you take %E to build recovery" device/rockchip/common/mk-ramdisk.sh recovery.img rockchip_rk3308_recovery
+
+update_config=1
+network={
+ssid="IoT-Test" 
+psk="12345678" 
+key_mgmt=WPA-PSK
+}
+wpa_supplicant -B -i wlan0 -c /data/cfg/wpa_supplicant.conf
+wget http://192.168.1.199:8000/X50QML -O X50QML && chmod 777 X50QML
+wget -c -r -np http://192.168.1.199:8000/x5/
+python3 -m http.server
+wget http://192.168.1.199:8000/x5.tar
+cat /proc/sys/kernel/printk
+echo 4 4 1 7 > /proc/sys/kernel/printk
+export QT_QPA_PLATFORM=linuxfb:tty=/dev/fb0:rotation=270
+killall X50app X50QML
+
+echo 'update_config=1' >> /data/cfg/wpa_supplicant.conf
+mount -o nolock,tcp -t nfs 192.168.1.199:/home/ppq/nfs /mnt
+export QT_QPA_FB_DRM=0
+export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/qt/plugins
+export QT_PLUGIN_PATH=/usr/lib/qt/plugins
+export QML2_IMPORT_PATH=/usr/qml
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:lib:/usr/lib:/usr/lib/qt/plugins/platforms
+export QT_QPA_FONTDIR=/usr/share/fonts
+
+export QT_QPA_FB_TSLIB=1
+export QT_QPA_GENERIC_PLUGINS=tslib:/dev/input/event0
+export POINTERCAL_FILE=/etc/pointercal
+
+export TSLIB_CONSOLEDEVICE=none
+export TSLIB_FBDEVICE=/dev/fb0
+export TSLIB_TSDEVICE=/dev/input/event0
+export TSLIB_CONFFILE=/etc/ts.conf
+export TSLIB_PLUGINDIR=/usr/lib/ts
+export LD_PRELOAD=/usr/lib/libts.so
+export TSLIB_CALIBFILE=/etc/pointercal
+
+export QT_QPA_EGLFS_ROTATION=90
+echo 1 > /sys/class/graphics/fb0/rotate
+export QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS=/dev/input/event0:rotate=270:invertx
+export QT_QPA_GENERIC_PLUGINS=evdevtouch:/dev/input/event0
+
+e6 e6 00 00 03 00 02 05 01 00 00 6e 6e
+e6 e6 00 00 03 00 02 31 01 00 00 6e 6e
+e6 e6 00 00 03 00 02 32 01 00 00 6e 6e
+

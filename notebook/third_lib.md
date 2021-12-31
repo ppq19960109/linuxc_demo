@@ -105,10 +105,6 @@ http://www.onvif.org/onvif/ver20/ptz/wsdl/ptz.wsdl
 ./soapcpp2 -L -x -2 -c onvif.h -I../share/gsoap -I../share/gsoap/import
 ./soapcpp2 -x -2 -c onvif.h -I../share/gsoap -I../share/gsoap/import
 
-.\wsdl2h.exe -x -c -s -t .\typemap.dat -o onvif/onvif.h http://www.onvif.org/onvif/ver10/network/wsdl/remotediscovery.wsdl http://www.onvif.org/onvif/ver10/device/wsdl/devicemgmt.wsdl http://www.onvif.org/onvif/ver10/media/wsdl/media.wsdl
-
-.\soapcpp2.exe -L -x -2 -C -c onvif.h -I .. -I ..\import 
-
 ./soapcpp2 -L -x -C -2 -I../share/gsoap -I../share/gsoap/import -I../share/gsoap/plugin -I../share/gsoap/custom onvif.h
 
 Valgrind：
@@ -154,3 +150,10 @@ export STRIP=mipsel-openwrt-linux-strip
 export AR=mipsel-openwrt-linux-ar
 make USE_STATIC_LIB=1 
 make install PREFIX=$(pwd)/_install
+
+qrencode:
+./configure --prefix=$(pwd)/_install --host=arm-rockchip-linux-gnueabihf CC=arm-rockchip-linux-gnueabihf-gcc --enable-static
+
+zlog:
+make PREFIX=$(pwd)/_install CC=arm-rockchip-linux-gnueabihf-gcc
+make PREFIX=$(pwd)/_install install
