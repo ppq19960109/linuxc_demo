@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "alsa.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "asoundlib.h": "c",
+        "*.tcc": "c"
     }
 }
