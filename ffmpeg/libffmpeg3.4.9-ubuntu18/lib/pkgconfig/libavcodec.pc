@@ -1,0 +1,14 @@
+prefix=/home/ppq/tmp/ffmpeg-3.4.9/_install
+exec_prefix=${prefix}
+libdir=/home/ppq/tmp/ffmpeg-3.4.9/_install/lib
+includedir=/home/ppq/tmp/ffmpeg-3.4.9/_install/include
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 57.107.100
+Requires: 
+Requires.private: libswresample >= 2.9.100, libavutil >= 55.78.100
+Conflicts:
+Libs: -L${libdir}  -lavcodec 
+Libs.private: -lxcb -lxcb-xfixes -lxcb-shape -lasound -lm -ldl -lz -pthread -pthread
+Cflags: -I${includedir}

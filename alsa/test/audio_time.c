@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 			printf("Playback open error: %s\n", snd_strerror(err));
 			goto _exit;
 		}
-
+SND_PCM_FORMAT_LAST
 		snd_pcm_hw_params_alloca(&hwparams_p);
 /* get the current hwparams */
 		err = snd_pcm_hw_params_current(handle_p, hwparams_p);

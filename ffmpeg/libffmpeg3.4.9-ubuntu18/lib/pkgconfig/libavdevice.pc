@@ -1,0 +1,14 @@
+prefix=/home/ppq/tmp/ffmpeg-3.4.9/_install
+exec_prefix=${prefix}
+libdir=/home/ppq/tmp/ffmpeg-3.4.9/_install/lib
+includedir=/home/ppq/tmp/ffmpeg-3.4.9/_install/include
+
+Name: libavdevice
+Description: FFmpeg device handling library
+Version: 57.10.100
+Requires: 
+Requires.private: libavfilter >= 6.107.100, libswscale >= 4.8.100, libpostproc >= 54.7.100, libavformat >= 57.83.100, libavcodec >= 57.107.100, libswresample >= 2.9.100, libavutil >= 55.78.100
+Conflicts:
+Libs: -L${libdir}  -lavdevice 
+Libs.private: -lxcb -lxcb-xfixes -lxcb-shape -lasound -lm -ldl -lz -pthread -pthread
+Cflags: -I${includedir}

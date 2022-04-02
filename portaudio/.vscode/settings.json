@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "stdlib.h": "c",
+        "paex_record.h": "c",
+        "portaudio.h": "c",
+        "alsa.h": "c",
+        "alsa_conf.h": "c",
+        "asoundlib.h": "c",
+        "math.h": "c",
+        "unistd.h": "c",
+        "wav.h": "c",
+        "fcntl.h": "c"
+    }
+}

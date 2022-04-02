@@ -1,0 +1,14 @@
+prefix=/home/ppq/tmp/ffmpeg-3.4.9/_install
+exec_prefix=${prefix}
+libdir=/home/ppq/tmp/ffmpeg-3.4.9/_install/lib
+includedir=/home/ppq/tmp/ffmpeg-3.4.9/_install/include
+
+Name: libswscale
+Description: FFmpeg image rescaling library
+Version: 4.8.100
+Requires: 
+Requires.private: libavutil >= 55.78.100
+Conflicts:
+Libs: -L${libdir}  -lswscale 
+Libs.private: -lm
+Cflags: -I${includedir}

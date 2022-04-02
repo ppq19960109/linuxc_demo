@@ -52,6 +52,13 @@
         "lv_examples.h": "c",
         "lv_test_theme_1.h": "c",
         "lv_hal.h": "c",
-        "qrcode.h": "c"
+        "qrcode.h": "c",
+        "asoundlib.h": "c",
+        "string_view": "c",
+        "avcodec.h": "c",
+        "curl.h": "c",
+        "download.h": "c",
+        "string.h": "c",
+        "stdio.h": "c"
     }
 }
