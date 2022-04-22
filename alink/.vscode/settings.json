@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "pthread.h": "c",
+        "string.h": "c",
+        "stdio.h": "c",
+        "link_solo.h": "c",
+        "aiot_dynregmq_api.h": "c"
+    }
+}

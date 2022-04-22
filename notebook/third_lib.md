@@ -67,6 +67,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/ppq/git/x265/buf/_install/lib
 --extra-libs=-ldl --enable-cross-compile --target-os=linux --arch=arm --cpu=cortex-a7 
 
 
+./configure --prefix=`pwd`/_install --enable-shared --enable-gpl --enable-nonfree --disable-asm --enable-pthreads --enable-pic
+
 librtmp:
 make prefix=`pwd`/_install XCFLAGS+='-I/home/ppq/openssl-1.0.1u/_install/include -I/home/ppq/git/zlib/_install/include' \
 XLDFLAGS+='-L/home/ppq/openssl-1.0.1u/_install/lib -L/home/ppq/git/zlib/_install/lib'
@@ -157,3 +159,5 @@ qrencode:
 zlog:
 make PREFIX=$(pwd)/_install CC=arm-rockchip-linux-gnueabihf-gcc
 make PREFIX=$(pwd)/_install install
+jsoncpp:
+cmake -DCMAKE_INSTALL_PREFIX=./_install -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=ON -G "Unix Makefiles" ..   -DCMAKE_BUILD_TYPE=debug

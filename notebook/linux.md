@@ -28,7 +28,7 @@ echo 5 > /proc/sys/kernel/printk
 
 
 #LD_LIBRARY_PATH
-
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/pulse-11.1/modules
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/userdata:/userdata/lib
 echo $LD_LIBRARY_PATH
 

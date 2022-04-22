@@ -8,7 +8,7 @@
    writeable = yes
    available = yes
    
-   
+ http://mcook.marssenger.com?mcu_current_version=1&model=Q6&timestamp=1&wifi_mac=1234567890
 $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyS0 -b 921600 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x30000 build/app-x7.bin 0x3a2000 demo_anyone_can_use.bin
 
 idf.py set-target esp32
@@ -18,12 +18,15 @@ idf.py -p /dev/ttyUSB0 flash
 idf.py -p /dev/ttyUSB0 monitor
 clear && idf.py -p /dev/ttyUSB0 flash monitor
 clear && idf.py -p /dev/ttyUSB0 app-flash monitor
-idf.py -p /dev/ttyUSB0 app monitor
+clear && idf.py -p /dev/ttyUSB0 monitor
 
 idf.py app
 idf.py app-flash  
 idf.py clean
 idf.py fullclean
+
+
+/home/ppq/git/esp-idf4.4/tools/xtensa-esp32-elf/esp-2021r2-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-addr2line -pfiaC -e build/esp-uart.elf 0x40081c72:0x3ffec1300x400915fd:0x3ffec150 0x40098a65:0x3ffec170 0x40092a46:0x3ffec290 0x400fcf11:0x3ffec2b0 0x4012688c:0x3ffec2d0 0x401268e4:0x3ffec2f0 0x4010ca16:0x3ffec310 0x40112dfb:0x3ffec330 0x4011319b:0x3ffec350 0x400fcbe9:0x3ffec370 0x40095039:0x3ffec390
 
 $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x24000 build/ota_data_initial.bin 0x30000 build/app-x7.bin 0x3a2000 testx7.bin
 e6 e6 00 01 01 00 00 01 02 6e 6e
@@ -40,10 +43,10 @@ $IDF_PATH/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py --in
 $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x11000 build/ota_data_initial.bin 0x20000 build/esp-uart.bin 0x2a0000 test1029.bin
 $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x11000 build/ota_data_initial.bin 0x20000 build/esp-uart.bin 0x2a0000 test1021.bin
 $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x11000 build/ota_data_initial.bin 0x20000 build/esp-uart.bin 0x360000 testq6bc.bin
-
+$IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x11000 build/ota_data_initial.bin 0x20000 build/esp-uart.bin 0x360000 X502_test1.bin
 
 $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x24000 build/ota_data_initial.bin 0x30000 build/d50.bin 0x3a2000 x502_test1.bin
-
+$IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x1000 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x24000 build/ota_data_initial.bin 0x30000 build/X7BC.bin 0x3a2000 test1.bin
 
 export IDF_TOOLS_PATH=$HOME/git/esp-idf3.3
 export IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
