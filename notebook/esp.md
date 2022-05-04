@@ -86,3 +86,10 @@ $IDF_PATH/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 460800 --b
 
 Property Set Received, Devid: 0, Request: {"CookbookParam":[{"RemindText":"","FanTime":0,"Temp":100,"Timer":20,"Valid":1,"SteamTime":0,"Mode":1,"WaterTime":0,"Paused":0},{"RemindText":"","FanTime":0,"Temp":100,"Timer":20,"Valid":1,"SteamTime":0,"Mode":1,"WaterTime":0,"Paused":0}],"CookbookName":"好想","CookbookIntro":{"Steps":"","Intro":"","Materials":""}}
 I (26081) linkkit_solo: Property Set Received, Devid: 0, Request: {"MultiMode":2,"StOvOperation":0}
+
+e6 e6 00 04 03 00 2f f6  00 05 01 0a 00 00 00 02 0b 02 13 02 14 00 31 01  32 00 34 00 38 03 52 05 53 00 64 54 00 61 55 00  1e 56 00 1e 57 00 00 58 00 00 59 00 60 01 5b b0  6e 6e e6 e6 00 04 03 00 0b f6 00 05 01 0a 00 00  00 02 0b 02 02 73 6e 6e
+
+e6 e6 00 05 0d 00 5a 01  02 02 01 03 02 04 01 05 01 0a 00 00 00 02 0b 02  11 00 12 00 13 02 14 00 31 01 32 00 34 00 38 03  42 00 43 00 44 00 00 45 00 38 46 00 00 47 00 00  48 00 00 49 00 00 4a 00 4b 00 4f 00 50 00 00 00  00 52 05 53 00 64 54 00 61 55 00 1e 56 00 1e 57  00 00 58 00 00 59 00 60 01 74 19 6e 6e
+
+e6 e6 00 05 03 00 23 f6  00 05 01 0a 00 00 00 00 0b 00 52 03 53 00 64 54  00 61 55 00 1e 56 00 1e 57 00 00 58 00 00 59 00  60 01 d8 0a 6e 6e e6 e6 00 05 03 00 0b f6 00 05  01 0a 00 00 00 00 0b 00 03 92 6e 6e
+
