@@ -59,6 +59,8 @@
         "curl.h": "c",
         "download.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "fs.h": "c",
+        "uartcfg.h": "c"
     }
 }
