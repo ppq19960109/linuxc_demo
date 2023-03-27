@@ -61,6 +61,9 @@
         "string.h": "c",
         "stdio.h": "c",
         "fs.h": "c",
-        "uartcfg.h": "c"
+        "uartcfg.h": "c",
+        "hloop.h": "c",
+        "hssl.h": "c",
+        "hmain.h": "c"
     }
 }

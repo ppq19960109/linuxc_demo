@@ -92,7 +92,7 @@
 /* #undef WITH_OPENSSL */
 /* #undef WITH_GNUTLS */
 /* #undef WITH_MBEDTLS */
-/* #undef ENABLE_UDS */
+#define ENABLE_UDS 1
 /* #undef USE_MULTIMAP */
 /* #undef WITH_KCP */
 
